@@ -60,26 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      // body: Center(
-      //   child: Column(
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     children: <Widget>[
-      //       Text(
-      //         'You have clicked the button this many times:',
-      //       ),
-      //       Text(
-      //         '$_counter',
-      //         style: Theme.of(context).textTheme.display1,
-      //       ),
-      //     ],
-      //   ),
-      // ),
       body: ScoreboardScreens(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), 
     );
   }
 }
@@ -95,7 +76,8 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
 
   List<Screen> _screenList = [
       Screen("NHL"),
-      Screen("MLB")
+      Screen("MLB"),
+      Screen("NCAA")
   ];
 
   @override
@@ -116,13 +98,29 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
   }
 
   Widget _buildRow(Screen screen) {
-    return new Card(
+    return new Card( 
+      color: screen.enabled ? Colors.white : Colors.grey,
+      
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
           print("Tapped on ${screen.title}");
+          setState(() {
+            for (var s in _screenList) {
+              s.enabled = false; 
+            }
+            screen.enabled = true;
+          });
+          //TODO send ChangeScreen request
         },
-        child: Text(screen.title)
+        child: Column(children: <Widget>[
+          ListTile(
+            leading: Icon(Icons.album),
+            title: Text(screen.title,
+            style: TextStyle(fontSize: 24),),
+            subtitle: Text(screen.subtitle),
+          ),
+        ],)
       ),
     );
   }
@@ -132,8 +130,12 @@ class Screen {
 
   Screen(String title) {
     this.title = title;
+    this.subtitle = "Blah blah blah";
+    this.enabled = false;
   }
   String title;
+  String subtitle;
+  bool enabled;
 
 
 }
