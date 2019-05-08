@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -71,13 +75,29 @@ class ScoreboardScreens extends StatefulWidget {
     return new ScoreboardScreensState();
   }
 }
+Future<http.Response> sportRequest (ScreenId id) async {
+  var url ='192.168.0.197:5005/setSport';
 
+  Map data = {
+    'asportId': id.index
+  };
+  //encode Map to JSON
+  var body = json.encode(data);
+
+  var response = await http.post(url,
+      headers: {"Content-Type": "application/json"},
+      body: body
+  );
+  print("${response.statusCode}");
+  print("${response.body}");
+  return response;
+}
 class ScoreboardScreensState extends State<ScoreboardScreens> {
 
   List<Screen> _screenList = [
-      Screen("NHL"),
-      Screen("MLB"),
-      Screen("NCAA")
+      Screen("NHL", ScreenId.nhl),
+      Screen("MLB", ScreenId.mlb),
+      //Screen("NCAA")
   ];
 
   @override
@@ -109,7 +129,10 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
             for (var s in _screenList) {
               s.enabled = false; 
             }
+            sportRequest(screen.id);
+
             screen.enabled = true;
+            
           });
           //TODO send ChangeScreen request
         },
@@ -125,14 +148,17 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
     );
   }
 }
+enum ScreenId { nhl, mlb }
 
 class Screen {
 
-  Screen(String title) {
+  Screen(String title, ScreenId id) {
     this.title = title;
     this.subtitle = "Blah blah blah";
     this.enabled = false;
+    this.id = id;
   }
+  ScreenId id;
   String title;
   String subtitle;
   bool enabled;
