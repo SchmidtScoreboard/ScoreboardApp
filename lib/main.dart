@@ -75,11 +75,15 @@ class ScoreboardScreens extends StatefulWidget {
     return new ScoreboardScreensState();
   }
 }
+
+Future<http.Response> configRequest() async {
+  var url = 'http://192.168.0.197:5005/setSport'
+}
 Future<http.Response> sportRequest (ScreenId id) async {
-  var url ='192.168.0.197:5005/setSport';
+  var url ='http://192.168.0.197:5005/setSport';
 
   Map data = {
-    'asportId': id.index
+    'sport': id.index
   };
   //encode Map to JSON
   var body = json.encode(data);
@@ -124,17 +128,15 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
-          print("Tapped on ${screen.title}");
-          setState(() {
-            for (var s in _screenList) {
-              s.enabled = false; 
-            }
-            sportRequest(screen.id);
-
-            screen.enabled = true;
-            
-          });
-          //TODO send ChangeScreen request
+          if(!screen.enabled) {
+            setState(() {
+              for (var s in _screenList) {
+                s.enabled = false; 
+              }
+              sportRequest(screen.id);
+              screen.enabled = true;
+            });
+          }
         },
         child: Column(children: <Widget>[
           ListTile(
