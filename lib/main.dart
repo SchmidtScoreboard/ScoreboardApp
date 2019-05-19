@@ -76,8 +76,15 @@ class ScoreboardScreens extends StatefulWidget {
   }
 }
 
-Future<http.Response> configRequest() async {
-  var url = 'http://192.168.0.197:5005/setSport'
+Future<ScoreboardSettings> configRequest() async {
+  var url = 'http://192.168.0.197:5005/';
+  final response = await http.get(url);
+  if (response.statusCode == 200) {
+    print(json.decode(response.body));
+   return ScoreboardSettings.fromJson(json.decode(response.body));
+  } else {
+    throw Exception("Failed to load post");
+  }
 }
 Future<http.Response> sportRequest (ScreenId id) async {
   var url ='http://192.168.0.197:5005/setSport';
@@ -98,50 +105,54 @@ Future<http.Response> sportRequest (ScreenId id) async {
 }
 class ScoreboardScreensState extends State<ScoreboardScreens> {
 
-  List<Screen> _screenList = [
-      Screen("NHL", ScreenId.nhl),
-      Screen("MLB", ScreenId.mlb),
-      //Screen("NCAA")
-  ];
+  ScreenId activeScreen; 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(    body: _fillScreens(),
+    return FutureBuilder<ScoreboardSettings>(
+      future: configRequest(),
+      builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        return _fillScreens(snapshot.data);
+      } else if (snapshot.hasError) {
+        return Text(snapshot.error.toString());
+      }
+
+      return CircularProgressIndicator();
+    }
     );
   }
 
-  Widget _fillScreens() {
+  Widget _fillScreens(ScoreboardSettings settings) {
+    activeScreen = settings.activeScreen;
     return new ListView.builder(
       padding: const EdgeInsets.all(10.0),
-      itemCount: _screenList.length,
+      itemCount: settings.screens.length,
       itemBuilder: (context, i) {
 
-        return _buildRow(_screenList[i]);
+        return _buildRow(settings.screens[i]);
       },
     );
   }
 
   Widget _buildRow(Screen screen) {
     return new Card( 
-      color: screen.enabled ? Colors.white : Colors.grey,
+      color: screen.id == activeScreen? Colors.white : Colors.grey,
       
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
-          if(!screen.enabled) {
+          // if(screen.id != activeScreen) {
             setState(() {
-              for (var s in _screenList) {
-                s.enabled = false; 
-              }
               sportRequest(screen.id);
-              screen.enabled = true;
+              activeScreen = screen.id;
             });
-          }
+          // }
         },
         child: Column(children: <Widget>[
           ListTile(
             leading: Icon(Icons.album),
-            title: Text(screen.title,
+            title: Text(screen.name,
             style: TextStyle(fontSize: 24),),
             subtitle: Text(screen.subtitle),
           ),
@@ -154,16 +165,36 @@ enum ScreenId { nhl, mlb }
 
 class Screen {
 
-  Screen(String title, ScreenId id) {
-    this.title = title;
-    this.subtitle = "Blah blah blah";
-    this.enabled = false;
-    this.id = id;
-  }
+  Screen({this.id, this.name, this.subtitle, this.alwaysRotate, this.rotationTime});
   ScreenId id;
-  String title;
+  String name;
   String subtitle;
-  bool enabled;
 
+  bool alwaysRotate;
+  int rotationTime;
+  //list of favorite team IDs
 
+  factory Screen.fromJson(Map<String, dynamic> json) {
+    return Screen(id: ScreenId.values[json["id"]],
+      name: json['name'],
+      subtitle: json['subtitle'],
+      alwaysRotate: json['always_rotate'],
+      rotationTime: json['rotation_time']);
+  }
+}
+
+class ScoreboardSettings {
+  ScreenId activeScreen;
+  List<Screen> screens;
+
+  ScoreboardSettings({this.activeScreen, this.screens});
+
+  factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
+    List<Screen> screens = [];
+    for (var screen in json["screens"]) {
+      screens.add(Screen.fromJson(screen));
+    }
+    return ScoreboardSettings(activeScreen: ScreenId.values[json["active_screen"]],
+      screens: screens); 
+  }
 }
