@@ -76,18 +76,20 @@ class ScoreboardScreens extends StatefulWidget {
   }
 }
 
-Future<ScoreboardSettings> configRequest() async {
+Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
+  if(set != null ) {
+    return set;
+  }
   // var url = 'http://192.168.0.197:5005/';
   var url = "http://127.0.0.1:5005/";
   final response = await http.get(url);
   if (response.statusCode == 200) {
-    print(json.decode(response.body));
    return ScoreboardSettings.fromJson(json.decode(response.body));
   } else {
     throw Exception("Failed to load post");
   }
 }
-Future<http.Response> sportRequest (ScreenId id) async {
+Future<ScoreboardSettings> sportRequest (ScreenId id) async {
   // var url ='http://192.168.0.197:5005/setSport';
   var url = "http://127.0.0.1:5005/setSport";
 
@@ -101,18 +103,22 @@ Future<http.Response> sportRequest (ScreenId id) async {
       headers: {"Content-Type": "application/json"},
       body: body
   );
-  return response;
+  if (response.statusCode == 200) {
+   return ScoreboardSettings.fromJson(json.decode(response.body));
+  } else {
+    throw Exception("Failed to load post");
+  }
 }
 class ScoreboardScreensState extends State<ScoreboardScreens> {
 
-  ScreenId activeScreen; 
-
+  ScoreboardSettings settings;
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<ScoreboardSettings>(
-      future: configRequest(),
+      future: configRequest(settings),
       builder: (context, snapshot) {
       if (snapshot.hasData) {
+        settings = snapshot.data;
         return _fillScreens(snapshot.data);
       } else if (snapshot.hasError) {
         return Text(snapshot.error.toString());
@@ -124,8 +130,6 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
   }
 
   Widget _fillScreens(ScoreboardSettings settings) {
-    print("Calling fillScreens");
-    activeScreen = settings.activeScreen;
     return new ListView.builder(
       padding: const EdgeInsets.all(10.0),
       itemCount: settings.screens.length,
@@ -137,19 +141,20 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
 
   Widget _buildRow(Screen screen) {
     return new Card( 
-      color: screen.id == activeScreen ? Colors.white : Colors.grey,
+      color: screen.id == settings.activeScreen ? Colors.white : Colors.grey,
       
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
-          if(screen.id != activeScreen) {
-            Future<http.Response> responseFuture = sportRequest(screen.id);
-            responseFuture.whenComplete(() {
-              setState(() {
-                //nothing to set in state 
-              });
+          if(screen.id != settings.activeScreen) {
+            Future<ScoreboardSettings> responseFuture = sportRequest(screen.id);
+            responseFuture.then((ScoreboardSettings set) {
+              setState(() {settings = set; }); 
+            }).catchError((e) { 
+                print("Something went wrong :(");
             });
           }
+          
         },
         child: Column(children: <Widget>[
           ListTile(
