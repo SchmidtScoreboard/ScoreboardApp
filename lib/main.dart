@@ -77,7 +77,8 @@ class ScoreboardScreens extends StatefulWidget {
 }
 
 Future<ScoreboardSettings> configRequest() async {
-  var url = 'http://192.168.0.197:5005/';
+  // var url = 'http://192.168.0.197:5005/';
+  var url = "http://127.0.0.1:5005/";
   final response = await http.get(url);
   if (response.statusCode == 200) {
     print(json.decode(response.body));
@@ -87,7 +88,8 @@ Future<ScoreboardSettings> configRequest() async {
   }
 }
 Future<http.Response> sportRequest (ScreenId id) async {
-  var url ='http://192.168.0.197:5005/setSport';
+  // var url ='http://192.168.0.197:5005/setSport';
+  var url = "http://127.0.0.1:5005/setSport";
 
   Map data = {
     'sport': id.index
@@ -99,8 +101,6 @@ Future<http.Response> sportRequest (ScreenId id) async {
       headers: {"Content-Type": "application/json"},
       body: body
   );
-  print("${response.statusCode}");
-  print("${response.body}");
   return response;
 }
 class ScoreboardScreensState extends State<ScoreboardScreens> {
@@ -116,20 +116,20 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
         return _fillScreens(snapshot.data);
       } else if (snapshot.hasError) {
         return Text(snapshot.error.toString());
+      } else {
+        return CircularProgressIndicator();
       }
-
-      return CircularProgressIndicator();
     }
     );
   }
 
   Widget _fillScreens(ScoreboardSettings settings) {
+    print("Calling fillScreens");
     activeScreen = settings.activeScreen;
     return new ListView.builder(
       padding: const EdgeInsets.all(10.0),
       itemCount: settings.screens.length,
       itemBuilder: (context, i) {
-
         return _buildRow(settings.screens[i]);
       },
     );
@@ -137,17 +137,19 @@ class ScoreboardScreensState extends State<ScoreboardScreens> {
 
   Widget _buildRow(Screen screen) {
     return new Card( 
-      color: screen.id == activeScreen? Colors.white : Colors.grey,
+      color: screen.id == activeScreen ? Colors.white : Colors.grey,
       
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
-          // if(screen.id != activeScreen) {
-            setState(() {
-              sportRequest(screen.id);
-              activeScreen = screen.id;
+          if(screen.id != activeScreen) {
+            Future<http.Response> responseFuture = sportRequest(screen.id);
+            responseFuture.whenComplete(() {
+              setState(() {
+                //nothing to set in state 
+              });
             });
-          // }
+          }
         },
         child: Column(children: <Widget>[
           ListTile(
