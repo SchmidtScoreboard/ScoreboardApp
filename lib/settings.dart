@@ -2,23 +2,43 @@
 import 'package:flutter/material.dart';
 import 'models.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   final ScoreboardSettings settings;
   SettingsScreen({this.settings});
+
+  @override
+  State<StatefulWidget> createState() {
+    return SettingsScreenState();
+  }
+}
+
+class SettingsScreenState extends State {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Second Route"),
+        title: Text("Edit Scoreboard Settings"),
       ),
-      body: Center(
-        child: RaisedButton(
-          onPressed: () {
-            // Navigate back to first route when tapped.
+      body: ( ListView(children: <Widget>[
+        ListTile(
+          leading: Icon(Icons.wifi),
+          title: Text("WiFi Settings"),
+          onTap: () {
+            //TODO open wifi settings screen
           },
-          child: Text('Go back!'),
-        ),
+          
+        )
+      ],)
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+
+        },
+        icon: Icon(Icons.save),
+        label: Text("Save Settings"),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
+  
 }

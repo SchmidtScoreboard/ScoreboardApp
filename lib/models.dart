@@ -26,9 +26,10 @@ class Screen {
 
 class ScoreboardSettings {
   ScreenId activeScreen;
+  bool screenOn;
   List<Screen> screens;
 
-  ScoreboardSettings({this.activeScreen, this.screens});
+  ScoreboardSettings({this.activeScreen, this.screenOn, this.screens});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -36,6 +37,7 @@ class ScoreboardSettings {
       screens.add(Screen.fromJson(screen));
     }
     return ScoreboardSettings(activeScreen: ScreenId.values[json["active_screen"]],
+      screenOn: json["screen_on"],
       screens: screens); 
   }
 }
@@ -60,6 +62,28 @@ Future<ScoreboardSettings> sportRequest (ScreenId id) async {
 
   Map data = {
     'sport': id.index
+  };
+  //encode Map to JSON
+  var body = json.encode(data);
+
+  var response = await http.post(url,
+      headers: {"Content-Type": "application/json"},
+      body: body
+  );
+  if (response.statusCode == 200) {
+    print(response.body);
+   return ScoreboardSettings.fromJson(json.decode(response.body));
+  } else {
+    throw Exception("Failed to load post");
+  }
+}
+
+Future<ScoreboardSettings> powerRequest (bool power) async {
+  var url ='http://192.168.0.197:5005/setPower';
+  // var url = "http://127.0.0.1:5005/setPower";
+
+  Map data = {
+    'screen_on': power
   };
   //encode Map to JSON
   var body = json.encode(data);

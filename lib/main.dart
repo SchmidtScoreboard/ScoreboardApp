@@ -77,21 +77,33 @@ class _MyHomePageState extends State<MyHomePage> {
         itemBuilder: (context, i) {
           return _buildRow(settings.screens[i]);
         },
-      )
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Future<ScoreboardSettings> responseFuture = powerRequest(!settings.screenOn);
+          responseFuture.then((ScoreboardSettings newSettings) {
+            setState(() { settings = newSettings;});
+          }).catchError((e) {
+            print("Something went wrong :(");
+          });
+        },
+        child: Icon(Icons.power_settings_new),
+        backgroundColor: settings.screenOn ? Theme.of(context).primaryColor : Colors.grey,
+      ),
     );
   }
 
   Widget _buildRow(Screen screen) {
     return new Card( 
-      color: screen.id == settings.activeScreen ? Colors.white : Colors.grey,
+      color: screen.id == settings.activeScreen && settings.screenOn ? Colors.white : Colors.grey,
       
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
           if(screen.id != settings.activeScreen) {
             Future<ScoreboardSettings> responseFuture = sportRequest(screen.id);
-            responseFuture.then((ScoreboardSettings set) {
-              setState(() {settings = set; }); 
+            responseFuture.then((ScoreboardSettings newSettings) {
+              setState(() {settings = newSettings; }); 
             }).catchError((e) { 
                 print("Something went wrong :(");
             });
