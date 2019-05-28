@@ -46,9 +46,41 @@ class _MyHomePageState extends State<MyHomePage> {
           settings = snapshot.data;
           return _buildHome();
         } else if (snapshot.hasError) {
-          return Text(snapshot.error.toString());
+          return Scaffold(appBar: AppBar(
+            title: Text(widget.title),
+            ),
+            body: ListView(
+              children: <Widget>[
+                Card(
+                  child: Column(children: <Widget>[
+                    ListTile(
+                      leading: Icon(Icons.error),
+                      title: Text("Could not connect to scoreboard"),
+                      subtitle: Text("Make sure it is powered and connected to wifi"),
+                    ),
+                  ],)
+                ), Card(
+                  child: Column(children: <Widget>[
+                    ListTile(
+                      leading: Icon(Icons.alarm), //Todo add icon for click side button
+                      title: Text("Fill in Scoreboard Address"),
+                      subtitle: Text("If your scoreboard is not displaying an error, tap the side button to reveal its address")
+                    ),
+                    RaisedButton(child: Text("Fill in address"))
+                    //TODO add address entry button 
+                  ],))
+              ]
+            )
+              
+          );
+
         } else {
-          return CircularProgressIndicator();
+          return Scaffold(appBar: AppBar(
+            title: Text(widget.title),
+            ),
+            body: Center(
+              child: CircularProgressIndicator()),
+          );
         }
       }
     );

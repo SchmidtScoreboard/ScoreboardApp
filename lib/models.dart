@@ -46,8 +46,8 @@ Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
   if(set != null ) {
     return set;
   }
-  var url = 'http://192.168.0.197:5005/';
-  // var url = "http://127.0.0.1:5005/";
+  // var url = 'http://192.168.0.197:5005/';
+  var url = "http://127.0.0.1:5005/";
   final response = await http.get(url);
   if (response.statusCode == 200) {
     print(response.body);
@@ -57,8 +57,8 @@ Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
   }
 }
 Future<ScoreboardSettings> sportRequest (ScreenId id) async {
-  var url ='http://192.168.0.197:5005/setSport';
-  // var url = "http://127.0.0.1:5005/setSport";
+  // var url ='http://192.168.0.197:5005/setSport';
+  var url = "http://127.0.0.1:5005/setSport";
 
   Map data = {
     'sport': id.index
@@ -79,8 +79,8 @@ Future<ScoreboardSettings> sportRequest (ScreenId id) async {
 }
 
 Future<ScoreboardSettings> powerRequest (bool power) async {
-  var url ='http://192.168.0.197:5005/setPower';
-  // var url = "http://127.0.0.1:5005/setPower";
+  // var url ='http://192.168.elf.197:5005/setPower';
+  var url = "http://127.0.0.1:5005/setPower";
 
   Map data = {
     'screen_on': power
@@ -92,6 +92,7 @@ Future<ScoreboardSettings> powerRequest (bool power) async {
       headers: {"Content-Type": "application/json"},
       body: body
   );
+
   if (response.statusCode == 200) {
     print(response.body);
    return ScoreboardSettings.fromJson(json.decode(response.body));
