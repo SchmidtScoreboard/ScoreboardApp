@@ -12,7 +12,7 @@ class SettingsScreen extends StatefulWidget {
   }
 }
 
-class SettingsScreenState extends State {
+class SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +27,10 @@ class SettingsScreenState extends State {
             //TODO open wifi settings screen
           },
           
-        )
+        ),
+        Divider(),
+        for (var screen in widget.settings.screens)
+          getScreenWidget(screen),
       ],)
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -40,5 +43,12 @@ class SettingsScreenState extends State {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-  
+
+  Widget getScreenWidget(Screen screen) {
+    return Column(children: <Widget>[
+      ListTile(
+        title: Text("$screen.name settings")
+      ) 
+    ]);
+  } 
 }
