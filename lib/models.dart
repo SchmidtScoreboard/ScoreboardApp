@@ -4,6 +4,9 @@ import 'dart:convert';
 import 'dart:async';
 enum ScreenId { nhl, mlb }
 
+var root = 'http://192.168.0.197:5005/';
+//var root = "http://127.0.0.1:5005/";
+
 class Screen {
 
   Screen({this.id, this.name, this.subtitle, this.alwaysRotate, this.rotationTime});
@@ -46,8 +49,7 @@ Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
   if(set != null ) {
     return set;
   }
-  // var url = 'http://192.168.0.197:5005/';
-  var url = "http://127.0.0.1:5005/";
+  var url = root;
   final response = await http.get(url);
   if (response.statusCode == 200) {
     print(response.body);
@@ -57,8 +59,7 @@ Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
   }
 }
 Future<ScoreboardSettings> sportRequest (ScreenId id) async {
-  // var url ='http://192.168.0.197:5005/setSport';
-  var url = "http://127.0.0.1:5005/setSport";
+  var url = root + "setSport";
 
   Map data = {
     'sport': id.index
@@ -79,8 +80,7 @@ Future<ScoreboardSettings> sportRequest (ScreenId id) async {
 }
 
 Future<ScoreboardSettings> powerRequest (bool power) async {
-  // var url ='http://192.168.elf.197:5005/setPower';
-  var url = "http://127.0.0.1:5005/setPower";
+  var url = root + "setPower";
 
   Map data = {
     'screen_on': power

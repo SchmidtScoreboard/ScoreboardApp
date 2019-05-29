@@ -33,12 +33,15 @@ class SettingsScreenState extends State<SettingsScreen> {
           getScreenWidget(screen),
       ],)
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+      floatingActionButton: Padding(
+        child: FloatingActionButton.extended(
+          onPressed: () {
 
-        },
-        icon: Icon(Icons.save),
-        label: Text("Save Settings"),
+          },
+          icon: Icon(Icons.save),
+          label: Text("Save Settings"),
+        ),
+        padding: const EdgeInsets.only(bottom: 20.0)
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
@@ -47,8 +50,12 @@ class SettingsScreenState extends State<SettingsScreen> {
   Widget getScreenWidget(Screen screen) {
     return Column(children: <Widget>[
       ListTile(
-        title: Text("$screen.name settings")
-      ) 
+        title: Text("${screen.name} settings"),
+        onTap: () {}
+      ),
+      
+
     ]);
+
   } 
 }
