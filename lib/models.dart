@@ -1,11 +1,7 @@
 
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 enum ScreenId { nhl, mlb }
-
-var root = 'http://192.168.0.197:5005/';
-//var root = "http://127.0.0.1:5005/";
 
 class Screen {
 
@@ -45,58 +41,16 @@ class ScoreboardSettings {
   }
 }
 
-Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
-  if(set != null ) {
-    return set;
-  }
-  var url = root;
-  final response = await http.get(url);
-  if (response.statusCode == 200) {
-    print(response.body);
-   return ScoreboardSettings.fromJson(json.decode(response.body));
+  // var root = 'http://192.168.0.197:5005/';
+  var root = "http://127.0.0.1:5005/";
+Future<String> getRoot() async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  String address = prefs.getString("scoreboardAddress");
+  if(address == null) {
+    return root;
   } else {
-    throw Exception("Failed to load post");
+    return address;
   }
-}
-Future<ScoreboardSettings> sportRequest (ScreenId id) async {
-  var url = root + "setSport";
 
-  Map data = {
-    'sport': id.index
-  };
-  //encode Map to JSON
-  var body = json.encode(data);
-
-  var response = await http.post(url,
-      headers: {"Content-Type": "application/json"},
-      body: body
-  );
-  if (response.statusCode == 200) {
-    print(response.body);
-   return ScoreboardSettings.fromJson(json.decode(response.body));
-  } else {
-    throw Exception("Failed to load post");
-  }
-}
-
-Future<ScoreboardSettings> powerRequest (bool power) async {
-  var url = root + "setPower";
-
-  Map data = {
-    'screen_on': power
-  };
-  //encode Map to JSON
-  var body = json.encode(data);
-
-  var response = await http.post(url,
-      headers: {"Content-Type": "application/json"},
-      body: body
-  );
-
-  if (response.statusCode == 200) {
-    print(response.body);
-   return ScoreboardSettings.fromJson(json.decode(response.body));
-  } else {
-    throw Exception("Failed to load post");
-  }
 }

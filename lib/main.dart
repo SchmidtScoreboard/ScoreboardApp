@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
 import 'settings.dart';
+import 'channel.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -22,7 +23,23 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'My Scoreboard'),
+      home: FutureBuilder(
+        future: getRoot(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if(snapshot.hasData) {
+            String address = snapshot.data;
+            if(address == "") {
+              // Go to onboarding
+            } else {
+              return MyHomePage(title: "My Scoreboard");
+            }
+          }
+          return Scaffold(appBar: AppBar(
+            title: Text("My Scoreboard"),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -37,10 +54,25 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   ScoreboardSettings settings;
+  Timer refreshTimer;
+  Channel channel;
+  @override
+  void initState() {
+    super.initState();
+    channel = new Channel();
+    refreshTimer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      setState(() {
+        settings = null;
+      });
+    });
+    
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<ScoreboardSettings>(
-      future: configRequest(settings),
+      future: channel.configRequest(settings),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           settings = snapshot.data;
@@ -102,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Future<ScoreboardSettings> responseFuture = powerRequest(!settings.screenOn);
+          Future<ScoreboardSettings> responseFuture = channel.powerRequest(!settings.screenOn);
           responseFuture.then((ScoreboardSettings newSettings) {
             setState(() { settings = newSettings;});
           }).catchError((e) {
@@ -123,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
           if(screen.id != settings.activeScreen) {
-            Future<ScoreboardSettings> responseFuture = sportRequest(screen.id);
+            Future<ScoreboardSettings> responseFuture = channel.sportRequest(screen.id);
             responseFuture.then((ScoreboardSettings newSettings) {
               setState(() {settings = newSettings; }); 
             }).catchError((e) { 
