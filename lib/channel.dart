@@ -7,22 +7,22 @@ import 'dart:convert';
 
 class Channel {
   static final Channel _singleton = new Channel._internal();
-
   factory Channel() {
     if(_singleton == null) {
       Channel c = _singleton;
     }
     return _singleton;
   }
-
-  
   Channel._internal();
 
-  Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
+  // String root = 'http://192.168.0.197:5005/';
+  // String root = "http://127.0.0.1:5005/";
+
+  Future<ScoreboardSettings> configRequest(ScoreboardSettings set, [String root]) async {
     if(set != null ) {
       return set;
     }
-    var url = await getRoot();
+    String url = root != null ? root : await getRoot();
     final response = await http.get(url);
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));

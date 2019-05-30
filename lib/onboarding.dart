@@ -3,8 +3,12 @@ import 'dart:async';
 import 'models.dart';
 import 'settings.dart';
 import 'channel.dart';
- 
-abstract class OnboardingScreen extends StatelessWidget {
+
+abstract class OnboardingScreen extends StatefulWidget {
+
+}
+
+abstract class OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,8 +78,15 @@ Widget layoutWidgets(Iterable widgets) {
   );
 
 }
-class SplashScreen extends OnboardingScreen {
 
+class SplashScreen extends OnboardingScreen {
+  @override
+  State<StatefulWidget> createState() {
+    return SplashScreenState();
+  }
+}
+
+class SplashScreenState extends OnboardingScreenState {
   Widget getOnboardWidget(BuildContext context) {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Scoreboard Controller"),
@@ -88,12 +99,41 @@ class SplashScreen extends OnboardingScreen {
 
 class ConnectToHotspotScreen extends OnboardingScreen {
   @override
+  State<StatefulWidget> createState() {
+    return ConnectToHotspotScreenState();
+  }
+}
+
+class ConnectToHotspotScreenState extends OnboardingScreenState {
+  ScoreboardSettings settings;
+  Timer refreshTimer;
+  Channel channel;
+  @override
+  void initState() {
+    super.initState();
+    channel = new Channel();
+    refreshTimer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      setState(() {
+        settings = null;
+      });
+    });
+  }
+
+  @override
   Widget getOnboardWidget(BuildContext context) {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Connect to your Scoreboard"),
-      getOnboardInstruction("In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
-      getOnboardButton(context, "Get Started", SplashScreen())
+      getOnboardInstruction("In your device's Settings app, connect to the wifi network as shown on your scoreboard:"),
+      //TODO add dope hero image here
+      FutureBuilder(
+        future: channel.configRequest(settings, "rpi address here"),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if(snapshot.hasData) {
+            return getOnboardButton(context, "All Connected", SplashScreen());
+          }
+          return Text("Waiting on connection...", style: TextStyle(color: Colors.grey[400]));
+        },
+      ),
     ]);
   }
-  
 }
