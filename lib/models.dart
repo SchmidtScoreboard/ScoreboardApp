@@ -48,7 +48,7 @@ Future<String> getRoot() async {
 
   String address = prefs.getString("scoreboardAddress");
   if(address == null) {
-    return root;
+    return "";
   } else {
     return address;
   }
