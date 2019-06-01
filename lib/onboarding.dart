@@ -18,8 +18,8 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: [
-              Theme.of(context).primaryColorDark,
-              Theme.of(context).primaryColor,
+              Colors.blue,
+              Colors.blue[900],
             ],
           ),
         ),
@@ -43,13 +43,13 @@ Widget getOnboardTitle(String text) {
 
 Widget getOnboardInstruction(String text) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical:40, horizontal: 20),
+    padding: const EdgeInsets.symmetric(vertical:40),
     child:
       Text(text, style: TextStyle(fontSize: 18, color: Colors.white),)
   );
 }
 
-Widget getOnboardButton(BuildContext context, String text, Widget target) {
+Widget getOnboardButton(BuildContext context, String text, Widget target, [VoidCallback callback]) {
   return RaisedButton(
     padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
     child: Text(text),  
@@ -58,6 +58,8 @@ Widget getOnboardButton(BuildContext context, String text, Widget target) {
     highlightElevation: 8,
     shape: StadiumBorder(),
     onPressed: () {
+      if(callback != null)
+        callback();
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => target)
@@ -71,8 +73,11 @@ Widget layoutWidgets(Iterable widgets) {
   return SafeArea( 
     minimum: const EdgeInsets.only(top: 100),
     child: Center( child:
-      Column(
-        children: widgets,
+      Padding(
+        padding:const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          children: widgets,
+        )
       )
     )
   );
@@ -126,14 +131,85 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
       getOnboardInstruction("In your device's Settings app, connect to the wifi network as shown on your scoreboard:"),
       //TODO add dope hero image here
       FutureBuilder(
-        future: channel.configRequest(settings, "rpi address here"),
+        future: channel.configRequest(settings, "http://127.0.0.1:5005/"),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if(snapshot.hasData) {
-            return getOnboardButton(context, "All Connected", SplashScreen());
+            return getOnboardButton(context, "All Connected!", WifiCredentialsScreen());
           }
           return Text("Waiting on connection...", style: TextStyle(color: Colors.grey[400]));
         },
       ),
     ]);
   }
+}
+
+class WifiCredentialsScreen extends OnboardingScreen {
+  @override
+  State<StatefulWidget> createState() {
+    return WifiCredentialsScreenState();
+  }
+
+}
+
+class WifiCredentialsScreenState extends OnboardingScreenState {
+  FocusNode wifiNode = FocusNode();
+  FocusNode passNode = FocusNode();
+  String wifi;
+  String password;
+
+  void callback() {
+    //TODO send /wifi request
+  }
+  @override
+  Widget getOnboardWidget(BuildContext context) { //TODO fix layout alignment issues
+    return ListView(children: <Widget>[
+      layoutWidgets(<Widget>[
+      getOnboardTitle("Enter your WiFi Information"),
+      getOnboardInstruction("Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below:"),
+      TextField(decoration: 
+        InputDecoration(
+          icon: Icon(Icons.wifi), 
+          labelText: "Wifi Name",
+        ),
+        maxLines: 1, 
+        maxLength: 32,
+        autocorrect: false,
+        textInputAction: TextInputAction.next,
+        focusNode: wifiNode,
+        onChanged: (String s) {wifi = s;},
+        onEditingComplete: () {FocusScope.of(context).requestFocus(passNode);},
+        ),
+      TextField(decoration: InputDecoration(icon: Icon(Icons.lock), labelText: "Password"),
+        maxLines: 1, 
+        obscureText: true, 
+        autocorrect: false, 
+        maxLength: 63, 
+        textInputAction: TextInputAction.send,
+        focusNode: passNode,
+        onChanged: (String s) {password = s;},
+        onEditingComplete: () {callback();},
+        ),
+      Padding(
+        padding: EdgeInsets.only(top: 20),
+        child: getOnboardButton(context, "Submit", SplashScreen(), callback)
+      )
+    ])
+    ]);
+  }
+}
+
+class ScanQRCodeScreen extends OnboardingScreen {
+  @override
+  State<StatefulWidget> createState() {
+    return ScanQrCodeScreenState();
+  }
+
+}
+
+class ScanQrCodeScreenState extends OnboardingScreenState {
+  @override
+  Widget getOnboardWidget(BuildContext context) {
+    return null;
+  }
+
 }
