@@ -3,6 +3,7 @@ import 'dart:async';
 import 'models.dart';
 import 'settings.dart';
 import 'channel.dart';
+import 'package:fast_qr_reader_view/fast_qr_reader_view.dart';
 
 abstract class OnboardingScreen extends StatefulWidget {
 
@@ -51,7 +52,6 @@ Widget getOnboardInstruction(String text) {
 
 Widget getOnboardButton(BuildContext context, String text, Widget target, [VoidCallback callback]) {
   return RaisedButton(
-    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
     child: Text(text),  
     color: Theme.of(context).accentColor, 
     elevation: 4,
@@ -71,11 +71,11 @@ Widget getOnboardButton(BuildContext context, String text, Widget target, [VoidC
 
 Widget layoutWidgets(Iterable widgets) {
   return SafeArea( 
-    minimum: const EdgeInsets.only(top: 100),
+    minimum: const EdgeInsets.only(top: 70),
     child: Center( child:
       Padding(
         padding:const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
+        child: ListView(
           children: widgets,
         )
       )
@@ -131,7 +131,8 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
       getOnboardInstruction("In your device's Settings app, connect to the wifi network as shown on your scoreboard:"),
       //TODO add dope hero image here
       FutureBuilder(
-        future: channel.configRequest(settings, "http://127.0.0.1:5005/"),
+        //future: channel.configRequest(settings, "http://127.0.0.1:5005/"),
+        future: channel.configRequest(settings, "http://192.168.0.197:5005/"),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if(snapshot.hasData) {
             return getOnboardButton(context, "All Connected!", WifiCredentialsScreen());
@@ -162,8 +163,8 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   }
   @override
   Widget getOnboardWidget(BuildContext context) { //TODO fix layout alignment issues
-    return ListView(children: <Widget>[
-      layoutWidgets(<Widget>[
+
+    return layoutWidgets(<Widget>[
       getOnboardTitle("Enter your WiFi Information"),
       getOnboardInstruction("Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below:"),
       TextField(decoration: 
@@ -187,13 +188,18 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
         textInputAction: TextInputAction.send,
         focusNode: passNode,
         onChanged: (String s) {password = s;},
-        onEditingComplete: () {callback();},
+        onEditingComplete: () {
+          callback();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ScanQRCodeScreen())
+          );
+        },
         ),
       Padding(
         padding: EdgeInsets.only(top: 20),
-        child: getOnboardButton(context, "Submit", SplashScreen(), callback)
+        child: getOnboardButton(context, "Submit", ScanQRCodeScreen(), callback)
       )
-    ])
     ]);
   }
 }
@@ -207,9 +213,40 @@ class ScanQRCodeScreen extends OnboardingScreen {
 }
 
 class ScanQrCodeScreenState extends OnboardingScreenState {
+
+  Future<List<CameraDescription>> getCameras() async {
+    return await availableCameras();
+  }
+
+  QRReaderController controller;
   @override
   Widget getOnboardWidget(BuildContext context) {
-    return null;
+    return layoutWidgets(<Widget>[
+      getOnboardTitle("Scan your Scoreboard's Address"),
+      getOnboardInstruction("Once your scoreboard restarts, it will display a scannable code that will sync it to this app"),
+      FutureBuilder(
+        future: getCameras(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if(snapshot.hasData) {
+            controller = new QRReaderController(snapshot.data[0], 
+            ResolutionPreset.medium,
+            [CodeFormat.qr],
+            (dynamic value) {
+              print(value);
+            });
+            return new AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: new QRReaderPreview(controller)
+            );
+            return new Text("Got camera!");
+          } else {
+            return new Text("Loading camera...");
+          }
+        },
+      ), 
+      // getOnboardButton(context, "Scan Now", SplashScreen())
+      //TODO include dope hero image
+    ]);
   }
 
 }

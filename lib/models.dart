@@ -41,8 +41,8 @@ class ScoreboardSettings {
   }
 }
 
-  // var root = 'http://192.168.0.197:5005/';
-  var root = "http://127.0.0.1:5005/";
+  var root = 'http://192.168.0.197:5005/';
+ // var root = "http://127.0.0.1:5005/";
 Future<String> getRoot() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
 
