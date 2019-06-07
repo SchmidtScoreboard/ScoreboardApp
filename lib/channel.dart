@@ -27,7 +27,7 @@ class Channel {
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
     } else {
-      throw Exception("Failed to load post");
+      throw Exception("Failed to load scoreboard settings");
     }
   }
   Future<ScoreboardSettings> sportRequest (ScreenId id) async {
@@ -46,7 +46,7 @@ class Channel {
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
     } else {
-      throw Exception("Failed to load post");
+      throw Exception("Failed to send sport request");
     }
   }
 
@@ -67,7 +67,53 @@ class Channel {
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
     } else {
-      throw Exception("Failed to load post");
+      throw Exception("Failed to send power request");
+    }
+  }
+  Future<ScoreboardSettings> wifiRequest(String ssid, String password) async {
+    var url = await getRoot() + "wifi";
+
+    Map data = {
+      'ssid' : ssid,
+      'psk' : password
+    };
+    //encode Map to JSON
+    var body = json.encode(data);
+
+    var response = await http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: body
+    );
+
+    if (response.statusCode == 200) {
+      return ScoreboardSettings.fromJson(json.decode(response.body));
+    } else {
+      throw Exception("Failed to send wifi request");
+    }
+  }
+  Future<ScoreboardSettings> syncRequest() async {
+    var url = await getRoot() + "sync";
+
+    //encode Map to JSON
+
+    var response = await http.post(url);
+
+    if (response.statusCode == 200) {
+      return ScoreboardSettings.fromJson(json.decode(response.body));
+    } else {
+      throw Exception("Failed to send sync request");
+    }
+  }
+  Future<ScoreboardSettings> connectRequest(ScoreboardSettings set, [String root]) async {
+    if(set != null) {
+      return set;
+    }
+    String url = (root != null ? root : await getRoot()) + "connect";
+    final response = await http.post(url);
+    if (response.statusCode == 200) {
+      return ScoreboardSettings.fromJson(json.decode(response.body));
+    } else {
+      throw Exception("Failed to connect to scoreboard");
     }
   }
 }

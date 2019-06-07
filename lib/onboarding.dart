@@ -113,14 +113,17 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
   ScoreboardSettings settings;
   Timer refreshTimer;
   Channel channel;
+  bool connected = false;
   @override
   void initState() {
     super.initState();
     channel = new Channel();
-    refreshTimer = Timer.periodic(Duration(seconds: 1), (Timer t) {
-      setState(() {
-        settings = null;
-      });
+    refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
+      if(!connected) {
+        setState(() {
+            settings = null;
+        });
+      }
     });
   }
 
@@ -131,11 +134,16 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
       getOnboardInstruction("In your device's Settings app, connect to the wifi network as shown on your scoreboard:"),
       //TODO add dope hero image here
       FutureBuilder(
-        //future: channel.configRequest(settings, "http://127.0.0.1:5005/"),
-        future: channel.configRequest(settings, "http://192.168.0.197:5005/"),
+        // //future: channel.configRequest(settings, "http://127.0.0.1:5005/"),
+        // future: channel.configRequest(settings, "http://192.168.0.197:5005/"),
+        future: channel.connectRequest(settings, "http://127.0.0.1:5005/"),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if(snapshot.hasData) {
+            print("Connected to server");
+            connected = true;
             return getOnboardButton(context, "All Connected!", WifiCredentialsScreen());
+          } else if (snapshot.hasError) {
+            print(snapshot.error.toString());
           }
           return Text("Waiting on connection...", style: TextStyle(color: Colors.grey[400]));
         },
@@ -159,7 +167,8 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   String password;
 
   void callback() {
-    //TODO send /wifi request
+    Channel c = new Channel();
+    c.wifiRequest(wifi, password);
   }
   @override
   Widget getOnboardWidget(BuildContext context) { //TODO fix layout alignment issues
