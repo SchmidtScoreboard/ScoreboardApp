@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
@@ -50,7 +51,7 @@ Widget getOnboardInstruction(String text) {
   );
 }
 
-Widget getOnboardButton(BuildContext context, String text, Widget target, [VoidCallback callback]) {
+Widget getOnboardButton(BuildContext context, String text, Widget target, [AsyncCallback callback]) {
   return RaisedButton(
     child: Text(text),  
     color: Theme.of(context).accentColor, 
@@ -75,7 +76,7 @@ Widget layoutWidgets(Iterable widgets) {
     child: Center( child:
       Padding(
         padding:const EdgeInsets.symmetric(horizontal: 20),
-        child: ListView(
+        child: Column(
           children: widgets,
         )
       )
@@ -92,11 +93,19 @@ class SplashScreen extends OnboardingScreen {
 }
 
 class SplashScreenState extends OnboardingScreenState {
+
+  Future callback() async {
+    AppState app = await AppState.load();
+    //TODO handle errors better
+    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.HOTSPOT;
+    await AppState.store();
+  }
+
   Widget getOnboardWidget(BuildContext context) {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Scoreboard Controller"),
       getOnboardInstruction("Welcome to the scoreboard controller app! Make sure your scoreboard is plugged in and powered on, then we'll get connected!"),
-      getOnboardButton(context, "Get Started", ConnectToHotspotScreen())
+      getOnboardButton(context, "Get Started", ConnectToHotspotScreen(), callback)
       //TODO include dope hero image
     ]);
   }
@@ -110,10 +119,17 @@ class ConnectToHotspotScreen extends OnboardingScreen {
 }
 
 class ConnectToHotspotScreenState extends OnboardingScreenState {
-  ScoreboardSettings settings;
   Timer refreshTimer;
   Channel channel;
   bool connected = false;
+
+  Future callback() async {
+    AppState app = await AppState.load();
+    //TODO handle errors better
+    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.WIFI_CONNECT;
+    await AppState.store();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -121,7 +137,6 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
     refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       if(!connected) {
         setState(() {
-            settings = null;
         });
       }
     });
@@ -134,16 +149,14 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
       getOnboardInstruction("In your device's Settings app, connect to the wifi network as shown on your scoreboard:"),
       //TODO add dope hero image here
       FutureBuilder(
-        // //future: channel.configRequest(settings, "http://127.0.0.1:5005/"),
-        // future: channel.configRequest(settings, "http://192.168.0.197:5005/"),
-        future: channel.connectRequest(settings, "http://127.0.0.1:5005/"),
+        future: Channel.localChannel.connectRequest(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if(snapshot.hasData) {
             print("Connected to server");
             connected = true;
-            return getOnboardButton(context, "All Connected!", WifiCredentialsScreen());
+            return getOnboardButton(context, "All Connected!", WifiCredentialsScreen(), callback);
           } else if (snapshot.hasError) {
-            print(snapshot.error.toString());
+            //print(snapshot.error.toString());
           }
           return Text("Waiting on connection...", style: TextStyle(color: Colors.grey[400]));
         },
@@ -166,9 +179,12 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   String wifi;
   String password;
 
-  void callback() {
-    Channel c = new Channel();
-    c.wifiRequest(wifi, password);
+  Future callback() async {
+    ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(wifi, password);
+    AppState app = await AppState.load();
+    //TODO handle errors better
+    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.SYNC;
+    await AppState.store();
   }
   @override
   Widget getOnboardWidget(BuildContext context) { //TODO fix layout alignment issues
@@ -227,6 +243,13 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
     return await availableCameras();
   }
 
+  Future callback() async {
+    AppState app = await AppState.load();
+    //TODO handle errors better
+    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.READY;
+    await AppState.store();
+  }
+
   QRReaderController controller;
   @override
   Widget getOnboardWidget(BuildContext context) {
@@ -237,22 +260,32 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
         future: getCameras(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if(snapshot.hasData) {
-            controller = new QRReaderController(snapshot.data[0], 
-            ResolutionPreset.medium,
-            [CodeFormat.qr],
-            (dynamic value) {
-              print(value);
-            });
-            return new AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
-              child: new QRReaderPreview(controller)
-            );
-            return new Text("Got camera!");
+            List<CameraDescription> cameras = snapshot.data;
+            if(cameras.length > 0) {
+              controller = new QRReaderController(cameras[0], 
+                ResolutionPreset.medium,
+                [CodeFormat.qr],
+                (dynamic value) {
+                  print(value);
+                });
+              /*return new AspectRatio(
+                aspectRatio: controller.value.aspectRatio,
+                child: new QRReaderPreview(controller)
+              );*/
+              return new Text("Got camera!");
+            } else {
+              return new Text("No cameras detected :(");
+            }
           } else {
             return new Text("Loading camera...");
           }
         },
       ), 
+      RaisedButton(
+        child: Text("If your scoreboard is showing an error,\ntap here to restart setup"),
+        onPressed: () => {
+          print("Pressed reset button")
+        },)
       // getOnboardButton(context, "Scan Now", SplashScreen())
       //TODO include dope hero image
     ]);

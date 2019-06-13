@@ -6,35 +6,31 @@ import 'dart:convert';
 
 
 class Channel {
-  static final Channel _singleton = new Channel._internal();
-  factory Channel() {
-    if(_singleton == null) {
-      Channel c = _singleton;
-    }
-    return _singleton;
-  }
-  Channel._internal();
+  String ipAddress;
+  Channel({this.ipAddress});
+
+  static final Channel hotspotChannel = Channel(ipAddress: "http://192.168.4.1:5005/");
+  static final Channel localChannel = Channel(ipAddress: "http://127.0.0.1:5005/");
 
   // String root = 'http://192.168.0.197:5005/';
   // String root = "http://127.0.0.1:5005/";
 
-  Future<ScoreboardSettings> configRequest(ScoreboardSettings set, [String root]) async {
+  Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
     if(set != null ) {
       return set;
     }
-    String url = root != null ? root : await getRoot();
-    final response = await http.get(url);
+    final response = await http.get(ipAddress);
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
     } else {
       throw Exception("Failed to load scoreboard settings");
     }
   }
-  Future<ScoreboardSettings> sportRequest (ScreenId id) async {
-    var url = await getRoot() + "setSport";
+  Future<ScoreboardSettings> sportRequest (int id) async {
+    var url = ipAddress + "setSport";
 
     Map data = {
-      'sport': id.index
+      'sport': id
     };
     //encode Map to JSON
     var body = json.encode(data);
@@ -51,7 +47,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> powerRequest (bool power) async {
-    var url = await getRoot() + "setPower";
+    var url = ipAddress + "setPower";
 
     Map data = {
       'screen_on': power
@@ -71,8 +67,7 @@ class Channel {
     }
   }
   Future<ScoreboardSettings> wifiRequest(String ssid, String password) async {
-    var url = await getRoot() + "wifi";
-
+    String url = ipAddress + "wifi";
     Map data = {
       'ssid' : ssid,
       'psk' : password
@@ -84,15 +79,15 @@ class Channel {
         headers: {"Content-Type": "application/json"},
         body: body
     );
-
     if (response.statusCode == 200) {
+      print(response.body);
       return ScoreboardSettings.fromJson(json.decode(response.body));
     } else {
-      throw Exception("Failed to send wifi request");
+      throw Exception("Failed to connect to scoreboard");
     }
   }
   Future<ScoreboardSettings> syncRequest() async {
-    var url = await getRoot() + "sync";
+    var url = ipAddress + "sync";
 
     //encode Map to JSON
 
@@ -104,13 +99,11 @@ class Channel {
       throw Exception("Failed to send sync request");
     }
   }
-  Future<ScoreboardSettings> connectRequest(ScoreboardSettings set, [String root]) async {
-    if(set != null) {
-      return set;
-    }
-    String url = (root != null ? root : await getRoot()) + "connect";
+  Future<ScoreboardSettings> connectRequest() async {
+    String url = ipAddress + "connect";
     final response = await http.post(url);
     if (response.statusCode == 200) {
+      print(response.body);
       return ScoreboardSettings.fromJson(json.decode(response.body));
     } else {
       throw Exception("Failed to connect to scoreboard");
