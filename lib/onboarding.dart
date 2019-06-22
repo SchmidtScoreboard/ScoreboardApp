@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
-import 'settings.dart';
+import 'homepage.dart';
 import 'channel.dart';
 import 'package:fast_qr_reader_view/fast_qr_reader_view.dart';
 
@@ -44,14 +44,10 @@ Widget getOnboardTitle(String text) {
 }
 
 Widget getOnboardInstruction(String text) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical:40),
-    child:
-      Text(text, style: TextStyle(fontSize: 18, color: Colors.white),)
-  );
+    return Text(text, style: TextStyle(fontSize: 18, color: Colors.white));
 }
 
-Widget getOnboardButton(BuildContext context, String text, Widget target, [AsyncCallback callback]) {
+Widget getOnboardButton(BuildContext context, String text, Widget target, AsyncCallback callback) {
   return RaisedButton(
     child: Text(text),  
     color: Theme.of(context).accentColor, 
@@ -61,26 +57,35 @@ Widget getOnboardButton(BuildContext context, String text, Widget target, [Async
     onPressed: () {
       if(callback != null)
         callback();
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => target)
-      );
+      if(target != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => target)
+        );
+      } else {
+        // pop back to main
+        Navigator.pop(context);
+      }
     },
   );
 
 }
 
 Widget layoutWidgets(Iterable widgets) {
+  List<Widget> paddedWidgets = [];
+  for (var widget in widgets) {
+    paddedWidgets.add(widget);
+    paddedWidgets.add(new SizedBox(height: 20,));
+  }
   return SafeArea( 
     minimum: const EdgeInsets.only(top: 70),
-    child: Center( child:
+    child: 
       Padding(
         padding:const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
-          children: widgets,
+          children: paddedWidgets
         )
       )
-    )
   );
 
 }
@@ -95,10 +100,7 @@ class SplashScreen extends OnboardingScreen {
 class SplashScreenState extends OnboardingScreenState {
 
   Future callback() async {
-    AppState app = await AppState.load();
-    //TODO handle errors better
-    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.HOTSPOT;
-    await AppState.store();
+    await AppState.setState(SetupState.HOTSPOT);
   }
 
   Widget getOnboardWidget(BuildContext context) {
@@ -124,10 +126,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
   bool connected = false;
 
   Future callback() async {
-    AppState app = await AppState.load();
-    //TODO handle errors better
-    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.WIFI_CONNECT;
-    await AppState.store();
+    await AppState.setState(SetupState.WIFI_CONNECT);
   }
 
   @override
@@ -181,51 +180,53 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
 
   Future callback() async {
     ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(wifi, password);
-    AppState app = await AppState.load();
-    //TODO handle errors better
-    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.SYNC;
-    await AppState.store();
+    await AppState.setState(SetupState.SYNC);
   }
   @override
   Widget getOnboardWidget(BuildContext context) { //TODO fix layout alignment issues
 
-    return layoutWidgets(<Widget>[
-      getOnboardTitle("Enter your WiFi Information"),
-      getOnboardInstruction("Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below:"),
-      TextField(decoration: 
-        InputDecoration(
-          icon: Icon(Icons.wifi), 
-          labelText: "Wifi Name",
-        ),
-        maxLines: 1, 
-        maxLength: 32,
-        autocorrect: false,
-        textInputAction: TextInputAction.next,
-        focusNode: wifiNode,
-        onChanged: (String s) {wifi = s;},
-        onEditingComplete: () {FocusScope.of(context).requestFocus(passNode);},
-        ),
-      TextField(decoration: InputDecoration(icon: Icon(Icons.lock), labelText: "Password"),
-        maxLines: 1, 
-        obscureText: true, 
-        autocorrect: false, 
-        maxLength: 63, 
-        textInputAction: TextInputAction.send,
-        focusNode: passNode,
-        onChanged: (String s) {password = s;},
-        onEditingComplete: () {
-          callback();
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ScanQRCodeScreen())
-          );
-        },
-        ),
-      Padding(
-        padding: EdgeInsets.only(top: 20),
-        child: getOnboardButton(context, "Submit", ScanQRCodeScreen(), callback)
-      )
-    ]);
+    return Theme(data: ThemeData(
+        primarySwatch: Colors.blue,
+        accentColor: Colors.orangeAccent,
+        brightness: Brightness.dark),
+        child: layoutWidgets(<Widget>[
+          getOnboardTitle("Enter your WiFi Information"),
+          getOnboardInstruction("Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below:"),
+          TextField(decoration: 
+            InputDecoration(
+              icon: Icon(Icons.wifi), 
+              labelText: "Wifi Name",
+            ),
+            maxLines: 1, 
+            maxLength: 32,
+            autocorrect: false,
+            textInputAction: TextInputAction.next,
+            focusNode: wifiNode,
+            onChanged: (String s) {wifi = s;},
+            onEditingComplete: () {FocusScope.of(context).requestFocus(passNode);},
+            ),
+          TextField(decoration: InputDecoration(icon: Icon(Icons.lock), labelText: "Password"),
+            maxLines: 1, 
+            obscureText: true, 
+            autocorrect: false, 
+            maxLength: 63, 
+            textInputAction: TextInputAction.send,
+            focusNode: passNode,
+            onChanged: (String s) {password = s;},
+            onEditingComplete: () {
+              callback();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ScanQRCodeScreen())
+              );
+            },
+            ),
+          Padding(
+            padding: EdgeInsets.only(top: 20),
+            child: getOnboardButton(context, "Submit", ScanQRCodeScreen(), callback)
+          )
+        ])
+    );
   }
 }
 
@@ -244,10 +245,8 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
   }
 
   Future callback() async {
-    AppState app = await AppState.load();
-    //TODO handle errors better
-    app.scoreboardSetupStates[app.lastScoreboardIndex] = SetupState.READY;
-    await AppState.store();
+    ScoreboardSettings scoreboard = await Channel.localChannel.syncRequest();
+    await AppState.setState(SetupState.READY);
   }
 
   QRReaderController controller;
@@ -281,12 +280,21 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
           }
         },
       ), 
+      getOnboardButton(context, "Confirm", MyHomePage(title: "Scoreboard"), callback),
       RaisedButton(
-        child: Text("If your scoreboard is showing an error,\ntap here to restart setup"),
-        onPressed: () => {
-          print("Pressed reset button")
-        },)
-      // getOnboardButton(context, "Scan Now", SplashScreen())
+        child: Padding(
+          child: Text("If your scoreboard is showing an error,\ntap here to restart setup"),
+          padding: EdgeInsets.symmetric(vertical: 5)
+        ),
+        onPressed: () {
+          AppState.setState(SetupState.HOTSPOT);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ConnectToHotspotScreen())
+          );
+        },
+        shape: StadiumBorder())
+      //OnboardButton(context, "Scan Now", SplashScreen())
       //TODO include dope hero image
     ]);
   }

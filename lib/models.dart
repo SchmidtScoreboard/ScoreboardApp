@@ -112,6 +112,11 @@ class AppState {
     }
   }
 
+  static Future setState(SetupState state) async {
+    AppState app = await AppState.load();
+    app.scoreboardSetupStates[app.lastScoreboardIndex] = state;
+    await AppState.store();
+  }
 }
 
   var root = 'http://192.168.0.197:5005/';

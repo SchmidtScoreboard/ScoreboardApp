@@ -15,10 +15,7 @@ class Channel {
   // String root = 'http://192.168.0.197:5005/';
   // String root = "http://127.0.0.1:5005/";
 
-  Future<ScoreboardSettings> configRequest(ScoreboardSettings set) async {
-    if(set != null ) {
-      return set;
-    }
+  Future<ScoreboardSettings> configRequest() async {
     final response = await http.get(ipAddress);
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
