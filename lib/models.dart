@@ -13,21 +13,22 @@ class ScreenId {
 
 class Screen {
 
-  Screen({this.id, this.name, this.subtitle, this.alwaysRotate, this.rotationTime});
+  Screen({this.id, this.name, this.subtitle, this.alwaysRotate, this.rotationTime, this.focusTeams});
   int id;
   String name;
   String subtitle;
 
   bool alwaysRotate;
   int rotationTime;
-  //list of favorite team IDs
+  List<int> focusTeams;
 
   factory Screen.fromJson(Map<String, dynamic> json) {
     return Screen(id: json["id"],
       name: json['name'],
       subtitle: json['subtitle'],
       alwaysRotate: json['always_rotate'],
-      rotationTime: json['rotation_time']);
+      rotationTime: json['rotation_time'],
+      focusTeams: new List<int>.from(json['focus_teams']));
   }
 }
 
@@ -46,6 +47,12 @@ class ScoreboardSettings {
     return ScoreboardSettings(activeScreen: json["active_screen"],
       screenOn: json["screen_on"],
       screens: screens); 
+  }
+
+  ScoreboardSettings clone() {
+    return new ScoreboardSettings(activeScreen: activeScreen, 
+      screenOn: screenOn, 
+      screens: new List<Screen>.from(screens));
   }
 }
 

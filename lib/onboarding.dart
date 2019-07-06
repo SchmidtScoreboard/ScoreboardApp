@@ -13,19 +13,20 @@ abstract class OnboardingScreen extends StatefulWidget {
 abstract class OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Colors.blue,
-              Colors.blue[900],
-            ],
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Colors.blue,
+            Colors.blue[900],
+          ],
         ),
-        child: getOnboardWidget(context)
+      ),
+      child: Scaffold(
+        body: getOnboardWidget(context),
+        backgroundColor: Colors.transparent
       )
     );
   }
@@ -62,10 +63,7 @@ Widget getOnboardButton(BuildContext context, String text, Widget target, AsyncC
           context,
           MaterialPageRoute(builder: (context) => target)
         );
-      } else {
-        // pop back to main
-        Navigator.pop(context);
-      }
+      } 
     },
   );
 
@@ -77,15 +75,17 @@ Widget layoutWidgets(Iterable widgets) {
     paddedWidgets.add(widget);
     paddedWidgets.add(new SizedBox(height: 20,));
   }
-  return SafeArea( 
-    minimum: const EdgeInsets.only(top: 70),
-    child: 
-      Padding(
-        padding:const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          children: paddedWidgets
+  return SingleChildScrollView(
+    child: SafeArea( 
+      minimum: const EdgeInsets.only(top: 70),
+      child: 
+        Padding(
+          padding:const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: paddedWidgets
+          )
         )
-      )
+    )
   );
 
 }
@@ -215,7 +215,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
             onChanged: (String s) {password = s;},
             onEditingComplete: () {
               callback();
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => ScanQRCodeScreen())
               );
@@ -275,6 +275,8 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
             } else {
               return new Text("No cameras detected :(");
             }
+          } else if(snapshot.hasError) {
+              return new Text(snapshot.error);
           } else {
             return new Text("Loading camera...");
           }
@@ -282,19 +284,19 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
       ), 
       getOnboardButton(context, "Confirm", MyHomePage(title: "Scoreboard"), callback),
       RaisedButton(
+        //TODO make this not look like shit
         child: Padding(
           child: Text("If your scoreboard is showing an error,\ntap here to restart setup"),
           padding: EdgeInsets.symmetric(vertical: 5)
         ),
         onPressed: () {
           AppState.setState(SetupState.HOTSPOT);
-          Navigator.push(
+          Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => ConnectToHotspotScreen())
           );
         },
         shape: StadiumBorder())
-      //OnboardButton(context, "Scan Now", SplashScreen())
       //TODO include dope hero image
     ]);
   }
