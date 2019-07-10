@@ -2,12 +2,15 @@ PODS:
   - fast_qr_reader_view (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - flutter_picker (0.0.1):
+    - Flutter
   - shared_preferences (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - fast_qr_reader_view (from `.symlinks/plugins/fast_qr_reader_view/ios`)
   - Flutter (from `.symlinks/flutter/ios`)
+  - flutter_picker (from `.symlinks/plugins/flutter_picker/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
 
 EXTERNAL SOURCES:
@@ -15,12 +18,15 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/fast_qr_reader_view/ios"
   Flutter:
     :path: ".symlinks/flutter/ios"
+  flutter_picker:
+    :path: ".symlinks/plugins/flutter_picker/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
 
 SPEC CHECKSUMS:
   fast_qr_reader_view: 53b38a544886e650381ca579e0cdd5ae142fffa6
   Flutter: 58dd7d1b27887414a370fcccb9e645c08ffd7a6a
+  flutter_picker: 8ff0d7440b4e8327fcc9e6b21a39ef9369e697c7
   shared_preferences: 1feebfa37bb57264736e16865e7ffae7fc99b523
 
 PODFILE CHECKSUM: aff02bfeed411c636180d6812254b2daeea14d09

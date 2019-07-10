@@ -43,6 +43,23 @@ class Channel {
     }
   }
 
+  Future<ScoreboardSettings> configureSettings (ScoreboardSettings newSettings) async {
+    var url = ipAddress + "configure";
+    //TODO implement toJson in scoreboard settings
+    
+    var body = json.encode(newSettings);
+
+    var response = await http.post(url,
+        headers: {"Content-Type": "application/json"},
+        body: body
+    );
+    if (response.statusCode == 200) {
+      return ScoreboardSettings.fromJson(json.decode(response.body));
+    } else {
+      throw Exception("Failed to send configuration");
+    }
+ }
+
   Future<ScoreboardSettings> powerRequest (bool power) async {
     var url = ipAddress + "setPower";
 

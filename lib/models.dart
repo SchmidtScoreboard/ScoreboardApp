@@ -1,5 +1,7 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:collection/equality.dart';
 import 'dart:async';
 
 class ScreenId { 
@@ -30,6 +32,31 @@ class Screen {
       rotationTime: json['rotation_time'],
       focusTeams: new List<int>.from(json['focus_teams']));
   }
+
+  bool operator==(other) {
+    return this.id == other.id &&
+      this.name == other.name &&
+      this.subtitle == other.subtitle &&
+      this.alwaysRotate == other.alwaysRotate &&
+      this.rotationTime == other.rotationTime &&
+      listEquals(this.focusTeams, other.focusTeams);
+  }
+
+  Screen clone() {
+    List<int> focus = [];
+    for(int i in focusTeams) {
+      focus.add(i);
+    }
+    return new Screen(
+      alwaysRotate: alwaysRotate,
+      id: id,
+      name: name,
+      rotationTime: rotationTime,
+      subtitle: subtitle,
+      focusTeams: focus
+      
+    );
+  }
 }
 
 class ScoreboardSettings {
@@ -50,9 +77,20 @@ class ScoreboardSettings {
   }
 
   ScoreboardSettings clone() {
-    return new ScoreboardSettings(activeScreen: activeScreen, 
+    List<Screen> screensCopy = [];
+    for(Screen s in screens) {
+      screensCopy.add(s.clone());
+    }
+    return new ScoreboardSettings(
+      activeScreen: activeScreen, 
       screenOn: screenOn, 
-      screens: new List<Screen>.from(screens));
+      screens: new List<Screen>.from(screensCopy));
+  }
+
+  bool operator==(other) {
+    return this.activeScreen == other.activeScreen &&
+      this.screenOn == other.screenOn &&
+      listEquals(this.screens, other.screens);
   }
 }
 
@@ -108,7 +146,6 @@ class AppState {
   }
 
   static Future store() async {
-    print("Storing app state");
     if(_singleton == null) {
       throw Exception("Cannot store null AppState");
     } else {
