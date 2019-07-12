@@ -47,7 +47,7 @@ class Channel {
     var url = ipAddress + "configure";
     //TODO implement toJson in scoreboard settings
     
-    var body = json.encode(newSettings);
+    var body = json.encode(newSettings.toJson());
 
     var response = await http.post(url,
         headers: {"Content-Type": "application/json"},

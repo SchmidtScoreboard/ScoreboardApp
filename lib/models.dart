@@ -57,40 +57,62 @@ class Screen {
       
     );
   }
-}
 
-class ScoreboardSettings {
-  int activeScreen;
-  bool screenOn;
-  List<Screen> screens;
-
-  ScoreboardSettings({this.activeScreen, this.screenOn, this.screens});
-
-  factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
-    List<Screen> screens = [];
-    for (var screen in json["screens"]) {
-      screens.add(Screen.fromJson(screen));
-    }
-    return ScoreboardSettings(activeScreen: json["active_screen"],
-      screenOn: json["screen_on"],
-      screens: screens); 
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> ret = {};
+    ret["id"] = id;
+    ret["name"] = name;
+    ret["subtitle"] = subtitle;
+    ret["always_rotate"] = alwaysRotate;
+    ret["rotation_time"] = rotationTime;
+    ret["focus_teams"] = focusTeams;
+    return ret;
   }
-
-  ScoreboardSettings clone() {
-    List<Screen> screensCopy = [];
-    for(Screen s in screens) {
-      screensCopy.add(s.clone());
-    }
-    return new ScoreboardSettings(
-      activeScreen: activeScreen, 
-      screenOn: screenOn, 
-      screens: new List<Screen>.from(screensCopy));
   }
-
-  bool operator==(other) {
-    return this.activeScreen == other.activeScreen &&
-      this.screenOn == other.screenOn &&
-      listEquals(this.screens, other.screens);
+  
+  class ScoreboardSettings {
+    int activeScreen;
+    bool screenOn;
+    List<Screen> screens;
+  
+    ScoreboardSettings({this.activeScreen, this.screenOn, this.screens});
+  
+    factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
+      List<Screen> screens = [];
+      for (var screen in json["screens"]) {
+        screens.add(Screen.fromJson(screen));
+      }
+      return ScoreboardSettings(activeScreen: json["active_screen"],
+        screenOn: json["screen_on"],
+        screens: screens); 
+    }
+  
+    ScoreboardSettings clone() {
+      List<Screen> screensCopy = [];
+      for(Screen s in screens) {
+        screensCopy.add(s.clone());
+      }
+      return new ScoreboardSettings(
+        activeScreen: activeScreen, 
+        screenOn: screenOn, 
+        screens: new List<Screen>.from(screensCopy));
+    }
+  
+    bool operator==(other) {
+      return this.activeScreen == other.activeScreen &&
+        this.screenOn == other.screenOn &&
+        listEquals(this.screens, other.screens);
+    }
+  
+    Map<String, dynamic> toJson() {
+      Map<String, dynamic> ret = {};
+      ret["active_screen"] = activeScreen;
+      ret["screen_on"] = screenOn;
+      ret["screens"] = [];
+      for(Screen s in screens) {
+        ret["screens"].add(s.toJson());
+    }
+    return ret;
   }
 }
 
@@ -105,6 +127,7 @@ enum SetupState {
 class AppState {
   List<String> scoreboardAddresses;
   List<SetupState> scoreboardSetupStates;
+  String scoreboardName;
   int lastScoreboardIndex;
 
   static const String ADDRESS_KEY = "addresses";

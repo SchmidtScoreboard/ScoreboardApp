@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         accentColor: Colors.orangeAccent,
-        brightness: Brightness.light
+        brightness: Brightness.light,
       ),
       home: FutureBuilder(
         future: AppState.load(),

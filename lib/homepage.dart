@@ -5,7 +5,7 @@ import 'models.dart';
 import 'settings.dart';
 import 'channel.dart';
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key key, this.title, }) : super(key: key);
   final String title;
 
   @override
@@ -83,12 +83,14 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(10.0),
-        itemCount: settings.screens.length,
-        itemBuilder: (context, i) {
-          return _buildRow(settings.screens[i]);
-        },
+      body: Container(
+        child: ListView.builder(
+          padding: const EdgeInsets.all(10.0),
+          itemCount: settings.screens.length,
+          itemBuilder: (context, i) {
+            return _buildRow(settings.screens[i]);
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -100,14 +102,15 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         },
         child: Icon(Icons.power_settings_new),
-        backgroundColor: settings.screenOn ? Theme.of(context).primaryColor : Colors.grey,
+        backgroundColor: settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
+        foregroundColor: Colors.white,
       ),
     );
   }
 
   Widget _buildRow(Screen screen) {
     return new Card( 
-      color: screen.id == settings.activeScreen && settings.screenOn ? Colors.white : Colors.grey,
+      color: screen.id == settings.activeScreen && settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
       
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
@@ -124,10 +127,10 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         child: Column(children: <Widget>[
           ListTile(
-            leading: Icon(Icons.album),
+            //leading: Icon(Icons.album, color: Colors.white,),
             title: Text(screen.name,
-            style: TextStyle(fontSize: 24),),
-            subtitle: Text(screen.subtitle),
+            style: TextStyle(fontSize: 24, color: Colors.white),),
+            subtitle: Text(screen.subtitle, style: TextStyle(color: Colors.white)),
           ),
         ],)
       ),

@@ -1,16 +1,19 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'models.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'teams.dart';
+import 'channel.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 
 
 
 
 class SettingsScreen extends StatefulWidget {
-  final ScoreboardSettings settings;
+  ScoreboardSettings settings;
   SettingsScreen({this.settings});
 
   @override
@@ -21,6 +24,9 @@ class SettingsScreen extends StatefulWidget {
 
 class SettingsScreenState extends State<SettingsScreen> {
   ScoreboardSettings mutableSettings;
+  FocusNode wifiNode = FocusNode();
+  FocusNode passNode = FocusNode();
+  bool requesting = false;
   @override
   void initState() {
     mutableSettings = widget.settings.clone();
@@ -40,13 +46,28 @@ class SettingsScreenState extends State<SettingsScreen> {
           title: Text("Edit Scoreboard Settings"),
         ),
         body: ( ListView(children: <Widget>[
-          ListTile(
+          ExpansionTile(
             leading: Icon(Icons.wifi),
             title: Text("WiFi Settings"),
-            onTap: () {
-              //TODO open wifi settings screen
-            },
-            
+            children: <Widget>[
+              ListTile(title: Text("Updating wifi settings will require your scoreboard to restart")),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), child: 
+                TextField(decoration: 
+                  InputDecoration(
+                    labelText: "Wifi Name",
+                  ),
+                  maxLines: 1, 
+                  maxLength: 32,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.next,
+                  focusNode: wifiNode,
+                  onChanged: (String s) {},
+                  onEditingComplete: () {FocusScope.of(context).requestFocus(passNode);},
+                ),
+              )
+
+
+            ],
           ),
           for (var screen in mutableSettings.screens)
             getScreenWidget(screen),
@@ -60,21 +81,44 @@ class SettingsScreenState extends State<SettingsScreen> {
           )
         ],)
         ),
-        floatingActionButton: Visibility(
-          visible: hasEditedSettings(),
-          maintainInteractivity: false,
-          child: Padding(
-            child: FloatingActionButton.extended(
-              onPressed: () {
-                //TODO trigger send command, show loading wheel, handle error
-              },
-              icon: Icon(Icons.save),
-              label: Text("Save Settings"),
-              backgroundColor: Theme.of(context).primaryColor
-            ),
-            padding: const EdgeInsets.only(bottom: 20.0)
-          )
-        ),
+        floatingActionButton: new Builder(
+          builder: (BuildContext context) {
+            return Visibility(
+              visible: hasEditedSettings(),
+              maintainInteractivity: false,
+              child: Padding(
+                child: FloatingActionButton.extended(
+                  onPressed: () {
+                    if(!requesting) {
+                      Future<ScoreboardSettings> future = Channel.localChannel.configureSettings(mutableSettings);
+                      setState(() {
+                        requesting = true;
+                      });
+                      future.then((ScoreboardSettings settings) {
+                        setState(() {
+                          widget.settings = settings.clone();
+                          mutableSettings = settings.clone();
+                          requesting = false;
+                        });
+                        final scaffold = Scaffold.of(context);
+                        scaffold.showSnackBar(
+                          SnackBar(
+                            content: const Text('Saved settings!'),
+                          )
+                        );
+                      });
+                    }
+                  },
+                  icon: requesting ? Padding(padding: EdgeInsets.all(20), child:
+                    CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),)) : Icon(Icons.save),
+                  label: requesting ? Text("Loading...") : Text("Save Settings"),
+                  backgroundColor: Theme.of(context).accentColor,
+                  foregroundColor: Colors.white,
+                ),
+                padding: const EdgeInsets.only(bottom: 20.0)
+              )
+            );}
+          ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat
       ), 
       onWillPop: () {
@@ -119,7 +163,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         print("Could not find team in list");
         return ListTile(title: Text("Scoreboard settings are corrupted"), subtitle: Text("Hold the poower button for 10 seconds to fully reset"),);
     }
-    return Theme(data: ThemeData(accentColor: Colors.blue), child:
+    return //Theme(data: ThemeData(accentColor: Colors.blue), child:
         ExpansionTile(
           title: Text("${screen.name} Settings"),
           leading: Icon(Icons.desktop_mac),
@@ -202,8 +246,8 @@ class SettingsScreenState extends State<SettingsScreen> {
             ),
 
           ],
-        )
-      );
+        );
+      //);
       
 
 
