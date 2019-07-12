@@ -13,7 +13,7 @@ import 'package:flutter_picker/flutter_picker.dart';
 
 
 class SettingsScreen extends StatefulWidget {
-  ScoreboardSettings settings;
+  final ScoreboardSettings settings;
   SettingsScreen({this.settings});
 
   @override
@@ -24,20 +24,65 @@ class SettingsScreen extends StatefulWidget {
 
 class SettingsScreenState extends State<SettingsScreen> {
   ScoreboardSettings mutableSettings;
+  ScoreboardSettings originalSettings; 
   FocusNode wifiNode = FocusNode();
   FocusNode passNode = FocusNode();
+  String wifi = "";
+  String password = "";
   bool requesting = false;
   @override
   void initState() {
+    originalSettings = widget.settings.clone();
     mutableSettings = widget.settings.clone();
 
     super.initState();
   }
 
-  bool hasEditedSettings() {
-    bool eq = mutableSettings == widget.settings;
-    return !eq;
+  bool hasEditedSettings() => settingsDirty() || wifiDirty();
+
+  bool settingsDirty() => mutableSettings != originalSettings;
+  bool wifiDirty() => wifi.isNotEmpty && password.isNotEmpty;
+
+  void submitCallback() {
+    if(!requesting) {
+      setState(() {
+        requesting = true;
+      });
+      if(settingsDirty()) {
+        Future<ScoreboardSettings> future = Channel.localChannel.configureSettings(mutableSettings);
+        future.then((ScoreboardSettings settings) {
+          if(wifiDirty()) {
+            Future wifiFuture = wifiCallback();
+            wifiFuture.then((dynamic) {
+
+            });
+          } else {
+            setState(() {
+              originalSettings = settings.clone();
+              mutableSettings = settings.clone();
+              requesting = false;
+            });
+            final scaffold = Scaffold.of(context);
+            scaffold.showSnackBar(
+              SnackBar(
+                content: const Text('Saved settings!'),
+              )
+            );
+          }
+        }); 
+      } else if(wifiDirty()) {
+        wifiCallback();
+      }
+    }
   }
+
+  Future<void> wifiCallback() async {
+    print("In wifi callback");
+    ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(wifi, password); //TODO replcae all these localChannels with the actual addresses
+    await AppState.setState(SetupState.SYNC);
+    Navigator.of(context).pop(); //get out of this page and back to the home screen, which should hopefully rebuild into QR state
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(child: 
@@ -52,19 +97,46 @@ class SettingsScreenState extends State<SettingsScreen> {
             children: <Widget>[
               ListTile(title: Text("Updating wifi settings will require your scoreboard to restart")),
               Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), child: 
-                TextField(decoration: 
-                  InputDecoration(
-                    labelText: "Wifi Name",
+                Theme(data: Theme.of(context).copyWith(brightness: Brightness.dark), child:
+                  TextField(decoration: 
+                    InputDecoration(
+                      labelText: "Wifi Name",
+                    ),
+                    maxLines: 1, 
+                    maxLength: 32,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.next,
+                    focusNode: wifiNode,
+                    onChanged: (String s) {setState(() {
+                      wifi = s; 
+                    });},
+                    onEditingComplete: () {FocusScope.of(context).requestFocus(passNode);},
                   ),
-                  maxLines: 1, 
-                  maxLength: 32,
-                  autocorrect: false,
-                  textInputAction: TextInputAction.next,
-                  focusNode: wifiNode,
-                  onChanged: (String s) {},
-                  onEditingComplete: () {FocusScope.of(context).requestFocus(passNode);},
-                ),
-              )
+                )
+              ),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), child: 
+                Theme(data: Theme.of(context).copyWith(brightness: Brightness.dark), child:
+                  TextField(decoration: 
+                    InputDecoration(
+                      labelText: "Password",
+                    ),
+                    maxLines: 1, 
+                    maxLength: 32,
+                    obscureText: true,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.send,
+                    focusNode: passNode,
+                    onChanged: (String s) {
+                      setState(() {
+                        password = s;
+                      });
+                    },
+                    onEditingComplete: () {
+                      
+                    },
+                  ),
+                )
+              ),
 
 
             ],
@@ -86,28 +158,10 @@ class SettingsScreenState extends State<SettingsScreen> {
             return Visibility(
               visible: hasEditedSettings(),
               maintainInteractivity: false,
-              child: Padding(
+              child: SafeArea(
+                bottom: true,
                 child: FloatingActionButton.extended(
                   onPressed: () {
-                    if(!requesting) {
-                      Future<ScoreboardSettings> future = Channel.localChannel.configureSettings(mutableSettings);
-                      setState(() {
-                        requesting = true;
-                      });
-                      future.then((ScoreboardSettings settings) {
-                        setState(() {
-                          widget.settings = settings.clone();
-                          mutableSettings = settings.clone();
-                          requesting = false;
-                        });
-                        final scaffold = Scaffold.of(context);
-                        scaffold.showSnackBar(
-                          SnackBar(
-                            content: const Text('Saved settings!'),
-                          )
-                        );
-                      });
-                    }
                   },
                   icon: requesting ? Padding(padding: EdgeInsets.all(20), child:
                     CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),)) : Icon(Icons.save),
@@ -115,7 +169,6 @@ class SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: Theme.of(context).accentColor,
                   foregroundColor: Colors.white,
                 ),
-                padding: const EdgeInsets.only(bottom: 20.0)
               )
             );}
           ),
