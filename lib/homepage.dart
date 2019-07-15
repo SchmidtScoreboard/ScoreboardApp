@@ -16,10 +16,14 @@ class _MyHomePageState extends State<MyHomePage> {
   ScoreboardSettings settings;
   Timer refreshTimer;
   Channel channel;
+  bool refreshingScreenSelect;
+  bool refreshingPower;
   @override
   void initState() {
     super.initState();
     channel = new Channel();
+    refreshingPower = false;
+    refreshingScreenSelect = false;
     refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       setState(() {
       });
@@ -94,14 +98,23 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          setState(() {
+            settings.screenOn != settings.screenOn;
+            refreshingPower = true;
+          });
           Future<ScoreboardSettings> responseFuture = Channel.localChannel.powerRequest(!settings.screenOn);
           responseFuture.then((ScoreboardSettings newSettings) {
-            setState(() { settings = newSettings;});
+            setState(() { 
+              settings = newSettings;
+              refreshingPower = false;
+            });
           }).catchError((e) {
             print("Something went wrong :(");
           });
         },
-        child: Icon(Icons.power_settings_new),
+        child: refreshingPower ? 
+          CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),) :
+          Icon(Icons.power_settings_new, color: Colors.white,),
         backgroundColor: settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
         foregroundColor: Colors.white,
       ),
@@ -116,9 +129,19 @@ class _MyHomePageState extends State<MyHomePage> {
         splashColor: Colors.blue.withAlpha(30),
         onTap: () { 
           if(screen.id != settings.activeScreen) {
+            setState(() {
+              print("Selecting");
+              settings.activeScreen = screen.id;
+              settings.screenOn = true;
+              refreshingScreenSelect = true;
+            });
             Future<ScoreboardSettings> responseFuture = Channel.localChannel.sportRequest(screen.id);
             responseFuture.then((ScoreboardSettings newSettings) {
-              setState(() {settings = newSettings; }); 
+              setState(() {
+                print("Done select");
+                settings = newSettings; 
+                refreshingScreenSelect = false;
+              }); 
             }).catchError((e) { 
                 print("Something went wrong :(");
             });
@@ -127,7 +150,9 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         child: Column(children: <Widget>[
           ListTile(
-            //leading: Icon(Icons.album, color: Colors.white,),
+            leading: screen.id == settings.activeScreen && refreshingScreenSelect ? 
+              CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),) :
+              Icon(Icons.album, color: Colors.white,),
             title: Text(screen.name,
             style: TextStyle(fontSize: 24, color: Colors.white),),
             subtitle: Text(screen.subtitle, style: TextStyle(color: Colors.white)),

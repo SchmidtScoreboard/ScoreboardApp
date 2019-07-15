@@ -62,12 +62,6 @@ class SettingsScreenState extends State<SettingsScreen> {
               mutableSettings = settings.clone();
               requesting = false;
             });
-            final scaffold = Scaffold.of(context);
-            scaffold.showSnackBar(
-              SnackBar(
-                content: const Text('Saved settings!'),
-              )
-            );
           }
         }); 
       } else if(wifiDirty()) {
@@ -153,16 +147,14 @@ class SettingsScreenState extends State<SettingsScreen> {
           )
         ],)
         ),
-        floatingActionButton: new Builder(
-          builder: (BuildContext context) {
-            return Visibility(
+        floatingActionButton:
+            Visibility(
               visible: hasEditedSettings(),
               maintainInteractivity: false,
               child: SafeArea(
                 bottom: true,
                 child: FloatingActionButton.extended(
-                  onPressed: () {
-                  },
+                  onPressed: () {submitCallback(); },
                   icon: requesting ? Padding(padding: EdgeInsets.all(20), child:
                     CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),)) : Icon(Icons.save),
                   label: requesting ? Text("Loading...") : Text("Save Settings"),
@@ -170,8 +162,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                   foregroundColor: Colors.white,
                 ),
               )
-            );}
-          ),
+            ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat
       ), 
       onWillPop: () {
