@@ -42,39 +42,71 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   bool settingsDirty() => mutableSettings != originalSettings;
   bool wifiDirty() => wifi.isNotEmpty && password.isNotEmpty;
+  bool nameDirty() => mutableSettings.name != originalSettings.name;
 
-  void submitCallback() {
+  // void submitCallback() {
+  //   if(!requesting) {
+  //     setState(() {
+  //       requesting = true;
+  //     });
+  //     if(settingsDirty()) {
+  //       Future<ScoreboardSettings> future = Channel.localChannel.configureSettings(mutableSettings);
+  //       future.then((ScoreboardSettings settings) {
+  //         if(wifiDirty()) {
+  //           Future wifiFuture = wifiCallback();
+  //           wifiFuture.then((dynamic) {
+
+  //           });
+  //         } else {
+  //           setState(() {
+  //             originalSettings = settings.clone();
+  //             mutableSettings = settings.clone();
+  //             requesting = false;
+  //           });
+  //         }
+  //       }); 
+  //     } else if(wifiDirty()) {
+  //       wifiCallback();
+  //     }
+  //   }
+  // }
+
+  Future submitCallback() async {
     if(!requesting) {
-      setState(() {
-        requesting = true;
-      });
-      if(settingsDirty()) {
-        Future<ScoreboardSettings> future = Channel.localChannel.configureSettings(mutableSettings);
-        future.then((ScoreboardSettings settings) {
-          if(wifiDirty()) {
-            Future wifiFuture = wifiCallback();
-            wifiFuture.then((dynamic) {
+      ScoreboardSettings settings = await handleSettings();
+      await handleName();
+      await handleWifi();
 
-            });
-          } else {
-            setState(() {
-              originalSettings = settings.clone();
-              mutableSettings = settings.clone();
-              requesting = false;
-            });
-          }
-        }); 
-      } else if(wifiDirty()) {
-        wifiCallback();
-      }
+      setState(() {
+        originalSettings = settings.clone();
+        mutableSettings = settings.clone();
+        requesting = false;
+      });
     }
   }
 
-  Future<void> wifiCallback() async {
-    print("In wifi callback");
-    ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(wifi, password); //TODO replcae all these localChannels with the actual addresses
-    await AppState.setState(SetupState.SYNC);
-    Navigator.of(context).pop(); //get out of this page and back to the home screen, which should hopefully rebuild into QR state
+  Future<ScoreboardSettings> handleSettings() async {
+    if(settingsDirty()) {
+      return await Channel.localChannel.configureSettings(mutableSettings);
+    } else {
+      return mutableSettings;
+    }
+
+  }
+
+  Future handleName() async {
+    if(nameDirty()) {
+      AppState.setName(mutableSettings.name);
+    }
+  }
+
+  Future handleWifi() async {
+    if(wifiDirty()) {
+      ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(wifi, password); //TODO replcae all these localChannels with the actual addresses
+      await AppState.setState(SetupState.SYNC);
+      Navigator.of(context).pop(); //get out of this page and back to the home screen, which should hopefully rebuild into QR state
+    }
+
   }
 
   @override

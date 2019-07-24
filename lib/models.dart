@@ -1,7 +1,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:collection/equality.dart';
+import 'channel.dart';
 import 'dart:async';
 
 class ScreenId { 
@@ -74,8 +74,9 @@ class Screen {
     int activeScreen;
     bool screenOn;
     List<Screen> screens;
+    String name;
   
-    ScoreboardSettings({this.activeScreen, this.screenOn, this.screens});
+    ScoreboardSettings({this.activeScreen, this.screenOn, this.name, this.screens});
   
     factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
       List<Screen> screens = [];
@@ -84,6 +85,7 @@ class Screen {
       }
       return ScoreboardSettings(activeScreen: json["active_screen"],
         screenOn: json["screen_on"],
+        name: json["scoreboard_name"] ?? "My New Scoreboard",
         screens: screens); 
     }
   
@@ -101,6 +103,7 @@ class Screen {
     bool operator==(other) {
       return this.activeScreen == other.activeScreen &&
         this.screenOn == other.screenOn &&
+        this.name == other.name && 
         listEquals(this.screens, other.screens);
     }
   
@@ -127,12 +130,13 @@ enum SetupState {
 class AppState {
   List<String> scoreboardAddresses;
   List<SetupState> scoreboardSetupStates;
-  String scoreboardName;
-  int lastScoreboardIndex;
+  List<String> scoreboardNames;
+  int activeIndex;
 
   static const String ADDRESS_KEY = "addresses";
   static const String SETUP_STATE_KEY = "setup_states";
   static const String LAST_INDEX_KEY = "last_index";
+  static const String NAMES_KEY = "names";
 
 
   static AppState _singleton;
@@ -148,20 +152,21 @@ class AppState {
       try {
         _singleton.scoreboardAddresses = prefs.getStringList(ADDRESS_KEY);
         _singleton.scoreboardSetupStates = prefs.getStringList(SETUP_STATE_KEY).map((s) => SetupState.values[int.parse(s)]).toList();
-        _singleton.lastScoreboardIndex = prefs.getInt(LAST_INDEX_KEY);
+        _singleton.activeIndex = prefs.getInt(LAST_INDEX_KEY);
       } catch (e) {
         //invalid string lists, set everything to basic values and return. This is an OK state if nothing has been done
         print(e);
         _singleton = AppState._internal();
         _singleton.scoreboardAddresses = [""];
+        _singleton.scoreboardNames = ["My Scoreboard"];
         _singleton.scoreboardSetupStates = [SetupState.FACTORY];
-        _singleton.lastScoreboardIndex = 0;
+        _singleton.activeIndex = 0;
 
         return _singleton;
       }
       if(_singleton.scoreboardAddresses.length != _singleton.scoreboardSetupStates.length) {
         throw Exception("Invalid addresses and setup states");
-      } else if (_singleton.lastScoreboardIndex >= _singleton.scoreboardAddresses.length) {
+      } else if (_singleton.activeIndex >= _singleton.scoreboardAddresses.length) {
         throw Exception("Invalid last index");
       }
       return _singleton;
@@ -175,15 +180,50 @@ class AppState {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setStringList(ADDRESS_KEY, _singleton.scoreboardAddresses);
       prefs.setStringList(SETUP_STATE_KEY, _singleton.scoreboardSetupStates.map((state) => state.index.toString()).toList());
-      prefs.setInt(LAST_INDEX_KEY, _singleton.lastScoreboardIndex);
+      prefs.setStringList(NAMES_KEY, _singleton.scoreboardNames);
+      prefs.setInt(LAST_INDEX_KEY, _singleton.activeIndex);
     }
   }
 
   static Future setState(SetupState state) async {
     AppState app = await AppState.load();
-    app.scoreboardSetupStates[app.lastScoreboardIndex] = state;
+    app.scoreboardSetupStates[app.activeIndex] = state;
     await AppState.store();
   }
+
+  static Future setName(String name) async {
+    AppState app = await AppState.load();
+    app.scoreboardNames[app.activeIndex] = name;
+    await AppState.store();
+  }
+
+  static Future setAddress(String address) async {
+    AppState app = await AppState.load();
+    app.scoreboardAddresses[app.activeIndex] = address;
+    await AppState.store();
+
+  }
+
+  static Future setActive(int index) async {
+    AppState app = await AppState.load();
+    app.activeIndex = index;
+    await AppState.store();
+  }
+
+  static Future addScoreboard() async {
+    AppState app = await AppState.load();
+    app.scoreboardAddresses.add("");
+    app.scoreboardNames.add("My Scoreboard");
+    app.scoreboardSetupStates.add(SetupState.FACTORY);
+    await AppState.store();
+  }
+
+  static Future<Channel> getChannel() async {
+    AppState app = await AppState.load();
+    return Channel(ipAddress: app.scoreboardAddresses[app.activeIndex]);
+    
+  }
+
 }
 
   var root = 'http://192.168.0.197:5005/';

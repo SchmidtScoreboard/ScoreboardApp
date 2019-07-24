@@ -26,7 +26,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       ),
       child: Scaffold(
         body: getOnboardWidget(context),
-        backgroundColor: Colors.transparent
+        backgroundColor: Colors.transparent,
       )
     );
   }
@@ -106,7 +106,7 @@ class SplashScreenState extends OnboardingScreenState {
   Widget getOnboardWidget(BuildContext context) {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Scoreboard Controller"),
-      getOnboardInstruction("Welcome to the scoreboard controller app! Make sure your scoreboard is plugged in and powered on, then we'll get connected!"),
+      getOnboardInstruction("Welcome to the scoreboard controller app! Make sure your scoreboard is plugged in and powered on, then we'll get connected!\n\nIf your scoreboard is showing an error, hold down the side button for ten seconds to reset it."),
       getOnboardButton(context, "Get Started", ConnectToHotspotScreen(), callback)
       //TODO include dope hero image
     ]);
@@ -245,8 +245,15 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
   }
 
   Future callback() async {
-    ScoreboardSettings scoreboard = await Channel.localChannel.syncRequest();
-    await AppState.setState(SetupState.READY);
+    try {
+      ScoreboardSettings scoreboard = await Channel.localChannel.syncRequest();
+    } catch (e) {
+      // Do nothing
+    } finally {
+      await AppState.setState(SetupState.READY);
+      // TODO set address based off the camera picture
+      await AppState.setAddress("http://127.0.0.1:5005/");
+    }
   }
 
   QRReaderController controller;
@@ -254,7 +261,7 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
   Widget getOnboardWidget(BuildContext context) {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Scan your Scoreboard's Address"),
-      getOnboardInstruction("Once your scoreboard restarts, it will display a scannable code that will sync it to this app"),
+      getOnboardInstruction("Once your scoreboard restarts, it will display a scannable code that will sync it to this app.\n\nIf it does not show a scannable code after restart, double tap the button on the side of the scoreboard."),
       FutureBuilder(
         future: getCameras(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
