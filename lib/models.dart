@@ -85,7 +85,7 @@ class Screen {
       }
       return ScoreboardSettings(activeScreen: json["active_screen"],
         screenOn: json["screen_on"],
-        name: json["scoreboard_name"] ?? "My New Scoreboard",
+        name: json["name"] ?? "My New Scoreboard",
         screens: screens); 
     }
   
@@ -97,6 +97,7 @@ class Screen {
       return new ScoreboardSettings(
         activeScreen: activeScreen, 
         screenOn: screenOn, 
+        name: name,
         screens: new List<Screen>.from(screensCopy));
     }
   
@@ -112,6 +113,7 @@ class Screen {
       ret["active_screen"] = activeScreen;
       ret["screen_on"] = screenOn;
       ret["screens"] = [];
+      ret["name"] = name;
       for(Screen s in screens) {
         ret["screens"].add(s.toJson());
     }
@@ -142,6 +144,12 @@ class AppState {
   static AppState _singleton;
 
   AppState._internal();
+  AppState._default() {
+    scoreboardAddresses = [""];
+    scoreboardNames = ["My Scoreboard"];
+    scoreboardSetupStates = [SetupState.FACTORY];
+    activeIndex = 0;
+  }
   
   static Future<AppState> load() async {
     if(_singleton != null) {
@@ -152,24 +160,21 @@ class AppState {
       try {
         _singleton.scoreboardAddresses = prefs.getStringList(ADDRESS_KEY);
         _singleton.scoreboardSetupStates = prefs.getStringList(SETUP_STATE_KEY).map((s) => SetupState.values[int.parse(s)]).toList();
+        _singleton.scoreboardNames = prefs.getStringList(NAMES_KEY);
         _singleton.activeIndex = prefs.getInt(LAST_INDEX_KEY);
+        if(_singleton.scoreboardAddresses.length != _singleton.scoreboardSetupStates.length || _singleton.scoreboardNames.length != _singleton.scoreboardAddresses.length) {
+          throw Exception("Invalid addresses, setup states, or names");
+        } else if (_singleton.activeIndex >= _singleton.scoreboardAddresses.length || _singleton.activeIndex < 0) {
+          throw Exception("Invalid last index");
+        }
+        return _singleton;
       } catch (e) {
         //invalid string lists, set everything to basic values and return. This is an OK state if nothing has been done
         print(e);
-        _singleton = AppState._internal();
-        _singleton.scoreboardAddresses = [""];
-        _singleton.scoreboardNames = ["My Scoreboard"];
-        _singleton.scoreboardSetupStates = [SetupState.FACTORY];
-        _singleton.activeIndex = 0;
+        _singleton = AppState._default();
 
         return _singleton;
       }
-      if(_singleton.scoreboardAddresses.length != _singleton.scoreboardSetupStates.length) {
-        throw Exception("Invalid addresses and setup states");
-      } else if (_singleton.activeIndex >= _singleton.scoreboardAddresses.length) {
-        throw Exception("Invalid last index");
-      }
-      return _singleton;
     }
   }
 
@@ -215,6 +220,21 @@ class AppState {
     app.scoreboardAddresses.add("");
     app.scoreboardNames.add("My Scoreboard");
     app.scoreboardSetupStates.add(SetupState.FACTORY);
+    await AppState.store();
+  }
+
+  static Future removeScoreboard() async {
+    AppState app = await AppState.load();
+    int index = app.activeIndex;
+    app.scoreboardAddresses.removeAt(index);
+    app.scoreboardNames.removeAt(index);
+    app.scoreboardSetupStates.removeAt(index);
+    app.activeIndex = 0;
+
+    if(app.scoreboardAddresses.length == 0) {
+      //Add a new default scoreboard so we don't crash
+      app = AppState._default();
+    }
     await AppState.store();
   }
 

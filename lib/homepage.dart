@@ -38,10 +38,10 @@ Widget buildHome() {
               return ScanQRCodeScreen();
             case SetupState.READY:
               print("Got setup state READY");
-              return MyHomePage(title: "My Scoreboard");
+              return MyHomePage();
             default:
               print("Error reading scoreboard setup state: $setupState");
-              return MyHomePage(title: "My Scoreboard");
+              return MyHomePage();
           }
         }
       } else if (snapshot.hasError) {
@@ -57,8 +57,7 @@ Widget buildHome() {
   );
 }
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title, }) : super(key: key);
-  final String title;
+  MyHomePage({Key key,}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -71,9 +70,9 @@ class _MyHomePageState extends State<MyHomePage> {
   bool refreshingScreenSelect;
   bool refreshingPower;
   @override
-  void initState() async {
+  void initState() {
     super.initState();
-    channel = await AppState.getChannel();
+    //channel = await AppState.getChannel();
     refreshingPower = false;
     refreshingScreenSelect = false;
     refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
@@ -159,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
         return Scaffold(
           appBar: AppBar(
-            title: Text(widget.title),
+            title: Text(settings != null ? settings.name :  "Loading"),
             actions: actions,
           ), body: body,
           floatingActionButton: fab,
@@ -203,6 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
         icon: Icon(Icons.settings),
         tooltip: 'Settings',
         onPressed: () { 
+          refreshTimer.cancel();
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => SettingsScreen(settings: settings))
@@ -213,10 +213,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildFab() {
+    print("Screen on: ${settings.screenOn}");
     return FloatingActionButton(
         onPressed: () {
           setState(() {
-            settings.screenOn = !(settings.screenOn);
             refreshingPower = true;
           });
           Future<ScoreboardSettings> responseFuture = Channel.localChannel.powerRequest(!settings.screenOn);

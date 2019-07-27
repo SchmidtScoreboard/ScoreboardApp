@@ -289,7 +289,7 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
           }
         },
       ), 
-      getOnboardButton(context, "Confirm", MyHomePage(title: "Scoreboard"), callback),
+      getOnboardButton(context, "Confirm", MyHomePage(), callback),
       RaisedButton(
         //TODO make this not look like shit
         child: Padding(

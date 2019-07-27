@@ -1,12 +1,14 @@
 
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'models.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'teams.dart';
 import 'channel.dart';
+import 'homepage.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 
 
@@ -32,6 +34,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   bool requesting = false;
   @override
   void initState() {
+    print("Initializing settings state");
     originalSettings = widget.settings.clone();
     mutableSettings = widget.settings.clone();
 
@@ -44,40 +47,17 @@ class SettingsScreenState extends State<SettingsScreen> {
   bool wifiDirty() => wifi.isNotEmpty && password.isNotEmpty;
   bool nameDirty() => mutableSettings.name != originalSettings.name;
 
-  // void submitCallback() {
-  //   if(!requesting) {
-  //     setState(() {
-  //       requesting = true;
-  //     });
-  //     if(settingsDirty()) {
-  //       Future<ScoreboardSettings> future = Channel.localChannel.configureSettings(mutableSettings);
-  //       future.then((ScoreboardSettings settings) {
-  //         if(wifiDirty()) {
-  //           Future wifiFuture = wifiCallback();
-  //           wifiFuture.then((dynamic) {
-
-  //           });
-  //         } else {
-  //           setState(() {
-  //             originalSettings = settings.clone();
-  //             mutableSettings = settings.clone();
-  //             requesting = false;
-  //           });
-  //         }
-  //       }); 
-  //     } else if(wifiDirty()) {
-  //       wifiCallback();
-  //     }
-  //   }
-  // }
-
   Future submitCallback() async {
     if(!requesting) {
+      setState(() {
+        requesting = true;
+      });
       ScoreboardSettings settings = await handleSettings();
       await handleName();
       await handleWifi();
 
       setState(() {
+        print(settings.name);
         originalSettings = settings.clone();
         mutableSettings = settings.clone();
         requesting = false;
@@ -86,22 +66,28 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<ScoreboardSettings> handleSettings() async {
-    if(settingsDirty()) {
-      return await Channel.localChannel.configureSettings(mutableSettings);
-    } else {
-      return mutableSettings;
+    try {
+      if(settingsDirty()) {
+        print("Settings dirty");
+        return await Channel.localChannel.configureSettings(mutableSettings);
+      }
+    } catch (e) {
+      //TDOO  display an error
     }
+    return mutableSettings;
 
   }
 
   Future handleName() async {
     if(nameDirty()) {
+      print("Name dirty");
       AppState.setName(mutableSettings.name);
     }
   }
 
   Future handleWifi() async {
     if(wifiDirty()) {
+      print("Wifi dirty");
       ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(wifi, password); //TODO replcae all these localChannels with the actual addresses
       await AppState.setState(SetupState.SYNC);
       Navigator.of(context).pop(); //get out of this page and back to the home screen, which should hopefully rebuild into QR state
@@ -111,12 +97,49 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("Mutable settings name: " + mutableSettings.name);
     return WillPopScope(child: 
       Scaffold(
         appBar: AppBar(
           title: Text("Edit Scoreboard Settings"),
         ),
         body: ( ListView(children: <Widget>[
+          ListTile(
+            leading: Icon(Icons.tv),
+            title: Text("Rename this scoreboard"),
+            subtitle: Text(mutableSettings.name),
+            onTap: () {
+              String name = mutableSettings.name;
+              AlertDialog dialog = AlertDialog(
+                title: Text("Enter a new scoreboard name:"),
+                content: TextField(
+                  maxLines: 1, 
+                  maxLength: 32,
+                  decoration: InputDecoration(labelText: "Scoreboard Name"),
+                  //initialValue: mutableSettings.name,
+                  
+                  onChanged: (String newName) {
+                      name = newName;
+                    },
+                  ),
+                actions: <Widget>[
+                  new FlatButton(child: Text("Cancel"), 
+                    onPressed: () { 
+                      print("Pressed cancel"); 
+                      Navigator.of(context).pop();
+                    },),
+                  new FlatButton(child: Text("Confirm"), 
+                    onPressed: () { 
+                      print("Pressed confirm"); 
+                      setState(() {
+                        mutableSettings.name = name;
+                      });
+                      Navigator.of(context).pop();
+                    },)
+                ],
+              );
+              showDialog(context: context, builder: (BuildContext context) {return dialog;});
+            },),
           ExpansionTile(
             leading: Icon(Icons.wifi),
             title: Text("WiFi Settings"),
@@ -174,6 +197,28 @@ class SettingsScreenState extends State<SettingsScreen> {
             title: Text("Delete this scoreboard", style: TextStyle(color: Colors.red)),
             onTap: () { 
               //TODO show delete popup, wipe settings and reset to main screen
+              AlertDialog alert = AlertDialog(
+                title: Text("Are you sure?"),
+                content: Text("This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text("Cancel"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text("Delete", style: TextStyle(color: Colors.red),),
+                    onPressed: () async {
+                      await AppState.removeScoreboard();
+                      Navigator.of(context).pop();
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => buildHome()));
+                    },
+                  )
+                ],
+              );
+              showDialog(context: context, builder: (BuildContext context) { return alert; });
+
 
             }
           )
