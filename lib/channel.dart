@@ -18,7 +18,10 @@ class Channel {
   Future<ScoreboardSettings> configRequest() async {
     final response = await http.get(ipAddress);
     if (response.statusCode == 200) {
-      return ScoreboardSettings.fromJson(json.decode(response.body));
+      ScoreboardSettings newScoreboard = ScoreboardSettings.fromJson(json.decode(response.body));
+      await AppState.setName(newScoreboard.name);
+      return newScoreboard;
+
     } else {
       throw Exception("Failed to load scoreboard settings");
     }

@@ -6,6 +6,146 @@ import 'settings.dart';
 import 'channel.dart';
 import 'onboarding.dart';
 import 'dart:math';
+import 'package:flutter_slidable/flutter_slidable.dart';
+
+
+class ScoreboardDrawer extends StatefulWidget {
+  final Function cleanup;
+  ScoreboardDrawer({Key key, this.cleanup}) : super(key: key);
+
+  @override
+  _ScoreboardDrawerState createState() => _ScoreboardDrawerState();
+}
+
+class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: AppState.load(),
+      builder: (context, snapshot) {
+        if(snapshot.hasData) {
+          AppState state = snapshot.data;
+          return Drawer(
+            child: Column(
+              children: <Widget>[
+                DrawerHeader(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'My Scoreboards',
+                        style: TextStyle(
+                          fontSize: 18
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                ),
+                Expanded(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: _buildDrawerList(state, widget.cleanup, context)
+                  )
+                ),
+                Align(
+                  alignment: FractionalOffset.bottomCenter,
+                  child: ListTile(
+                    leading: Icon(Icons.add),
+                    title: Text("Add a new scoreboard",),
+                    onTap: () async {
+                      await AppState.addScoreboard();
+                      widget.cleanup();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => buildHome())
+                      );
+                      
+                    },
+                  ),
+                )
+
+              ],
+            )
+          );
+        } else {
+          return Text("Loading");
+        }
+
+      }
+    );
+  }
+
+
+  List<Widget> _buildDrawerList(AppState state, Function cleanup, BuildContext context) {
+    List<Widget> widgets = [];
+    for(int i = 0; i < state.scoreboardAddresses.length; i++) {
+      widgets.add(
+      Slidable(
+        key: 
+          ValueKey(i),
+        child: 
+          ListTile(
+            title: Text(
+              state.scoreboardNames[i],
+              style: i == state.activeIndex ? TextStyle(fontWeight: FontWeight.bold) : null,
+            ),
+            onTap: () async {
+              await AppState.setActive(i);
+              cleanup();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => buildHome())
+              );
+            }
+          ),
+        actionPane: 
+          SlidableDrawerActionPane(),
+        secondaryActions: <Widget>[
+          IconSlideAction(
+            icon: Icons.delete, 
+            color: Colors.red,
+            onTap: () async {
+              //show alert dialog
+
+              AlertDialog alert = AlertDialog(
+                title: Text("Are you sure?"),
+                content: Text("This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text("Cancel"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text("Delete", style: TextStyle(color: Colors.red),),
+                    onPressed: () async {
+                      await AppState.removeScoreboard(index: i);
+                      Navigator.of(context).pop();
+                      setState(() {
+
+                      });
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => buildHome())
+                      );
+                    },
+                  )
+                ],
+              );
+              showDialog(context: context, builder: (BuildContext context) { return alert; });
+            },
+          )
+        ],
+        
+      ));
+    }
+    return widgets;
+  }
+
+}
 
 Widget buildHome() {
   return FutureBuilder(
@@ -95,7 +235,7 @@ class _MyHomePageState extends State<MyHomePage> {
           body = _buildHome();
           actions = _buildActions();      
           fab = _buildFab();
-          drawer = _buildDrawer();
+          drawer = ScoreboardDrawer(cleanup: () { refreshTimer.cancel(); });
           
         } else if (snapshot.hasError) {
           body = ListView(
@@ -151,7 +291,7 @@ class _MyHomePageState extends State<MyHomePage> {
               )
             ]
           );
-          drawer = _buildDrawer();
+          drawer = ScoreboardDrawer(cleanup: () { refreshTimer.cancel(); });
         } else {
           body = Center(
             child: CircularProgressIndicator());
@@ -169,32 +309,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildDrawer() {
-    return FutureBuilder(
-      future: AppState.load(),
-      builder: (context, snapshot) {
-        if(snapshot.hasData) {
-          AppState state = snapshot.data;
-          return Drawer(
-            child: ListView(
-              children: <Widget>[
-                ListTile(
-                  title: Text("Scoreboard 1"),
-                  
-                ), ListTile(
-                  title: Text("Scoreboard 2")
-                )
-                
-
-              ],
-            ),
-          );
-        } else {
-          return Text("Loading");
-        }
-
-      });
-  }
 
   List<Widget> _buildActions() {
     return <Widget> [
@@ -213,7 +327,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildFab() {
-    print("Screen on: ${settings.screenOn}");
     return FloatingActionButton(
         onPressed: () {
           setState(() {

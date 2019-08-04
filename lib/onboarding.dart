@@ -27,11 +27,16 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       child: Scaffold(
         body: getOnboardWidget(context),
         backgroundColor: Colors.transparent,
+        drawer: ScoreboardDrawer(cleanup: (){}) 
       )
     );
   }
   
   Widget getOnboardWidget(BuildContext context);
+
+  void cleanup() {
+    //Children that need to clean up timers/etc can use this
+  }
 
 }
 
@@ -125,8 +130,20 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
   Channel channel;
   bool connected = false;
 
+  @override
+  void cleanup() {
+    refreshTimer.cancel();
+  }
+
   Future callback() async {
+    cleanup();
     await AppState.setState(SetupState.WIFI_CONNECT);
+  }
+
+  @override
+  void dispose() {
+    refreshTimer.cancel();
+    super.dispose();
   }
 
   @override
@@ -294,7 +311,7 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
         //TODO make this not look like shit
         child: Padding(
           child: Text("If your scoreboard is showing an error,\ntap here to restart setup"),
-          padding: EdgeInsets.symmetric(vertical: 5)
+          padding: EdgeInsets.all(5)
         ),
         onPressed: () {
           AppState.setState(SetupState.HOTSPOT);

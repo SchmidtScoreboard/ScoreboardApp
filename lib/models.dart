@@ -150,6 +150,13 @@ class AppState {
     scoreboardSetupStates = [SetupState.FACTORY];
     activeIndex = 0;
   }
+
+  static void resetState(AppState state) {
+    state.scoreboardAddresses = [""];
+    state.scoreboardNames = ["My Scoreboard"];
+    state.scoreboardSetupStates = [SetupState.FACTORY];
+    state.activeIndex = 0;
+  }
   
   static Future<AppState> load() async {
     if(_singleton != null) {
@@ -170,8 +177,9 @@ class AppState {
         return _singleton;
       } catch (e) {
         //invalid string lists, set everything to basic values and return. This is an OK state if nothing has been done
-        print(e);
-        _singleton = AppState._default();
+        _singleton = AppState._internal();
+        resetState(_singleton);
+
 
         return _singleton;
       }
@@ -217,15 +225,44 @@ class AppState {
 
   static Future addScoreboard() async {
     AppState app = await AppState.load();
+    bool foundMyScoreboard = false;
+    String name = "My Scoreboard";
+    for (String name in app.scoreboardNames) {
+      if(name.startsWith("My Scoreboard")) {
+        foundMyScoreboard = true;
+        break;
+      }
+    }
+    if(foundMyScoreboard) {
+      //Find the highest numbered one
+      int number = 1;
+      for (String name in app.scoreboardNames) {
+        RegExp exp = new RegExp(r"^My Scoreboard\s([0-9]+)");
+        List<Match> matches = exp.allMatches(name).toList();
+        if(matches.length > 0) {
+          Match m = matches[0];
+          if(m.groupCount == 1 && m.group(1) != null) {
+            int candidate = int.tryParse(m.group(1));
+            if(candidate != null && candidate > number) {
+              number = candidate;
+            }
+          }
+        }
+      }
+      name = "My Scoreboard ${number + 1}";
+    }
+
     app.scoreboardAddresses.add("");
-    app.scoreboardNames.add("My Scoreboard");
+    app.scoreboardNames.add(name);
     app.scoreboardSetupStates.add(SetupState.FACTORY);
     await AppState.store();
   }
 
-  static Future removeScoreboard() async {
+  static Future removeScoreboard({int index}) async {
     AppState app = await AppState.load();
-    int index = app.activeIndex;
+    if(index == null){
+      index = app.activeIndex;
+    }
     app.scoreboardAddresses.removeAt(index);
     app.scoreboardNames.removeAt(index);
     app.scoreboardSetupStates.removeAt(index);
@@ -233,7 +270,7 @@ class AppState {
 
     if(app.scoreboardAddresses.length == 0) {
       //Add a new default scoreboard so we don't crash
-      app = AppState._default();
+      resetState(app);
     }
     await AppState.store();
   }
