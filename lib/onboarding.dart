@@ -273,42 +273,71 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
     }
   }
 
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    
+    getCameras().then((var value) {
+      cameras = value;
+      try {
+        controller = new QRReaderController(cameras[0], 
+          ResolutionPreset.medium,
+          [CodeFormat.qr],
+          (dynamic value) {
+            print(value);
+          }
+        );
+      } catch (e) {
+        print("Error setting up QRReader");
+      }
+
+      controller.initialize().then((_) {
+        if (!mounted) {
+          return;
+        }
+        initialized = true;
+        setState(() {});
+        controller.startScanning();
+        print("Starting Scanning");
+      });
+
+    }).catchError((var error) {
+      print(error);
+    });
+    
+  }
+
+  Widget getWidget() {
+    if(!initialized) {
+      return new Text("Not initalized");
+    } else if (cameras.length == 0) {
+      return new Text("No cameras :(");
+    } else if (!controller.value.isInitialized) {
+      return new Text("Controller not initialized");
+    } else {
+      return new AspectRatio(
+        aspectRatio: controller.value.aspectRatio,
+        child: new QRReaderPreview(controller)
+      );
+    }
+  }
+  bool initialized = false;
   QRReaderController controller;
+  List<CameraDescription> cameras;
   @override
   Widget getOnboardWidget(BuildContext context) {
     return layoutWidgets(<Widget>[
-      getOnboardTitle("Scan your Scoreboard's Address"),
-      getOnboardInstruction("Once your scoreboard restarts, it will display a scannable code that will sync it to this app.\n\nIf it does not show a scannable code after restart, double tap the button on the side of the scoreboard."),
-      FutureBuilder(
-        future: getCameras(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if(snapshot.hasData) {
-            List<CameraDescription> cameras = snapshot.data;
-            if(cameras.length > 0) {
-              controller = new QRReaderController(cameras[0], 
-                ResolutionPreset.medium,
-                [CodeFormat.qr],
-                (dynamic value) {
-                  print(value);
-                });
-              /*return new AspectRatio(
-                aspectRatio: controller.value.aspectRatio,
-                child: new QRReaderPreview(controller)
-              );*/
-              return new Text("Got camera!");
-            } else {
-              return new Text("No cameras detected :(");
-            }
-          } else if(snapshot.hasError) {
-              return new Text(snapshot.error);
-          } else {
-            return new Text("Loading camera...");
-          }
-        },
-      ), 
+      getOnboardTitle("Scan Address"),
+      getOnboardInstruction("Once your scoreboard restarts, it will display a scannable code that will sync it to this app"),
+      getWidget(),
       getOnboardButton(context, "Confirm", MyHomePage(), callback),
       RaisedButton(
-        //TODO make this not look like shit
         child: Padding(
           child: Text("If your scoreboard is showing an error,\ntap here to restart setup"),
           padding: EdgeInsets.all(5)
@@ -321,7 +350,6 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
           );
         },
         shape: StadiumBorder())
-      //TODO include dope hero image
     ]);
   }
 

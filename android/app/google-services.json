@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "481169129289",
+    "firebase_url": "https://scoreboard-app-9da85.firebaseio.com",
+    "project_id": "scoreboard-app-9da85",
+    "storage_bucket": "scoreboard-app-9da85.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:481169129289:android:a88a179c9ecf4129",
+        "android_client_info": {
+          "package_name": "com.markwschmidt.scoreboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "481169129289-nv3pivcv780b3t056evaa4r1d00gsg20.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkNPN03Edvx3Uh3hXju4CI8lEve5RBCUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "481169129289-nv3pivcv780b3t056evaa4r1d00gsg20.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

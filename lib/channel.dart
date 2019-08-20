@@ -10,7 +10,8 @@ class Channel {
   Channel({this.ipAddress});
 
   static final Channel hotspotChannel = Channel(ipAddress: "http://192.168.4.1:5005/");
-  static final Channel localChannel = Channel(ipAddress: "http://127.0.0.1:5005/");
+  // static final Channel localChannel = Channel(ipAddress: "http://127.0.0.1:5005/");
+  static final Channel localChannel = Channel(ipAddress: "http://192.168.0.190:5005/");
 
   // String root = 'http://192.168.0.197:5005/';
   // String root = "http://127.0.0.1:5005/";
