@@ -7,6 +7,7 @@ import 'channel.dart';
 import 'onboarding.dart';
 import 'dart:math';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 
 class ScoreboardDrawer extends StatefulWidget {
@@ -209,6 +210,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Channel channel;
   bool refreshingScreenSelect;
   bool refreshingPower;
+  bool shouldRefreshConfig = true;
   @override
   void initState() {
     super.initState();
@@ -217,14 +219,23 @@ class _MyHomePageState extends State<MyHomePage> {
     refreshingScreenSelect = false;
     refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       setState(() {
+        shouldRefreshConfig = true;
       });
     });
+  }
+
+  Future<ScoreboardSettings> getConfig() {
+    if(shouldRefreshConfig && !refreshingPower && !refreshingScreenSelect) {
+      return Channel.localChannel.configRequest();
+    } else {
+      return Future.value(settings);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<ScoreboardSettings>(
-      future: Channel.localChannel.configRequest(),
+      future: getConfig(),
       builder: (context, snapshot) {
         Widget body;
         List<Widget> actions;
@@ -236,6 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
           actions = _buildActions();      
           fab = _buildFab();
           drawer = ScoreboardDrawer(cleanup: () { refreshTimer.cancel(); });
+          shouldRefreshConfig = false;
           
         } else if (snapshot.hasError) {
           body = ListView(
@@ -292,6 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ]
           );
           drawer = ScoreboardDrawer(cleanup: () { refreshTimer.cancel(); });
+          shouldRefreshConfig = false;
         } else {
           body = Center(
             child: CircularProgressIndicator());
@@ -363,6 +376,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildRow(Screen screen) {
+    IconData i = Icons.album;
+    switch (screen.id) {
+      case ScreenId.NHL:
+        i = FontAwesomeIcons.hockeyPuck;
+        break;
+      case ScreenId.MLB:
+        i = FontAwesomeIcons.baseballBall;
+        break;
+      default:
+    }
     return new Card( 
       color: screen.id == settings.activeScreen && settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
       
@@ -393,7 +416,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ListTile(
             leading: screen.id == settings.activeScreen && refreshingScreenSelect ? 
               CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),) :
-              Icon(Icons.album, color: Colors.white,),
+              Icon(i, color: Colors.white, size: 40,),
             title: Text(screen.name,
             style: TextStyle(fontSize: 24, color: Colors.white),),
             subtitle: Text(screen.subtitle, style: TextStyle(color: Colors.white)),
