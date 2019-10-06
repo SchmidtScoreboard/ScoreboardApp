@@ -1,10 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:qr_mobile_vision/qr_camera.dart';
 import 'dart:async';
 import 'models.dart';
 import 'homepage.dart';
 import 'channel.dart';
-import 'package:fast_qr_reader_view/fast_qr_reader_view.dart';
+import 'package:qr_mobile_vision/qr_camera.dart';
+
+// import 'package:fast_qr_reader_view/fast_qr_reader_view.dart';
 
 abstract class OnboardingScreen extends StatefulWidget {
 
@@ -112,7 +115,14 @@ class SplashScreenState extends OnboardingScreenState {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Scoreboard Controller"),
       getOnboardInstruction("Welcome to the scoreboard controller app! Make sure your scoreboard is plugged in and powered on, then we'll get connected!\n\nIf your scoreboard is showing an error, hold down the side button for ten seconds to reset it."),
-      getOnboardButton(context, "Get Started", ConnectToHotspotScreen(), callback)
+      getOnboardButton(context, "Get Started", ConnectToHotspotScreen(), callback),
+      FlatButton(child: Text("Skip to scan"), onPressed: () {
+        AppState.setState(SetupState.SYNC);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ScanQRCodeScreen())
+        );
+      },)
       //TODO include dope hero image
     ]);
   }
@@ -127,7 +137,6 @@ class ConnectToHotspotScreen extends OnboardingScreen {
 
 class ConnectToHotspotScreenState extends OnboardingScreenState {
   Timer refreshTimer;
-  Channel channel;
   bool connected = false;
 
   @override
@@ -149,7 +158,6 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
   @override
   void initState() {
     super.initState();
-    channel = new Channel();
     refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
       if(!connected) {
         setState(() {
@@ -165,7 +173,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
       getOnboardInstruction("In your device's Settings app, connect to the wifi network as shown on your scoreboard:"),
       //TODO add dope hero image here
       FutureBuilder(
-        future: Channel.localChannel.connectRequest(),
+        future: Channel.hotspotChannel.connectRequest(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if(snapshot.hasData) {
             print("Connected to server");
@@ -196,7 +204,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   String password;
 
   Future callback() async {
-    ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(wifi, password);
+    ScoreboardSettings scoreboard = await Channel.hotspotChannel.wifiRequest(wifi, password);
     await AppState.setState(SetupState.SYNC);
   }
   @override
@@ -256,12 +264,13 @@ class ScanQRCodeScreen extends OnboardingScreen {
 }
 
 class ScanQrCodeScreenState extends OnboardingScreenState {
-
-  Future<List<CameraDescription>> getCameras() async {
-    return await availableCameras();
-  }
+  String code = "No code yet";
+  // Future<List<CameraDescription>> getCameras() async {
+  //   return await availableCameras();
+  // }
 
   Future callback() async {
+    //TODO get scoreboard address
     try {
       ScoreboardSettings scoreboard = await Channel.localChannel.syncRequest();
     } catch (e) {
@@ -269,13 +278,12 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
     } finally {
       await AppState.setState(SetupState.READY);
       // TODO set address based off the camera picture
-      await AppState.setAddress("http://127.0.0.1:5005/");
+      await AppState.setAddress("http://192.168.0.197:5005/");
     }
   }
 
   @override
   void dispose() {
-    controller?.dispose();
     super.dispose();
   }
 
@@ -283,53 +291,40 @@ class ScanQrCodeScreenState extends OnboardingScreenState {
   void initState() {
     super.initState();
     
-    getCameras().then((var value) {
-      cameras = value;
-      try {
-        controller = new QRReaderController(cameras[0], 
-          ResolutionPreset.medium,
-          [CodeFormat.qr],
-          (dynamic value) {
-            print(value);
-          }
-        );
-      } catch (e) {
-        print("Error setting up QRReader");
-      }
-
-      controller.initialize().then((_) {
-        if (!mounted) {
-          return;
-        }
-        initialized = true;
-        setState(() {});
-        controller.startScanning();
-        print("Starting Scanning");
-      });
-
-    }).catchError((var error) {
-      print(error);
-    });
     
   }
-
   Widget getWidget() {
-    if(!initialized) {
-      return new Text("Not initalized");
-    } else if (cameras.length == 0) {
-      return new Text("No cameras :(");
-    } else if (!controller.value.isInitialized) {
-      return new Text("Controller not initialized");
-    } else {
-      return new AspectRatio(
-        aspectRatio: controller.value.aspectRatio,
-        child: new QRReaderPreview(controller)
-      );
-    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+          Center(
+              child: new SizedBox(
+                width: 300.0,
+                height: 300.0,
+                child: new QrCamera(
+                  onError: (context, error) => Text(
+                        error.toString(),
+                        style: TextStyle(color: Colors.red),
+                      ),
+                  qrCodeCallback: (out) {
+                    setState(() {
+                      code = out;
+                    });
+                  },
+                  child: new Container(
+                    decoration: new BoxDecoration(
+                      color: Colors.transparent,
+                      border: Border.all(color: Colors.orange, width: 10.0, style: BorderStyle.solid),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        new Text("QRCODE: $code"),
+      ],
+    );
   }
-  bool initialized = false;
-  QRReaderController controller;
-  List<CameraDescription> cameras;
   @override
   Widget getOnboardWidget(BuildContext context) {
     return layoutWidgets(<Widget>[

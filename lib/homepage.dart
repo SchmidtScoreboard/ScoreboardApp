@@ -222,11 +222,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void dispose() { 
+    refreshTimer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<ScoreboardSettings>(
       future: Channel.localChannel.configRequest(),
       builder: (context, snapshot) {
         Widget body;
+        
         List<Widget> actions;
         Widget fab;
         Widget drawer;

@@ -14,7 +14,7 @@ class Team {
     109 : Team("Arizona", "D-backs", "ARI", Color.fromRGBO(167, 25, 48, 1.0), Color.fromRGBO(227, 212, 173, 1.0)),
     110 : Team("Baltimore", "Orioles", "BAL", Color.fromRGBO(223, 70, 1, 1.0), Color.fromRGBO(39, 37, 31, 1.0)),
     111 : Team("Boston", "Red Sox", "BOS", Color.fromRGBO(198, 1, 31, 1.0), Color.fromRGBO(255, 255, 255, 1.0)),
-    112 : Team("Cubs", "Cubs", "CHC", Color.fromRGBO(14, 51, 134, 1.0), Color.fromRGBO(204, 52, 51, 1.0)),
+    112 : Team("Chicago", "Cubs", "CHC", Color.fromRGBO(14, 51, 134, 1.0), Color.fromRGBO(204, 52, 51, 1.0)),
     113 : Team("Cincinnati", "Reds", "CIN", Color.fromRGBO(198, 1, 31, 1.0), Color.fromRGBO(0, 0, 0, 1.0)),
     114 : Team("Cleveland", "Indians", "CLE", Color.fromRGBO(227, 25, 55, 1.0), Color.fromRGBO(12, 35, 64, 1.0)),
     115 : Team("Colorado", "Rockies", "COL", Color.fromRGBO(51, 0, 111, 1.0), Color.fromRGBO(196, 206, 212, 1.0)),
