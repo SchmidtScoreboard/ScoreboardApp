@@ -52,18 +52,20 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
                 ),
                 Align(
                   alignment: FractionalOffset.bottomCenter,
-                  child: ListTile(
-                    leading: Icon(Icons.add),
-                    title: Text("Add a new scoreboard",),
-                    onTap: () async {
-                      await AppState.addScoreboard();
-                      widget.cleanup();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => buildHome())
-                      );
-                      
-                    },
+                  child: SafeArea(
+                    child: ListTile(
+                      leading: Icon(Icons.add),
+                      title: Text("Add a new scoreboard",),
+                      onTap: () async {
+                        await AppState.addScoreboard();
+                        widget.cleanup();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => buildHome())
+                        );
+                        
+                      },
+                    )
                   ),
                 )
 
@@ -265,7 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ListTile(
                     leading: Icon(Icons.sync),
                     title: Text("If scoreboard is working normally.."),
-                    subtitle: Text("Click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
+                    subtitle: Text("Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
                     onTap: () async {
                       await AppState.setState(SetupState.SYNC);
                       setState(() {
