@@ -10,7 +10,8 @@ class Channel {
   Channel({this.ipAddress});
 
   static final Channel hotspotChannel = Channel(ipAddress: "http://192.168.4.1:5005/");
-  static final Channel localChannel = Channel(ipAddress: "http://127.0.0.1:5005/");
+  // static final Channel localChannel = Channel(ipAddress: "http://127.0.0.1:5005/");
+  static final Channel localChannel = Channel(ipAddress: "http://192.168.0.197:5005/");
 
   // String root = 'http://192.168.0.197:5005/';
   // String root = "http://127.0.0.1:5005/";
@@ -21,7 +22,6 @@ class Channel {
       ScoreboardSettings newScoreboard = ScoreboardSettings.fromJson(json.decode(response.body));
       await AppState.setName(newScoreboard.name);
       return newScoreboard;
-
     } else {
       throw Exception("Failed to load scoreboard settings");
     }
