@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
@@ -9,7 +8,6 @@ import 'dart:math';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-
 class ScoreboardDrawer extends StatefulWidget {
   final Function cleanup;
   ScoreboardDrawer({Key key, this.cleanup}) : super(key: key);
@@ -19,16 +17,15 @@ class ScoreboardDrawer extends StatefulWidget {
 }
 
 class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: AppState.load(),
-      builder: (context, snapshot) {
-        if(snapshot.hasData) {
-          AppState state = snapshot.data;
-          return Drawer(
-            child: Column(
+        future: AppState.load(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            AppState state = snapshot.data;
+            return Drawer(
+                child: Column(
               children: <Widget>[
                 DrawerHeader(
                   child: Column(
@@ -36,85 +33,71 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
                     children: <Widget>[
                       Text(
                         'My Scoreboards',
-                        style: TextStyle(
-                          fontSize: 18
-                        ),
+                        style: TextStyle(fontSize: 18),
                       ),
                     ],
                   ),
-                  
                 ),
                 Expanded(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: _buildDrawerList(state, widget.cleanup, context)
-                  )
-                ),
+                    child: ListView(
+                        shrinkWrap: true,
+                        children:
+                            _buildDrawerList(state, widget.cleanup, context))),
                 Align(
                   alignment: FractionalOffset.bottomCenter,
                   child: SafeArea(
-                    child: ListTile(
-                      leading: Icon(Icons.add),
-                      title: Text("Add a new scoreboard",),
-                      onTap: () async {
-                        await AppState.addScoreboard();
-                        widget.cleanup();
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => buildHome())
-                        );
-                        
-                      },
-                    )
-                  ),
+                      child: ListTile(
+                    leading: Icon(Icons.add),
+                    title: Text(
+                      "Add a new scoreboard",
+                    ),
+                    onTap: () async {
+                      await AppState.addScoreboard();
+                      widget.cleanup();
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => buildHome()));
+                    },
+                  )),
                 )
-
               ],
-            )
-          );
-        } else {
-          return Text("Loading");
-        }
-
-      }
-    );
+            ));
+          } else {
+            return Text("Loading");
+          }
+        });
   }
 
-
-  List<Widget> _buildDrawerList(AppState state, Function cleanup, BuildContext context) {
+  List<Widget> _buildDrawerList(
+      AppState state, Function cleanup, BuildContext context) {
     List<Widget> widgets = [];
-    for(int i = 0; i < state.scoreboardAddresses.length; i++) {
-      widgets.add(
-      Slidable(
-        key: 
-          ValueKey(i),
-        child: 
-          ListTile(
+    for (int i = 0; i < state.scoreboardAddresses.length; i++) {
+      widgets.add(Slidable(
+        key: ValueKey(i),
+        child: ListTile(
             title: Text(
               state.scoreboardNames[i],
-              style: i == state.activeIndex ? TextStyle(fontWeight: FontWeight.bold) : null,
+              style: i == state.activeIndex
+                  ? TextStyle(fontWeight: FontWeight.bold)
+                  : null,
             ),
             onTap: () async {
               await AppState.setActive(i);
               cleanup();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => buildHome())
-              );
-            }
-          ),
-        actionPane: 
-          SlidableDrawerActionPane(),
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => buildHome()));
+            }),
+        actionPane: SlidableDrawerActionPane(),
         secondaryActions: <Widget>[
           IconSlideAction(
-            icon: Icons.delete, 
+            icon: Icons.delete,
             color: Colors.red,
             onTap: () async {
               //show alert dialog
 
               AlertDialog alert = AlertDialog(
                 title: Text("Are you sure?"),
-                content: Text("This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
+                content: Text(
+                    "This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
                 actions: <Widget>[
                   FlatButton(
                     child: Text("Cancel"),
@@ -123,43 +106,44 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
                     },
                   ),
                   FlatButton(
-                    child: Text("Delete", style: TextStyle(color: Colors.red),),
+                    child: Text(
+                      "Delete",
+                      style: TextStyle(color: Colors.red),
+                    ),
                     onPressed: () async {
                       await AppState.removeScoreboard(index: i);
                       Navigator.of(context).pop();
-                      setState(() {
-
-                      });
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => buildHome())
-                      );
+                      setState(() {});
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => buildHome()));
                     },
                   )
                 ],
               );
-              showDialog(context: context, builder: (BuildContext context) { return alert; });
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return alert;
+                  });
             },
           )
         ],
-        
       ));
     }
     return widgets;
   }
-
 }
 
 Widget buildHome() {
   return FutureBuilder(
     future: AppState.load(),
     builder: (BuildContext context, AsyncSnapshot snapshot) {
-      if(snapshot.hasData) {
+      if (snapshot.hasData) {
         print("Got snapshot data");
         AppState appState = snapshot.data;
         int numScoreboards = appState.scoreboardAddresses.length;
-        
-        if(numScoreboards == 0) {
+
+        if (numScoreboards == 0) {
           // Go to onboarding
           print("No scoreboards, going to onboarding");
           return SplashScreen();
@@ -169,7 +153,7 @@ Widget buildHome() {
           switch (setupState) {
             case SetupState.FACTORY:
               print("Got setup state FACTORY");
-              return SplashScreen(); 
+              return SplashScreen();
             case SetupState.HOTSPOT:
               print("Got setup state HOTSPOT");
               return ConnectToHotspotScreen();
@@ -178,7 +162,7 @@ Widget buildHome() {
               return WifiCredentialsScreen();
             case SetupState.SYNC:
               print("Got setup state SYNC");
-              return ScanQRCodeScreen();
+              return SyncScreen();
             case SetupState.READY:
               print("Got setup state READY");
               return MyHomePage();
@@ -191,16 +175,20 @@ Widget buildHome() {
         print(snapshot.error);
         return Text("Error :(");
       } else {
-        return Scaffold(appBar: AppBar(
-          title: Text("Waiting on storage"),
+        return Scaffold(
+          appBar: AppBar(
+            title: Text("Waiting on storage"),
           ),
         );
       }
     },
   );
 }
+
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key,}) : super(key: key);
+  MyHomePage({
+    Key key,
+  }) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -226,16 +214,18 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<ScoreboardSettings> getConfig() {
-    if(shouldRefreshConfig && !refreshingPower && !refreshingScreenSelect) {
-      return Channel.localChannel.configRequest();
+  Future<ScoreboardSettings> getConfig() async {
+    if (shouldRefreshConfig && !refreshingPower && !refreshingScreenSelect) {
+      AppState state = await AppState.load();
+      return Channel(ipAddress: state.scoreboardAddresses[state.activeIndex])
+          .configRequest();
     } else {
       return Future.value(settings);
     }
   }
 
   @override
-  void dispose() { 
+  void dispose() {
     refreshTimer.cancel();
     super.dispose();
   }
@@ -243,145 +233,140 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<ScoreboardSettings>(
-      future: getConfig(),
-      builder: (context, snapshot) {
-        Widget body;
-        
-        List<Widget> actions;
-        Widget fab;
-        Widget drawer;
-        if (snapshot.hasData) {
-          settings = snapshot.data;
-          body = _buildHome();
-          actions = _buildActions();      
-          fab = _buildFab();
-          drawer = ScoreboardDrawer(cleanup: () { refreshTimer.cancel(); });
-          shouldRefreshConfig = false;
-          
-        } else if (snapshot.hasError) {
-          body = ListView(
-            children: <Widget>[
-              Card(
-                child:
-                  ListTile(
-                    leading: Icon(Icons.error),
-                    title: Text("Could not connect to scoreboard"),
-                    subtitle: Text("Make sure it is powered and connected to wifi"),
-                  )
-                ),
-              Card(
-                child: 
-                  ListTile(
-                    leading: Icon(Icons.sync),
-                    title: Text("If scoreboard is working normally.."),
-                    subtitle: Text("Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
-                    onTap: () async {
-                      await AppState.setState(SetupState.SYNC);
-                      setState(() {
-                        //disable the timer
-                        refreshTimer.cancel();
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => buildHome())
-                        );
-                      });
+        future: getConfig(),
+        builder: (context, snapshot) {
+          Widget body;
 
-                    },
-                  )
-                ,
+          List<Widget> actions;
+          Widget fab;
+          Widget drawer;
+          if (snapshot.hasData) {
+            settings = snapshot.data;
+            body = _buildHome();
+            actions = _buildActions();
+            fab = _buildFab();
+            drawer = ScoreboardDrawer(cleanup: () {
+              refreshTimer.cancel();
+            });
+            shouldRefreshConfig = false;
+          } else if (snapshot.hasError) {
+            body = ListView(children: <Widget>[
+              Card(
+                  child: ListTile(
+                leading: Icon(Icons.error),
+                title: Text("Could not connect to scoreboard"),
+                subtitle: Text("Make sure it is powered and connected to wifi"),
+              )),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.sync),
+                  title: Text("If scoreboard is working normally.."),
+                  subtitle: Text(
+                      "Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
+                  onTap: () async {
+                    await AppState.setState(SetupState.SYNC);
+                    setState(() {
+                      //disable the timer
+                      refreshTimer.cancel();
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => buildHome()));
+                    });
+                  },
+                ),
               ),
               Card(
-                child: 
-                  ListTile(
-                    leading: Icon(Icons.refresh),
-                    title: Text("If scoreboard is showing an error..."),
-                    subtitle: Text("Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to reset"),
-                    onTap: () async {
-                      await AppState.setState(SetupState.FACTORY);
-                      setState(() {
-                        //disable the timer
-                        refreshTimer.cancel();
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => buildHome())
-                        );
-                      });
-                    },
-                  )
-                ,
+                child: ListTile(
+                  leading: Icon(Icons.refresh),
+                  title: Text("If scoreboard is showing an error..."),
+                  subtitle: Text(
+                      "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to reset"),
+                  onTap: () async {
+                    await AppState.setState(SetupState.FACTORY);
+                    setState(() {
+                      //disable the timer
+                      refreshTimer.cancel();
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (context) => buildHome()));
+                    });
+                  },
+                ),
               )
-            ]
+            ]);
+            drawer = ScoreboardDrawer(cleanup: () {
+              refreshTimer.cancel();
+            });
+            shouldRefreshConfig = false;
+          } else {
+            body = Center(child: CircularProgressIndicator());
+          }
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(settings != null ? settings.name : "Loading"),
+              actions: actions,
+            ),
+            body: body,
+            floatingActionButton: fab,
+            drawer: drawer,
           );
-          drawer = ScoreboardDrawer(cleanup: () { refreshTimer.cancel(); });
-          shouldRefreshConfig = false;
-        } else {
-          body = Center(
-            child: CircularProgressIndicator());
-        }
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(settings != null ? settings.name :  "Loading"),
-            actions: actions,
-          ), body: body,
-          floatingActionButton: fab,
-          drawer: drawer,
-
-        );
-      }
-    );
+        });
   }
 
-
   List<Widget> _buildActions() {
-    return <Widget> [
+    return <Widget>[
       IconButton(
-        icon: Icon(Icons.settings),
-        tooltip: 'Settings',
-        onPressed: () { 
-          refreshTimer.cancel();
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => SettingsScreen(settings: settings))
-          );
-        }
-      ),
+          icon: Icon(Icons.settings),
+          tooltip: 'Settings',
+          onPressed: () {
+            refreshTimer.cancel();
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => SettingsScreen(settings: settings)));
+          }),
     ];
   }
 
   Widget _buildFab() {
     return FloatingActionButton(
-        onPressed: () {
+      onPressed: () {
+        setState(() {
+          refreshingPower = true;
+        });
+        Future<ScoreboardSettings> responseFuture =
+            Channel.localChannel.powerRequest(!settings.screenOn);
+        responseFuture.then((ScoreboardSettings newSettings) {
           setState(() {
-            refreshingPower = true;
+            settings = newSettings;
+            refreshingPower = false;
           });
-          Future<ScoreboardSettings> responseFuture = Channel.localChannel.powerRequest(!settings.screenOn);
-          responseFuture.then((ScoreboardSettings newSettings) {
-            setState(() { 
-              settings = newSettings;
-              refreshingPower = false;
-            });
-          }).catchError((e) {
-            print("Something went wrong :(");
-          });
-        },
-        child: refreshingPower ? 
-          CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),) :
-          Icon(Icons.power_settings_new, color: Colors.white,),
-        backgroundColor: settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
-        foregroundColor: Colors.white,
-      );
+        }).catchError((e) {
+          print("Something went wrong :(");
+        });
+      },
+      child: refreshingPower
+          ? CircularProgressIndicator(
+              valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
+            )
+          : Icon(
+              Icons.power_settings_new,
+              color: Colors.white,
+            ),
+      backgroundColor:
+          settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
+      foregroundColor: Colors.white,
+    );
   }
 
   Widget _buildHome() {
-      return Container(
-        child: ListView.builder(
-          padding: const EdgeInsets.all(10.0),
-          itemCount: settings.screens.length,
-          itemBuilder: (context, i) {
-            return _buildRow(settings.screens[i]);
-          },
-        ),
-      );
+    return Container(
+      child: ListView.builder(
+        padding: const EdgeInsets.all(10.0),
+        itemCount: settings.screens.length,
+        itemBuilder: (context, i) {
+          return _buildRow(settings.screens[i]);
+        },
+      ),
+    );
   }
 
   Widget _buildRow(Screen screen) {
@@ -395,43 +380,56 @@ class _MyHomePageState extends State<MyHomePage> {
         break;
       default:
     }
-    return new Card( 
-      color: screen.id == settings.activeScreen && settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
-      
+    return new Card(
+      color: screen.id == settings.activeScreen && settings.screenOn
+          ? Theme.of(context).accentColor
+          : Colors.grey,
       child: InkWell(
-        splashColor: Colors.blue.withAlpha(30),
-        onTap: () { 
-          if(screen.id != settings.activeScreen) {
-            setState(() {
-              print("Selecting");
-              settings.activeScreen = screen.id;
-              settings.screenOn = true;
-              refreshingScreenSelect = true;
-            });
-            Future<ScoreboardSettings> responseFuture = Channel.localChannel.sportRequest(screen.id);
-            responseFuture.then((ScoreboardSettings newSettings) {
+          splashColor: Colors.blue.withAlpha(30),
+          onTap: () {
+            if (screen.id != settings.activeScreen) {
               setState(() {
-                print("Done select");
-                settings = newSettings; 
-                refreshingScreenSelect = false;
-              }); 
-            }).catchError((e) { 
+                print("Selecting");
+                settings.activeScreen = screen.id;
+                settings.screenOn = true;
+                refreshingScreenSelect = true;
+              });
+              Future<ScoreboardSettings> responseFuture =
+                  Channel.localChannel.sportRequest(screen.id);
+              responseFuture.then((ScoreboardSettings newSettings) {
+                setState(() {
+                  print("Done select");
+                  settings = newSettings;
+                  refreshingScreenSelect = false;
+                });
+              }).catchError((e) {
                 print("Something went wrong :(");
-            });
-          }
-          
-        },
-        child: Column(children: <Widget>[
-          ListTile(
-            leading: screen.id == settings.activeScreen && refreshingScreenSelect ? 
-              CircularProgressIndicator(valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),) :
-              Icon(i, color: Colors.white, size: 40,),
-            title: Text(screen.name,
-            style: TextStyle(fontSize: 24, color: Colors.white),),
-            subtitle: Text(screen.subtitle, style: TextStyle(color: Colors.white)),
-          ),
-        ],)
-      ),
+              });
+            }
+          },
+          child: Column(
+            children: <Widget>[
+              ListTile(
+                leading:
+                    screen.id == settings.activeScreen && refreshingScreenSelect
+                        ? CircularProgressIndicator(
+                            valueColor:
+                                new AlwaysStoppedAnimation<Color>(Colors.white),
+                          )
+                        : Icon(
+                            i,
+                            color: Colors.white,
+                            size: 40,
+                          ),
+                title: Text(
+                  screen.name,
+                  style: TextStyle(fontSize: 24, color: Colors.white),
+                ),
+                subtitle: Text(screen.subtitle,
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          )),
     );
   }
 }

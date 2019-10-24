@@ -2,65 +2,27 @@ PODS:
   - Flutter (1.0.0)
   - flutter_picker (0.0.1):
     - Flutter
-  - GoogleMobileVision/BarcodeDetector (1.5.0):
-    - GoogleMobileVision/Detector (~> 1.5)
-  - GoogleMobileVision/Detector (1.5.0):
-    - GoogleToolboxForMac/Logger (~> 2.1)
-    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
-    - GTMSessionFetcher/Core (~> 1.1)
-    - Protobuf (~> 3.1)
-  - GoogleToolboxForMac/Defines (2.2.0)
-  - GoogleToolboxForMac/Logger (2.2.0):
-    - GoogleToolboxForMac/Defines (= 2.2.0)
-  - "GoogleToolboxForMac/NSData+zlib (2.2.0)":
-    - GoogleToolboxForMac/Defines (= 2.2.0)
-  - GTMSessionFetcher/Core (1.2.1)
-  - native_device_orientation (0.0.1):
-    - Flutter
-  - Protobuf (3.6.1)
-  - qr_mobile_vision (0.0.1):
-    - Flutter
-    - GoogleMobileVision/BarcodeDetector
   - shared_preferences (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - Flutter (from `.symlinks/flutter/ios`)
   - flutter_picker (from `.symlinks/plugins/flutter_picker/ios`)
-  - native_device_orientation (from `.symlinks/plugins/native_device_orientation/ios`)
-  - qr_mobile_vision (from `.symlinks/plugins/qr_mobile_vision/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
-
-SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
-    - GoogleMobileVision
-    - GoogleToolboxForMac
-    - GTMSessionFetcher
-    - Protobuf
 
 EXTERNAL SOURCES:
   Flutter:
     :path: ".symlinks/flutter/ios"
   flutter_picker:
     :path: ".symlinks/plugins/flutter_picker/ios"
-  native_device_orientation:
-    :path: ".symlinks/plugins/native_device_orientation/ios"
-  qr_mobile_vision:
-    :path: ".symlinks/plugins/qr_mobile_vision/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
 
 SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   flutter_picker: 8ff0d7440b4e8327fcc9e6b21a39ef9369e697c7
-  GoogleMobileVision: a1f93108b3527d67339e2de80e1db76645f9e8b9
-  GoogleToolboxForMac: ff31605b7d66400dcec09bed5861689aebadda4d
-  GTMSessionFetcher: 32aeca0aa144acea523e1c8e053089dec2cb98ca
-  native_device_orientation: e24d00be281de72996640885d80e706142707660
-  Protobuf: 1eb9700044745f00181c136ef21b8ff3ad5a0fd5
-  qr_mobile_vision: be1c3c9f00796683610e8bab9bbab2920dd4ffca
   shared_preferences: 1feebfa37bb57264736e16865e7ffae7fc99b523
 
 PODFILE CHECKSUM: aff02bfeed411c636180d6812254b2daeea14d09
 
-COCOAPODS: 1.7.4
+COCOAPODS: 1.7.0
