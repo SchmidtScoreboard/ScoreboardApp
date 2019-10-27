@@ -217,8 +217,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<ScoreboardSettings> getConfig() async {
     if (shouldRefreshConfig && !refreshingPower && !refreshingScreenSelect) {
       AppState state = await AppState.load();
-      return Channel(ipAddress: state.scoreboardAddresses[state.activeIndex])
-          .configRequest();
+      String ip = state.scoreboardAddresses[state.activeIndex];
+      print("Querying scoreboard at address: $ip");
+      return Channel(ipAddress: ip).configRequest();
     } else {
       return Future.value(settings);
     }
@@ -250,6 +251,7 @@ class _MyHomePageState extends State<MyHomePage> {
             });
             shouldRefreshConfig = false;
           } else if (snapshot.hasError) {
+            print(snapshot.error);
             body = ListView(children: <Widget>[
               Card(
                   child: ListTile(

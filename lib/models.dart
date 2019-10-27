@@ -74,13 +74,20 @@ class Screen {
 }
 
 class ScoreboardSettings {
+  static final int clientVersion = 0;
+
   int activeScreen;
   bool screenOn;
   List<Screen> screens;
   String name;
+  String version;
 
   ScoreboardSettings(
-      {this.activeScreen, this.screenOn, this.name, this.screens});
+      {this.activeScreen,
+      this.screenOn,
+      this.name,
+      this.screens,
+      this.version});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -91,7 +98,8 @@ class ScoreboardSettings {
         activeScreen: json["active_screen"],
         screenOn: json["screen_on"],
         name: json["name"] ?? "My New Scoreboard",
-        screens: screens);
+        screens: screens,
+        version: json["version"]);
   }
 
   ScoreboardSettings clone() {
@@ -119,6 +127,7 @@ class ScoreboardSettings {
     ret["screen_on"] = screenOn;
     ret["screens"] = [];
     ret["name"] = name;
+    ret["version"] = version;
     for (Screen s in screens) {
       ret["screens"].add(s.toJson());
     }
