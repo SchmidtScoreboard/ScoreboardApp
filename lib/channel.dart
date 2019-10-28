@@ -9,11 +9,12 @@ class Channel {
 
   static final Channel localChannel =
       Channel(ipAddress: "http://127.0.0.1:5005/");
-  static final Channel hotspotChannel =
-      // Channel(ipAddress: "http://192.168.4.1:5005/");
-      localChannel;
+  static final Channel personalLaptopChannel = Channel(ipAddress: "http://192.168.0.190:5005/");
   static final Channel testingChannel =
       Channel(ipAddress: "http://192.168.0.197:5005/");
+  static final Channel hotspotChannel =
+      // Channel(ipAddress: "http://192.168.4.1:5005/");
+      personalLaptopChannel;
 
   // String root = 'http://192.168.0.197:5005/';
   // String root = "http://127.0.0.1:5005/";
@@ -50,7 +51,7 @@ class Channel {
       ScoreboardSettings newSettings) async {
     var url = ipAddress + "configure";
     //TODO implement toJson in scoreboard settings
-
+    print("Sending scoreboard: $newSettings");
     var body = json.encode(newSettings.toJson());
 
     var response = await http.post(url,

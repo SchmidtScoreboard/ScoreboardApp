@@ -37,7 +37,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     super.initState();
   }
 
-  bool hasEditedSettings() => settingsDirty() || wifiDirty();
+  bool hasEditedSettings() => settingsDirty() || wifiDirty() || nameDirty();
 
   bool settingsDirty() => mutableSettings != originalSettings;
   bool wifiDirty() => wifi.isNotEmpty && password.isNotEmpty;
@@ -63,12 +63,16 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   Future<ScoreboardSettings> handleSettings() async {
     try {
-      if (settingsDirty()) {
+      if (settingsDirty() || nameDirty()) {
         print("Settings dirty");
-        return await Channel.localChannel.configureSettings(mutableSettings);
+        AppState state = await AppState.load();
+        String ip = state.scoreboardAddresses[state.activeIndex];
+        print("Querying scoreboard at address: $ip");
+        return await Channel(ipAddress: ip).configureSettings(mutableSettings);
       }
     } catch (e) {
       //TDOO  display an error
+      print(e);
     }
     return mutableSettings;
   }
@@ -83,9 +87,12 @@ class SettingsScreenState extends State<SettingsScreen> {
   Future handleWifi() async {
     if (wifiDirty()) {
       print("Wifi dirty");
-      ScoreboardSettings scoreboard = await Channel.localChannel.wifiRequest(
+      AppState state = await AppState.load();
+      String ip = state.scoreboardAddresses[state.activeIndex];
+      print("Querying scoreboard at address: $ip");
+      ScoreboardSettings scoreboard = await Channel(ipAddress: ip).wifiRequest(
           wifi,
-          password); //TODO replcae all these localChannels with the actual addresses
+          password); 
       await AppState.setState(SetupState.SYNC);
       Navigator.of(context)
           .pop(); //get out of this page and back to the home screen, which should hopefully rebuild into QR state
@@ -114,6 +121,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       maxLines: 1,
                       maxLength: 32,
                       decoration: InputDecoration(labelText: "Scoreboard Name"),
+                      textCapitalization: TextCapitalization.words,
                       //initialValue: mutableSettings.name,
 
                       onChanged: (String newName) {
@@ -212,11 +220,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                 title: Text("About"),
                 children: <Widget>[
                   ListTile(
+                      leading: Icon(Icons.tv),
                       title:
-                          Text("Scoreboard Version: $mutableSettings.version")),
+                          Text("Scoreboard Version: ${mutableSettings.version}")),
                   ListTile(
+                      leading: Icon(Icons.phone_iphone),
                       title: Text(
-                          "App Version: $ScoreboardSettings.clientVersion")),
+                          "App Version: ${ScoreboardSettings.clientVersion}")),
                   ListTile(
                       title: Text("For Jamie"), leading: Icon(Icons.favorite))
                 ],
@@ -346,9 +356,10 @@ class SettingsScreenState extends State<SettingsScreen> {
     return //Theme(data: ThemeData(accentColor: Colors.blue), child:
         ExpansionTile(
       title: Text("${screen.name} Settings"),
-      leading: Icon(Icons.desktop_mac),
+      leading: Icon(screen.getIcon()),
       children: <Widget>[
         ListTile(
+          leading: Icon(Icons.timer),
           title: Text("Rotation time"),
           trailing: Text("${screen.rotationTime} seconds"),
           onTap: () {
@@ -365,9 +376,9 @@ class SettingsScreenState extends State<SettingsScreen> {
           },
         ),
         ListTile(
+            leading: Icon(Icons.favorite),
             title: Text("Favorite teams:"),
             trailing: IconButton(
-                //TODO add info button
                 icon: Icon(Icons.add),
                 onPressed: () {
                   List<String> displayData = [];

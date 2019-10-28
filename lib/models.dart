@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'channel.dart';
 import 'dart:async';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter/material.dart';
 
 class ScreenId {
   static const NHL = 0;
@@ -71,6 +73,17 @@ class Screen {
     ret["focus_teams"] = focusTeams;
     return ret;
   }
+
+  IconData getIcon() {
+    switch (id) {
+      case ScreenId.NHL:
+        return FontAwesomeIcons.hockeyPuck;
+      case ScreenId.MLB:
+        return FontAwesomeIcons.baseballBall;
+      default:
+        return FontAwesomeIcons.footballBall;
+    }
+  }
 }
 
 class ScoreboardSettings {
@@ -80,7 +93,7 @@ class ScoreboardSettings {
   bool screenOn;
   List<Screen> screens;
   String name;
-  String version;
+  int version;
 
   ScoreboardSettings(
       {this.activeScreen,
@@ -111,6 +124,7 @@ class ScoreboardSettings {
         activeScreen: activeScreen,
         screenOn: screenOn,
         name: name,
+        version: version,
         screens: new List<Screen>.from(screensCopy));
   }
 

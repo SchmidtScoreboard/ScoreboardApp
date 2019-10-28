@@ -82,7 +82,7 @@ Widget layoutWidgets(Iterable widgets, [Widget footer]) {
       child: SafeArea(
           child:
               Align(alignment: FractionalOffset.bottomCenter, child: footer)));
-  return Column(children: [
+  return Stack(children: [
     SingleChildScrollView(
         child: SafeArea(
             minimum: const EdgeInsets.only(top: 70),
@@ -284,6 +284,7 @@ class SyncScreenState extends OnboardingScreenState {
           "Enter the code that appears on the scoreboard in the box below. If no code appears, double tap the Scoreboard's side button."),
       TextField(
         decoration: InputDecoration(labelText: "Code"),
+        textCapitalization: TextCapitalization.characters,
         maxLines: 1,
         autocorrect: false,
         maxLength: 8,
@@ -302,7 +303,7 @@ class SyncScreenState extends OnboardingScreenState {
         },
       ),
       getOnboardButton(context, "Confirm", MyHomePage(), callback,
-          enabled: isValid),
+          enabled: isValid)], 
       RaisedButton(
           child: Padding(
               child: Text(
@@ -316,7 +317,7 @@ class SyncScreenState extends OnboardingScreenState {
                     builder: (context) => ConnectToHotspotScreen()));
           },
           shape: StadiumBorder())
-    ]);
+    );
   }
 
   Future callback() async {

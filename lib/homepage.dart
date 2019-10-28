@@ -232,6 +232,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void didUpdateWidget(MyHomePage oldWidget) {
+    shouldRefreshConfig = true;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<ScoreboardSettings>(
         future: getConfig(),
@@ -319,6 +324,7 @@ class _MyHomePageState extends State<MyHomePage> {
           icon: Icon(Icons.settings),
           tooltip: 'Settings',
           onPressed: () {
+            shouldRefreshConfig = true;
             refreshTimer.cancel();
             Navigator.push(
                 context,
@@ -330,20 +336,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildFab() {
     return FloatingActionButton(
-      onPressed: () {
+      onPressed: () async {
         setState(() {
           refreshingPower = true;
         });
-        Future<ScoreboardSettings> responseFuture =
-            Channel.localChannel.powerRequest(!settings.screenOn);
-        responseFuture.then((ScoreboardSettings newSettings) {
-          setState(() {
-            settings = newSettings;
-            refreshingPower = false;
-          });
-        }).catchError((e) {
-          print("Something went wrong :(");
+        AppState state = await AppState.load();
+        String ip = state.scoreboardAddresses[state.activeIndex];
+        print("Querying scoreboard at address: $ip");
+        ScoreboardSettings newSettings = await
+            Channel(ipAddress: ip).powerRequest(!settings.screenOn);
+        setState(() {
+          settings = newSettings;
+          refreshingPower = false;
         });
+      
       },
       child: refreshingPower
           ? CircularProgressIndicator(
@@ -372,23 +378,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildRow(Screen screen) {
-    IconData i = Icons.album;
-    switch (screen.id) {
-      case ScreenId.NHL:
-        i = FontAwesomeIcons.hockeyPuck;
-        break;
-      case ScreenId.MLB:
-        i = FontAwesomeIcons.baseballBall;
-        break;
-      default:
-    }
     return new Card(
       color: screen.id == settings.activeScreen && settings.screenOn
           ? Theme.of(context).accentColor
           : Colors.grey,
       child: InkWell(
           splashColor: Colors.blue.withAlpha(30),
-          onTap: () {
+          onTap: () async {
             if (screen.id != settings.activeScreen) {
               setState(() {
                 print("Selecting");
@@ -396,18 +392,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 settings.screenOn = true;
                 refreshingScreenSelect = true;
               });
-              Future<ScoreboardSettings> responseFuture =
-                  Channel.localChannel.sportRequest(screen.id);
-              responseFuture.then((ScoreboardSettings newSettings) {
-                setState(() {
-                  print("Done select");
-                  settings = newSettings;
-                  refreshingScreenSelect = false;
-                });
-              }).catchError((e) {
-                print("Something went wrong :(");
-              });
             }
+            AppState state = await AppState.load();
+            String ip = state.scoreboardAddresses[state.activeIndex];
+            print("Querying scoreboard at address: $ip");
+            ScoreboardSettings newSettings = await
+                Channel(ipAddress: ip).sportRequest(screen.id);
+            setState(() {
+              print("Done select");
+              settings = newSettings;
+              refreshingScreenSelect = false;
+            });
           },
           child: Column(
             children: <Widget>[
@@ -419,7 +414,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 new AlwaysStoppedAnimation<Color>(Colors.white),
                           )
                         : Icon(
-                            i,
+                            screen.getIcon(),
                             color: Colors.white,
                             size: 40,
                           ),
