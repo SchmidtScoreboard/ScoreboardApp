@@ -7,9 +7,13 @@ import 'channel.dart';
 
 // import 'package:fast_qr_reader_view/fast_qr_reader_view.dart';
 
+enum OnboardingStatus { ready, loading, error }
+
 abstract class OnboardingScreen extends StatefulWidget {}
 
 abstract class OnboardingScreenState extends State<OnboardingScreen> {
+  OnboardingStatus status = OnboardingStatus.ready;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -26,71 +30,77 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
         child: Scaffold(
             body: getOnboardWidget(context),
             backgroundColor: Colors.transparent,
-            drawer: ScoreboardDrawer(cleanup: () {})));
+            drawer: ScoreboardDrawer()));
   }
 
   Widget getOnboardWidget(BuildContext context);
 
-  void cleanup() {
-    //Children that need to clean up timers/etc can use this
+  Widget getOnboardTitle(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+          fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+      textAlign: TextAlign.center,
+    );
   }
-}
 
-Widget getOnboardTitle(String text) {
-  return Text(
-    text,
-    style: TextStyle(
-        fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
-    textAlign: TextAlign.center,
-  );
-}
+  Widget getOnboardInstruction(String text) {
+    return Text(text, style: TextStyle(fontSize: 18, color: Colors.white));
+  }
 
-Widget getOnboardInstruction(String text) {
-  return Text(text, style: TextStyle(fontSize: 18, color: Colors.white));
-}
-
-Widget getOnboardButton(
-    BuildContext context, String text, Widget target, AsyncCallback callback,
-    {bool enabled = true}) {
-  return RaisedButton(
-    child: Text(text),
-    color: Theme.of(context).accentColor,
-    elevation: 4,
-    highlightElevation: 8,
-    shape: StadiumBorder(),
-    onPressed: enabled
-        ? () {
-            if (callback != null) callback();
-            if (target != null) {
-              Navigator.pushReplacement(
-                  context, MaterialPageRoute(builder: (context) => target));
+  Widget getOnboardButton(BuildContext context, String text, Widget target,
+      AsyncValueGetter<bool> callback,
+      {bool enabled = true}) {
+    return RaisedButton(
+      child: status == OnboardingStatus.ready
+          ? Text(text)
+          : Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(
+                valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
+              )),
+      color: Theme.of(context).accentColor,
+      elevation: 4,
+      highlightElevation: 8,
+      shape: StadiumBorder(),
+      onPressed: enabled
+          ? () async {
+              setState(() {
+                status = OnboardingStatus.loading;
+              });
+              bool result = await callback();
+              if (!result) {
+                print("There was an error in callback");
+                status = OnboardingStatus.error;
+              } else {
+                Navigator.pushReplacement(
+                    context, MaterialPageRoute(builder: (context) => target));
+              }
             }
-          }
-        : null,
-  );
-}
-
-Widget layoutWidgets(Iterable widgets, [Widget footer]) {
-  List<Widget> paddedWidgets = [];
-  for (var widget in widgets) {
-    paddedWidgets.add(widget);
-    paddedWidgets.add(new SizedBox(
-      height: 20,
-    ));
+          : null,
+    );
   }
-  Widget alignedFooter = Expanded(
-      child: SafeArea(
-          child:
-              Align(alignment: FractionalOffset.bottomCenter, child: footer)));
-  return Stack(children: [
-    SingleChildScrollView(
-        child: SafeArea(
-            minimum: const EdgeInsets.only(top: 70),
-            child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(children: paddedWidgets)))),
-    if (footer != null) alignedFooter
-  ]);
+
+  Widget layoutWidgets(Iterable widgets, [Widget footer]) {
+    List<Widget> paddedWidgets = [];
+    for (var widget in widgets) {
+      paddedWidgets.add(widget);
+      paddedWidgets.add(new SizedBox(
+        height: 20,
+      ));
+    }
+    Widget alignedFooter = SafeArea(
+        child: Align(alignment: FractionalOffset.bottomCenter, child: footer));
+    return Stack(children: [
+      SingleChildScrollView(
+          child: SafeArea(
+              minimum: const EdgeInsets.only(top: 70),
+              child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(children: paddedWidgets)))),
+      if (footer != null) alignedFooter
+    ]);
+  }
 }
 
 class SplashScreen extends OnboardingScreen {
@@ -101,8 +111,9 @@ class SplashScreen extends OnboardingScreen {
 }
 
 class SplashScreenState extends OnboardingScreenState {
-  Future callback() async {
+  Future<bool> callback() async {
     await AppState.setState(SetupState.HOTSPOT);
+    return true;
   }
 
   Widget getOnboardWidget(BuildContext context) {
@@ -140,14 +151,9 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
   Timer refreshTimer;
   bool connected = false;
 
-  @override
-  void cleanup() {
-    refreshTimer.cancel();
-  }
-
-  Future callback() async {
-    cleanup();
+  Future<bool> callback() async {
     await AppState.setState(SetupState.WIFI_CONNECT);
+    return true;
   }
 
   @override
@@ -205,10 +211,15 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   String wifi;
   String password;
 
-  Future callback() async {
-    ScoreboardSettings scoreboard =
-        await Channel.hotspotChannel.wifiRequest(wifi, password);
-    await AppState.setState(SetupState.SYNC);
+  Future<bool> callback() async {
+    try {
+      await Channel.hotspotChannel.wifiRequest(wifi, password);
+      await AppState.setState(SetupState.SYNC);
+    } catch (e) {
+      print(e.toString());
+      return false;
+    }
+    return true;
   }
 
   @override
@@ -278,49 +289,51 @@ class SyncScreenState extends OnboardingScreenState {
 
   @override
   Widget getOnboardWidget(BuildContext context) {
-    return layoutWidgets([
-      getOnboardTitle("Sync with Scoreboard"),
-      getOnboardInstruction(
-          "Enter the code that appears on the scoreboard in the box below. If no code appears, double tap the Scoreboard's side button."),
-      TextField(
-        decoration: InputDecoration(labelText: "Code"),
-        textCapitalization: TextCapitalization.characters,
-        maxLines: 1,
-        autocorrect: false,
-        maxLength: 8,
-        textInputAction: TextInputAction.done,
-        onChanged: (String s) {
-          code = s;
-          isValid = isValidIpCode(code);
-          setState(() {});
-        },
-        onEditingComplete: () {
-          if (isValid) {
-            callback();
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => MyHomePage()));
-          }
-        },
-      ),
-      getOnboardButton(context, "Confirm", MyHomePage(), callback,
-          enabled: isValid)], 
-      RaisedButton(
-          child: Padding(
-              child: Text(
-                  "If your scoreboard is showing an error,\ntap here to restart setup"),
-              padding: EdgeInsets.all(5)),
-          onPressed: () {
-            AppState.setState(SetupState.HOTSPOT);
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ConnectToHotspotScreen()));
-          },
-          shape: StadiumBorder())
-    );
+    print("Building sync screen");
+    return layoutWidgets(
+        [
+          getOnboardTitle("Sync with Scoreboard"),
+          getOnboardInstruction(
+              "Enter the code that appears on the scoreboard in the box below. If no code appears, double tap the Scoreboard's side button."),
+          TextField(
+            decoration: InputDecoration(labelText: "Code"),
+            textCapitalization: TextCapitalization.characters,
+            maxLines: 1,
+            autocorrect: false,
+            maxLength: 8,
+            textInputAction: TextInputAction.done,
+            onChanged: (String s) {
+              code = s;
+              isValid = isValidIpCode(code);
+              setState(() {});
+            },
+            onEditingComplete: () {
+              if (isValid) {
+                callback();
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => MyHomePage()));
+              }
+            },
+          ),
+          getOnboardButton(context, "Confirm", MyHomePage(), callback,
+              enabled: isValid)
+        ],
+        RaisedButton(
+            child: Padding(
+                child: Text(
+                    "If your scoreboard is showing an error,\ntap here to restart setup"),
+                padding: EdgeInsets.all(5)),
+            onPressed: () {
+              AppState.setState(SetupState.HOTSPOT);
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ConnectToHotspotScreen()));
+            },
+            shape: StadiumBorder()));
   }
 
-  Future callback() async {
+  Future<bool> callback() async {
     String ip = ipFromCode(code);
     String address = "http://$ip:5005/";
     print("Found address: $address");
@@ -329,10 +342,11 @@ class SyncScreenState extends OnboardingScreenState {
       await Channel(ipAddress: address).syncRequest();
     } catch (e) {
       // Do nothing
+      return false;
     } finally {
       await AppState.setState(SetupState.READY);
-      // TODO set address based off code
       await AppState.setAddress(address);
     }
+    return true;
   }
 }

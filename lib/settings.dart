@@ -67,7 +67,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         print("Settings dirty");
         AppState state = await AppState.load();
         String ip = state.scoreboardAddresses[state.activeIndex];
-        print("Querying scoreboard at address: $ip");
+        print("Configuring settings for scoreboard at address: $ip");
         return await Channel(ipAddress: ip).configureSettings(mutableSettings);
       }
     } catch (e) {
@@ -89,10 +89,9 @@ class SettingsScreenState extends State<SettingsScreen> {
       print("Wifi dirty");
       AppState state = await AppState.load();
       String ip = state.scoreboardAddresses[state.activeIndex];
-      print("Querying scoreboard at address: $ip");
-      ScoreboardSettings scoreboard = await Channel(ipAddress: ip).wifiRequest(
-          wifi,
-          password); 
+      print("Setting wifi for scoreboard at address: $ip");
+      ScoreboardSettings scoreboard =
+          await Channel(ipAddress: ip).wifiRequest(wifi, password);
       await AppState.setState(SetupState.SYNC);
       Navigator.of(context)
           .pop(); //get out of this page and back to the home screen, which should hopefully rebuild into QR state
@@ -170,6 +169,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                             .copyWith(brightness: Brightness.dark),
                         child: TextField(
                           decoration: InputDecoration(
+                            icon: Icon(Icons.wifi),
                             labelText: "Wifi Name",
                           ),
                           maxLines: 1,
@@ -195,12 +195,11 @@ class SettingsScreenState extends State<SettingsScreen> {
                             .copyWith(brightness: Brightness.dark),
                         child: TextField(
                           decoration: InputDecoration(
-                            labelText: "Password",
-                          ),
+                              icon: Icon(Icons.lock), labelText: "Password"),
                           maxLines: 1,
-                          maxLength: 32,
                           obscureText: true,
                           autocorrect: false,
+                          maxLength: 63,
                           textInputAction: TextInputAction.send,
                           focusNode: passNode,
                           onChanged: (String s) {
@@ -221,15 +220,56 @@ class SettingsScreenState extends State<SettingsScreen> {
                 children: <Widget>[
                   ListTile(
                       leading: Icon(Icons.tv),
-                      title:
-                          Text("Scoreboard Version: ${mutableSettings.version}")),
+                      title: Text(
+                          "Scoreboard Version: ${mutableSettings.version}")),
                   ListTile(
                       leading: Icon(Icons.phone_iphone),
                       title: Text(
                           "App Version: ${ScoreboardSettings.clientVersion}")),
                   ListTile(
-                      title: Text("For Jamie"), leading: Icon(Icons.favorite))
+                      title: Text("Made for Jamie"),
+                      leading: Icon(Icons.favorite))
                 ],
+              ),
+              ListTile(
+                leading: Icon(Icons.power_settings_new),
+                title: Text("Reboot this scoreboard"),
+                subtitle: Text("Scoreboard will check for updates on reboot"),
+                onTap: () {
+                  AlertDialog alert = AlertDialog(
+                      title: Text("Reboot this scoreboard"),
+                      content: Text(
+                          "Rebooting will also update the scoreboard to the latest version.\nThis may take a minute."),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text("Cancel"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        FlatButton(
+                          child: Text("Reboot"),
+                          onPressed: () async {
+                            AppState state = await AppState.load();
+                            String ip =
+                                state.scoreboardAddresses[state.activeIndex];
+                            print("Rebooting at ip : $ip");
+                            try {
+                              await Channel(ipAddress: ip).rebootRequest();
+                            } catch (e) {
+                              print(e.toString());
+                            } finally {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                        )
+                      ]);
+                  showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      });
+                },
               ),
               ListTile(
                   leading: IconTheme(
@@ -238,7 +278,6 @@ class SettingsScreenState extends State<SettingsScreen> {
                   title: Text("Delete this scoreboard",
                       style: TextStyle(color: Colors.red)),
                   onTap: () {
-                    //TODO show delete popup, wipe settings and reset to main screen
                     AlertDialog alert = AlertDialog(
                       title: Text("Are you sure?"),
                       content: Text(

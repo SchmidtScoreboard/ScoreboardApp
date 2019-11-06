@@ -9,8 +9,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ScoreboardDrawer extends StatefulWidget {
-  final Function cleanup;
-  ScoreboardDrawer({Key key, this.cleanup}) : super(key: key);
+  ScoreboardDrawer({Key key}) : super(key: key);
 
   @override
   _ScoreboardDrawerState createState() => _ScoreboardDrawerState();
@@ -41,8 +40,7 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
                 Expanded(
                     child: ListView(
                         shrinkWrap: true,
-                        children:
-                            _buildDrawerList(state, widget.cleanup, context))),
+                        children: _buildDrawerList(state, context))),
                 Align(
                   alignment: FractionalOffset.bottomCenter,
                   child: SafeArea(
@@ -53,7 +51,6 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
                     ),
                     onTap: () async {
                       await AppState.addScoreboard();
-                      widget.cleanup();
                       Navigator.pushReplacement(context,
                           MaterialPageRoute(builder: (context) => buildHome()));
                     },
@@ -67,8 +64,7 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
         });
   }
 
-  List<Widget> _buildDrawerList(
-      AppState state, Function cleanup, BuildContext context) {
+  List<Widget> _buildDrawerList(AppState state, BuildContext context) {
     List<Widget> widgets = [];
     for (int i = 0; i < state.scoreboardAddresses.length; i++) {
       widgets.add(Slidable(
@@ -82,7 +78,6 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
             ),
             onTap: () async {
               await AppState.setActive(i);
-              cleanup();
               Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (context) => buildHome()));
             }),
@@ -198,27 +193,21 @@ class _MyHomePageState extends State<MyHomePage> {
   ScoreboardSettings settings;
   Timer refreshTimer;
   Channel channel;
-  bool refreshingScreenSelect;
-  bool refreshingPower;
+  bool refreshingScreenSelect = false;
+  bool refreshingPower = false;
   bool shouldRefreshConfig = true;
+  bool scoreboardUpdateAvailable = false;
   @override
   void initState() {
     super.initState();
-    //channel = await AppState.getChannel();
-    refreshingPower = false;
-    refreshingScreenSelect = false;
-    refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
-      setState(() {
-        shouldRefreshConfig = true;
-      });
-    });
+    _checkVersion();
   }
 
   Future<ScoreboardSettings> getConfig() async {
     if (shouldRefreshConfig && !refreshingPower && !refreshingScreenSelect) {
       AppState state = await AppState.load();
       String ip = state.scoreboardAddresses[state.activeIndex];
-      print("Querying scoreboard at address: $ip");
+      print("Getting config from scoreboard at address: $ip");
       return Channel(ipAddress: ip).configRequest();
     } else {
       return Future.value(settings);
@@ -227,7 +216,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    refreshTimer.cancel();
+    if (refreshTimer != null && refreshTimer.isActive) {
+      refreshTimer.cancel();
+    }
     super.dispose();
   }
 
@@ -246,17 +237,26 @@ class _MyHomePageState extends State<MyHomePage> {
           List<Widget> actions;
           Widget fab;
           Widget drawer;
+          String name;
           if (snapshot.hasData) {
+            print("Got config data");
+            if (refreshTimer == null || !refreshTimer.isActive) {
+              refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
+                setState(() {
+                  shouldRefreshConfig = true;
+                });
+              });
+            }
             settings = snapshot.data;
+            name = settings.name;
             body = _buildHome();
             actions = _buildActions();
             fab = _buildFab();
-            drawer = ScoreboardDrawer(cleanup: () {
-              refreshTimer.cancel();
-            });
+            drawer = ScoreboardDrawer();
             shouldRefreshConfig = false;
           } else if (snapshot.hasError) {
-            print(snapshot.error);
+            print("Got config error " + snapshot.error.toString());
+            name = "Error :(";
             body = ListView(children: <Widget>[
               Card(
                   child: ListTile(
@@ -299,16 +299,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               )
             ]);
-            drawer = ScoreboardDrawer(cleanup: () {
-              refreshTimer.cancel();
-            });
+            if (refreshTimer == null || !refreshTimer.isActive) {
+              refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
+                setState(() {
+                  shouldRefreshConfig = true;
+                });
+              });
+            }
+            drawer = ScoreboardDrawer();
             shouldRefreshConfig = false;
           } else {
+            name = "Loading";
             body = Center(child: CircularProgressIndicator());
+            drawer = ScoreboardDrawer();
           }
           return Scaffold(
             appBar: AppBar(
-              title: Text(settings != null ? settings.name : "Loading"),
+              title: Text(name),
               actions: actions,
             ),
             body: body,
@@ -342,14 +349,13 @@ class _MyHomePageState extends State<MyHomePage> {
         });
         AppState state = await AppState.load();
         String ip = state.scoreboardAddresses[state.activeIndex];
-        print("Querying scoreboard at address: $ip");
-        ScoreboardSettings newSettings = await
-            Channel(ipAddress: ip).powerRequest(!settings.screenOn);
+        print("Setting power for scoreboard at address: $ip");
+        ScoreboardSettings newSettings =
+            await Channel(ipAddress: ip).powerRequest(!settings.screenOn);
         setState(() {
           settings = newSettings;
           refreshingPower = false;
         });
-      
       },
       child: refreshingPower
           ? CircularProgressIndicator(
@@ -395,9 +401,9 @@ class _MyHomePageState extends State<MyHomePage> {
             }
             AppState state = await AppState.load();
             String ip = state.scoreboardAddresses[state.activeIndex];
-            print("Querying scoreboard at address: $ip");
-            ScoreboardSettings newSettings = await
-                Channel(ipAddress: ip).sportRequest(screen.id);
+            print("Setting sport for scoreboard at address: $ip");
+            ScoreboardSettings newSettings =
+                await Channel(ipAddress: ip).sportRequest(screen.id);
             setState(() {
               print("Done select");
               settings = newSettings;
@@ -428,5 +434,51 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           )),
     );
+  }
+
+  void _checkVersion() async {
+    AlertDialog alert;
+    try {
+      settings = await getConfig();
+    } catch (e) {
+      return;
+      // Do nothing
+    }
+    if (settings.version > ScoreboardSettings.clientVersion) {
+      alert = AlertDialog(
+          title: Text("Update this App!"),
+          content: Text(
+              "You are using an outdated version of the Scoreboard app.\nPlease update it in the App Store to get the latest features and bug fixes"),
+          actions: [
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ]);
+    } else if (settings.version < ScoreboardSettings.clientVersion) {
+      alert = AlertDialog(
+          title: Text("Update your scoreboard!"),
+          content: Text("There is an update available for your scoreboard."),
+          actions: [
+            FlatButton(
+              child: Text("Update"),
+              onPressed: () async {
+                await AppState.removeScoreboard();
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => buildHome()));
+              },
+            )
+          ]);
+    }
+    if (alert != null) {
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return alert;
+          });
+    }
   }
 }

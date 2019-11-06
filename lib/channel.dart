@@ -9,18 +9,20 @@ class Channel {
 
   static final Channel localChannel =
       Channel(ipAddress: "http://127.0.0.1:5005/");
-  static final Channel personalLaptopChannel = Channel(ipAddress: "http://192.168.0.190:5005/");
+  static final Channel personalLaptopChannel =
+      Channel(ipAddress: "http://192.168.0.190:5005/");
   static final Channel testingChannel =
       Channel(ipAddress: "http://192.168.0.197:5005/");
   static final Channel hotspotChannel =
       // Channel(ipAddress: "http://192.168.4.1:5005/");
-      personalLaptopChannel;
+      localChannel;
 
   // String root = 'http://192.168.0.197:5005/';
   // String root = "http://127.0.0.1:5005/";
 
   Future<ScoreboardSettings> configRequest() async {
-    final response = await http.get(ipAddress);
+    final response = await http.get(ipAddress).timeout(Duration(seconds: 10));
+
     if (response.statusCode == 200) {
       ScoreboardSettings newScoreboard =
           ScoreboardSettings.fromJson(json.decode(response.body));
@@ -54,8 +56,9 @@ class Channel {
     print("Sending scoreboard: $newSettings");
     var body = json.encode(newSettings.toJson());
 
-    var response = await http.post(url,
-        headers: {"Content-Type": "application/json"}, body: body);
+    var response = await http
+        .post(url, headers: {"Content-Type": "application/json"}, body: body)
+        .timeout(Duration(seconds: 10));
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
     } else {
@@ -70,8 +73,9 @@ class Channel {
     //encode Map to JSON
     var body = json.encode(data);
 
-    var response = await http.post(url,
-        headers: {"Content-Type": "application/json"}, body: body);
+    var response = await http
+        .post(url, headers: {"Content-Type": "application/json"}, body: body)
+        .timeout(Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
@@ -86,8 +90,9 @@ class Channel {
     //encode Map to JSON
     var body = json.encode(data);
 
-    var response = await http.post(url,
-        headers: {"Content-Type": "application/json"}, body: body);
+    var response = await http
+        .post(url, headers: {"Content-Type": "application/json"}, body: body)
+        .timeout(Duration(seconds: 10));
     if (response.statusCode == 200) {
       print(response.body);
       return ScoreboardSettings.fromJson(json.decode(response.body));
@@ -99,9 +104,9 @@ class Channel {
   Future<ScoreboardSettings> syncRequest() async {
     var url = ipAddress + "sync";
 
-    //encode Map to JSON
+    print("Attempting to sync at $url");
 
-    var response = await http.post(url);
+    var response = await http.post(url).timeout(Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       return ScoreboardSettings.fromJson(json.decode(response.body));
@@ -112,7 +117,19 @@ class Channel {
 
   Future<ScoreboardSettings> connectRequest() async {
     String url = ipAddress + "connect";
-    final response = await http.post(url);
+    print("Attempting to connect at $url");
+    final response = await http.post(url).timeout(Duration(seconds: 10));
+    if (response.statusCode == 200) {
+      print(response.body);
+      return ScoreboardSettings.fromJson(json.decode(response.body));
+    } else {
+      throw Exception("Failed to connect to scoreboard");
+    }
+  }
+
+  Future<ScoreboardSettings> rebootRequest() async {
+    String url = ipAddress + "reboot";
+    final response = await http.post(url).timeout(Duration(seconds: 10));
     if (response.statusCode == 200) {
       print(response.body);
       return ScoreboardSettings.fromJson(json.decode(response.body));
