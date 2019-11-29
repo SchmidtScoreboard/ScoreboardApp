@@ -6,7 +6,6 @@ import 'channel.dart';
 import 'onboarding.dart';
 import 'dart:math';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ScoreboardDrawer extends StatefulWidget {
   ScoreboardDrawer({Key key}) : super(key: key);

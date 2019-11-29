@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 class ScreenId {
   static const NHL = 0;
   static const MLB = 1;
+  static const CLOCK = 99;
   static const REFRESH = 100;
   static const HOTSPOT = 101;
   static const WIFIDETAILS = 102;
@@ -80,6 +81,8 @@ class Screen {
         return FontAwesomeIcons.hockeyPuck;
       case ScreenId.MLB:
         return FontAwesomeIcons.baseballBall;
+      case ScreenId.CLOCK:
+        return FontAwesomeIcons.clock;
       default:
         return FontAwesomeIcons.footballBall;
     }
