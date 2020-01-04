@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
+import 'package:toast/toast.dart';
+
 import 'homepage.dart';
 import 'channel.dart';
 
@@ -28,7 +30,9 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
         child: Scaffold(
-            body: getOnboardWidget(context),
+            body: Builder(builder: (BuildContext context) {
+              return getOnboardWidget(context);
+            }),
             backgroundColor: Colors.transparent,
             drawer: ScoreboardDrawer()));
   }
@@ -49,13 +53,16 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget getOnboardButton(BuildContext context, String text, Widget target,
-      AsyncValueGetter<bool> callback,
-      {bool enabled = true}) {
+      Future<bool> Function(BuildContext) callback,
+      {bool enabled = true, Function(BuildContext) errorCallback}) {
     return RaisedButton(
       child: status == OnboardingStatus.ready
-          ? Text(text)
+          ? Text(
+              text,
+              // style: TextStyle(color: Colors.white),
+            )
           : Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.all(10),
               child: CircularProgressIndicator(
                 valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
               )),
@@ -68,10 +75,14 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
               setState(() {
                 status = OnboardingStatus.loading;
               });
-              bool result = await callback();
+              bool result = await callback(context);
               if (!result) {
                 print("There was an error in callback");
                 status = OnboardingStatus.error;
+                if (errorCallback != null) {
+                  errorCallback(context);
+                }
+                setState(() {});
               } else {
                 Navigator.pushReplacement(
                     context, MaterialPageRoute(builder: (context) => target));
@@ -90,6 +101,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       ));
     }
     Widget alignedFooter = SafeArea(
+        minimum: const EdgeInsets.only(bottom: 30),
         child: Align(alignment: FractionalOffset.bottomCenter, child: footer));
     return Stack(children: [
       SingleChildScrollView(
@@ -111,7 +123,7 @@ class SplashScreen extends OnboardingScreen {
 }
 
 class SplashScreenState extends OnboardingScreenState {
-  Future<bool> callback() async {
+  Future<bool> callback(BuildContext context) async {
     await AppState.setState(SetupState.HOTSPOT);
     return true;
   }
@@ -151,7 +163,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
   Timer refreshTimer;
   bool connected = false;
 
-  Future<bool> callback() async {
+  Future<bool> callback(BuildContext context) async {
     await AppState.setState(SetupState.WIFI_CONNECT);
     return true;
   }
@@ -211,7 +223,22 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   String wifi;
   String password;
 
-  Future<bool> callback() async {
+  void errorCallback(BuildContext context) {
+    print("Got error callback wifi setup");
+    Scaffold.of(context).showSnackBar(new SnackBar(
+      content: Text(
+          "Failed to send Wifi Configuration, is your scoreboard turned on?"),
+      duration: Duration(minutes: 10),
+      action: SnackBarAction(
+        label: "Dismiss",
+        onPressed: () {},
+      ),
+    ));
+    status = OnboardingStatus.ready;
+  }
+
+  Future<bool> callback(BuildContext context) async {
+    Scaffold.of(context).hideCurrentSnackBar();
     try {
       await Channel.hotspotChannel.wifiRequest(wifi, password);
       await AppState.setState(SetupState.SYNC);
@@ -224,16 +251,16 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
 
   @override
   Widget getOnboardWidget(BuildContext context) {
-    return Theme(
-        data: ThemeData(
-            primarySwatch: Colors.blue,
-            accentColor: Colors.orangeAccent,
-            brightness: Brightness.dark),
-        child: layoutWidgets(<Widget>[
-          getOnboardTitle("Enter your WiFi Information"),
-          getOnboardInstruction(
-              "Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below:"),
-          TextField(
+    return layoutWidgets(<Widget>[
+      getOnboardTitle("Enter your WiFi Information"),
+      getOnboardInstruction(
+          "Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below:"),
+      Theme(
+          data: ThemeData(
+              primarySwatch: Colors.blue,
+              accentColor: Colors.orangeAccent,
+              brightness: Brightness.dark),
+          child: TextField(
             decoration: InputDecoration(
               icon: Icon(Icons.wifi),
               labelText: "Wifi Name",
@@ -249,8 +276,13 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
             onEditingComplete: () {
               FocusScope.of(context).requestFocus(passNode);
             },
-          ),
-          TextField(
+          )),
+      Theme(
+          data: ThemeData(
+              primarySwatch: Colors.blue,
+              accentColor: Colors.orangeAccent,
+              brightness: Brightness.dark),
+          child: TextField(
             decoration:
                 InputDecoration(icon: Icon(Icons.lock), labelText: "Password"),
             maxLines: 1,
@@ -262,17 +294,12 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
             onChanged: (String s) {
               password = s;
             },
-            onEditingComplete: () {
-              callback();
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => SyncScreen()));
-            },
-          ),
-          Padding(
-              padding: EdgeInsets.only(top: 20),
-              child:
-                  getOnboardButton(context, "Submit", SyncScreen(), callback))
-        ]));
+          )),
+      Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: getOnboardButton(context, "Submit", SyncScreen(), callback,
+              errorCallback: errorCallback))
+    ]);
   }
 }
 
@@ -295,45 +322,58 @@ class SyncScreenState extends OnboardingScreenState {
           getOnboardTitle("Sync with Scoreboard"),
           getOnboardInstruction(
               "Enter the code that appears on the scoreboard in the box below. If no code appears, double tap the Scoreboard's side button."),
-          TextField(
-            decoration: InputDecoration(labelText: "Code"),
-            textCapitalization: TextCapitalization.characters,
-            maxLines: 1,
-            autocorrect: false,
-            maxLength: 8,
-            textInputAction: TextInputAction.done,
-            onChanged: (String s) {
-              code = s;
-              isValid = isValidIpCode(code);
-              setState(() {});
-            },
-            onEditingComplete: () {
-              if (isValid) {
-                callback();
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => MyHomePage()));
-              }
-            },
-          ),
+          Theme(
+              data: ThemeData(
+                  primarySwatch: Colors.blue,
+                  accentColor: Colors.orangeAccent,
+                  brightness: Brightness.dark),
+              child: TextField(
+                decoration: InputDecoration(labelText: "Code"),
+                textCapitalization: TextCapitalization.characters,
+                maxLines: 1,
+                autocorrect: false,
+                maxLength: 8,
+                textInputAction: TextInputAction.done,
+                onChanged: (String s) {
+                  code = s;
+                  isValid = isValidIpCode(code);
+                  setState(() {});
+                },
+              )),
           getOnboardButton(context, "Confirm", MyHomePage(), callback,
-              enabled: isValid)
+              enabled: isValid, errorCallback: errorCallback)
         ],
-        RaisedButton(
-            child: Padding(
-                child: Text(
-                    "If your scoreboard is showing an error,\ntap here to restart setup"),
-                padding: EdgeInsets.all(5)),
-            onPressed: () {
-              AppState.setState(SetupState.HOTSPOT);
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ConnectToHotspotScreen()));
-            },
-            shape: StadiumBorder()));
+        Padding(
+            padding: EdgeInsets.all(20),
+            child: FlatButton(
+              child: Text(
+                  "If your scoreboard is showing an error,\ntap here to restart setup",
+                  style: TextStyle(color: Colors.grey, fontSize: 18)),
+              onPressed: () {
+                AppState.setState(SetupState.SYNC);
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ConnectToHotspotScreen()));
+              },
+            )));
   }
 
-  Future<bool> callback() async {
+  void errorCallback(BuildContext context) {
+    Scaffold.of(context).showSnackBar(new SnackBar(
+      content: Text(
+          "Sync failed. Is your Scoreboard connected to the same WiFi network as this device?"),
+      duration: Duration(minutes: 10),
+      action: SnackBarAction(
+        label: "Dismiss",
+        onPressed: () {},
+      ),
+    ));
+    status = OnboardingStatus.ready;
+  }
+
+  Future<bool> callback(BuildContext context) async {
+    Scaffold.of(context).hideCurrentSnackBar();
     String ip = ipFromCode(code);
     String address = "http://$ip:5005/";
     print("Found address: $address");
@@ -343,10 +383,9 @@ class SyncScreenState extends OnboardingScreenState {
     } catch (e) {
       // Do nothing
       return false;
-    } finally {
-      await AppState.setState(SetupState.READY);
-      await AppState.setAddress(address);
     }
+    await AppState.setState(SetupState.READY);
+    await AppState.setAddress(address);
     return true;
   }
 }

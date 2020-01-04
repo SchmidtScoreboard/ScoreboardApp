@@ -87,20 +87,22 @@ class Screen {
 }
 
 class ScoreboardSettings {
-  static final int clientVersion = 0;
+  static final int clientVersion = 1;
 
   int activeScreen;
   bool screenOn;
   List<Screen> screens;
   String name;
   int version;
+  String timezone;
 
   ScoreboardSettings(
       {this.activeScreen,
       this.screenOn,
       this.name,
       this.screens,
-      this.version});
+      this.version,
+      this.timezone});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -112,7 +114,8 @@ class ScoreboardSettings {
         screenOn: json["screen_on"],
         name: json["name"] ?? "My New Scoreboard",
         screens: screens,
-        version: json["version"]);
+        version: json["version"],
+        timezone: json["timezone"]);
   }
 
   ScoreboardSettings clone() {
@@ -125,13 +128,23 @@ class ScoreboardSettings {
         screenOn: screenOn,
         name: name,
         version: version,
-        screens: new List<Screen>.from(screensCopy));
+        screens: new List<Screen>.from(screensCopy),
+        timezone: timezone);
+  }
+
+  bool clientNeedsUpdate() {
+    return this.version > ScoreboardSettings.clientVersion;
+  }
+
+  bool scoreboardNeedsUpdate() {
+    return this.version < ScoreboardSettings.clientVersion;
   }
 
   bool operator ==(other) {
     return this.activeScreen == other.activeScreen &&
         this.screenOn == other.screenOn &&
         this.name == other.name &&
+        this.timezone == other.timezone &&
         listEquals(this.screens, other.screens);
   }
 
@@ -142,6 +155,7 @@ class ScoreboardSettings {
     ret["screens"] = [];
     ret["name"] = name;
     ret["version"] = version;
+    ret["timezone"] = timezone;
     for (Screen s in screens) {
       ret["screens"].add(s.toJson());
     }

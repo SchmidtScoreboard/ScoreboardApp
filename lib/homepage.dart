@@ -6,6 +6,7 @@ import 'channel.dart';
 import 'onboarding.dart';
 import 'dart:math';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:badges/badges.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ScoreboardDrawer extends StatefulWidget {
@@ -225,6 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void didUpdateWidget(MyHomePage oldWidget) {
     shouldRefreshConfig = true;
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -257,46 +259,66 @@ class _MyHomePageState extends State<MyHomePage> {
           } else if (snapshot.hasError) {
             print("Got config error " + snapshot.error.toString());
             name = "Error :(";
-            body = ListView(children: <Widget>[
+            body = ListView(padding: EdgeInsets.all(10), children: <Widget>[
               Card(
-                  child: ListTile(
-                leading: Icon(Icons.error),
-                title: Text("Could not connect to scoreboard"),
-                subtitle: Text("Make sure it is powered and connected to wifi"),
-              )),
+                  color: Colors.red[100],
+                  child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: ListTile(
+                        // leading: Column(
+                        //     mainAxisAlignment: MainAxisAlignment.center,
+                        //     children: <Widget>[Icon(Icons.error)]),
+                        title: Text("Could not connect to your scoreboard"),
+                        subtitle: Text(
+                            "Make sure your scoreboard is plugged in and your device is connected to the same WiFi network"),
+                      ))),
               Card(
-                child: ListTile(
-                  leading: Icon(Icons.sync),
-                  title: Text("If scoreboard is working normally.."),
-                  subtitle: Text(
-                      "Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
-                  onTap: () async {
-                    await AppState.setState(SetupState.SYNC);
-                    setState(() {
-                      //disable the timer
-                      refreshTimer.cancel();
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => buildHome()));
-                    });
-                  },
-                ),
+                color: Colors.red[200],
+                child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: ListTile(
+                      // leading: Column(
+                      //     mainAxisAlignment: MainAxisAlignment.center,
+                      //     children: <Widget>[Icon(Icons.sync)]),
+                      title: Text("If scoreboard is working normally.."),
+                      subtitle: Text(
+                          "Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
+                      onTap: () async {
+                        await AppState.setState(SetupState.SYNC);
+                        setState(() {
+                          //disable the timer
+                          refreshTimer.cancel();
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => buildHome()));
+                        });
+                      },
+                    )),
               ),
               Card(
-                child: ListTile(
-                  leading: Icon(Icons.refresh),
-                  title: Text("If scoreboard is showing an error..."),
-                  subtitle: Text(
-                      "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to reset"),
-                  onTap: () async {
-                    await AppState.setState(SetupState.FACTORY);
-                    setState(() {
-                      //disable the timer
-                      refreshTimer.cancel();
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => buildHome()));
-                    });
-                  },
-                ),
+                color: Colors.red[300],
+                child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: ListTile(
+                      // leading: Column(
+                      //     mainAxisAlignment: MainAxisAlignment.center,
+                      //     children: <Widget>[Icon(Icons.refresh)]),
+                      title: Text("If scoreboard is showing an error..."),
+                      subtitle: Text(
+                          "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to reset"),
+                      onTap: () async {
+                        await AppState.setState(SetupState.FACTORY);
+                        setState(() {
+                          //disable the timer
+                          refreshTimer.cancel();
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => buildHome()));
+                        });
+                      },
+                    )),
               )
             ]);
             if (refreshTimer == null || !refreshTimer.isActive) {
@@ -328,7 +350,13 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Widget> _buildActions() {
     return <Widget>[
       IconButton(
-          icon: Icon(Icons.settings),
+          icon: settings.scoreboardNeedsUpdate()
+              ? Badge(
+                  child: Icon(Icons.settings),
+                  badgeContent:
+                      Text("1", style: TextStyle(color: Colors.white)),
+                )
+              : Icon(Icons.settings),
           tooltip: 'Settings',
           onPressed: () {
             shouldRefreshConfig = true;
@@ -444,7 +472,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
       // Do nothing
     }
-    if (settings.version > ScoreboardSettings.clientVersion) {
+    if (settings.clientNeedsUpdate()) {
       alert = AlertDialog(
           title: Text("Update this App!"),
           content: Text(
@@ -457,18 +485,30 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             )
           ]);
-    } else if (settings.version < ScoreboardSettings.clientVersion) {
+    } else if (settings.scoreboardNeedsUpdate()) {
       alert = AlertDialog(
           title: Text("Update your scoreboard!"),
           content: Text("There is an update available for your scoreboard."),
           actions: [
             FlatButton(
-              child: Text("Update"),
-              onPressed: () async {
-                await AppState.removeScoreboard();
+              child: Text("Later"),
+              onPressed: () {
                 Navigator.of(context).pop();
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => buildHome()));
+              },
+            ),
+            FlatButton(
+              child: Text("Reboot"),
+              onPressed: () async {
+                AppState state = await AppState.load();
+                String ip = state.scoreboardAddresses[state.activeIndex];
+                print("Rebooting at ip : $ip");
+                try {
+                  await Channel(ipAddress: ip).rebootRequest();
+                } catch (e) {
+                  print(e.toString());
+                } finally {
+                  Navigator.of(context).pop();
+                }
               },
             )
           ]);
