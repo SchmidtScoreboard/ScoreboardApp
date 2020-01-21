@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'channel.dart';
 import 'dart:async';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:convert/convert.dart';
 
 class ScreenId {
   static const NHL = 0;
@@ -160,6 +164,60 @@ class ScoreboardSettings {
       ret["screens"].add(s.toJson());
     }
     return ret;
+  }
+}
+
+// Scoreboard uses Diffie-Hellman Key Exchange of ~500 digit keys
+class VerificationKey {
+  BigInt secret;
+
+  static BigInt p = BigInt.parse("23");
+  static BigInt g = BigInt.parse("5"); // Primitive root modulo of p
+  static const DIGITS = 2;
+
+  VerificationKey(String s) {
+    this.secret = BigInt.parse(s);
+  }
+
+  VerificationKey.internal(BigInt bigInt) {
+    this.secret = bigInt;
+  }
+  static VerificationKey generate() {
+    String value = "";
+    Random random = Random.secure();
+    for (var i = 0; i < DIGITS; i++) {
+      // There are way better ways to do this
+      value += random.nextInt(10).toString();
+    }
+    return VerificationKey(value);
+  }
+
+  // Converts an arbitrary string message to base64, then to bigint
+  static BigInt stringToBigInt(String message) {
+    var bytes = utf8.encode(message);
+    var hexString = hex.encode(bytes);
+    return BigInt.parse(hexString, radix: 16);
+  }
+
+  // Returns hex string signed using this key
+  String encrypt(String message) {
+    BigInt messageInt = stringToBigInt(message);
+    return (secret * messageInt).toRadixString(16);
+  }
+
+  String decrypt(String encryptedMessage) {
+    BigInt messageInt = BigInt.parse(encryptedMessage, radix: 16);
+    BigInt decryptedInt = messageInt ~/ secret;
+    List<int> hexValues = hex.decode(decryptedInt.toRadixString(16));
+    return utf8.decode(hexValues);
+  }
+
+  BigInt getPublicKey() {
+    return g.modPow(secret, p);
+  }
+
+  VerificationKey getSharedSecret(BigInt exchangedPublicKey) {
+    return VerificationKey.internal(exchangedPublicKey.modPow(secret, p));
   }
 }
 
