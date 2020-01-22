@@ -167,13 +167,14 @@ class ScoreboardSettings {
   }
 }
 
-// Scoreboard uses Diffie-Hellman Key Exchange of ~500 digit keys
+// Scoreboard uses Diffie-Hellman Key Exchange of ~300 digit keys
 class VerificationKey {
   BigInt secret;
 
-  static BigInt p = BigInt.parse("23");
+  static BigInt p = BigInt.parse(
+      "531872289054204184185084734375133399408303613982130856645299464930952178606045848877129147820387996428175564228204785846141207532462936339834139412401975338705794646595487324365194792822189473092273993580587964571659678084484152603881094176995594813302284232006001752128168901293560051833646881436219");
   static BigInt g = BigInt.parse("5"); // Primitive root modulo of p
-  static const DIGITS = 2;
+  static const DIGITS = 300;
 
   VerificationKey(String s) {
     this.secret = BigInt.parse(s);
