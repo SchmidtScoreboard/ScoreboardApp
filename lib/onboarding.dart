@@ -189,8 +189,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Connect to your Scoreboard"),
       getOnboardInstruction(
-          "In your device's Settings app, connect to the wifi network as shown on your scoreboard:"),
-      //TODO add dope hero image here
+          "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
       FutureBuilder(
         future: Channel.hotspotChannel.connectRequest(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
@@ -227,7 +226,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
     print("Got error callback wifi setup");
     Scaffold.of(context).showSnackBar(new SnackBar(
       content: Text(
-          "Failed to send Wifi Configuration, is your scoreboard turned on?"),
+          "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?"),
       duration: Duration(minutes: 10),
       action: SnackBarAction(
         label: "Dismiss",
@@ -254,7 +253,9 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Enter your WiFi Information"),
       getOnboardInstruction(
-          "Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below:"),
+          "Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below."),
+      getOnboardInstruction(
+          "Note that fields are case-sensitive. Scoreboard will restart and connect to WiFi"),
       Theme(
           data: ThemeData(
               primarySwatch: Colors.blue,
@@ -321,7 +322,9 @@ class SyncScreenState extends OnboardingScreenState {
         [
           getOnboardTitle("Sync with Scoreboard"),
           getOnboardInstruction(
-              "Enter the code that appears on the scoreboard in the box below. If no code appears, double tap the Scoreboard's side button."),
+              "Enter the code that appears on the scoreboard."),
+          getOnboardInstruction(
+              "It will take a few minutes for your Scoreboard to connect and startup."),
           Theme(
               data: ThemeData(
                   primarySwatch: Colors.blue,
@@ -347,7 +350,7 @@ class SyncScreenState extends OnboardingScreenState {
             padding: EdgeInsets.all(20),
             child: FlatButton(
               child: Text(
-                  "If your scoreboard is showing an error,\ntap here to restart setup",
+                  "If your scoreboard is showing an error, reset your Scoreboard by pressing and holding the side button for 10 seconds, then tap here to restart setup",
                   style: TextStyle(color: Colors.grey, fontSize: 18)),
               onPressed: () {
                 AppState.setState(SetupState.SYNC);

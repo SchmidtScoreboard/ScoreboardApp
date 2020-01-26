@@ -305,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       //     children: <Widget>[Icon(Icons.refresh)]),
                       title: Text("If scoreboard is showing an error..."),
                       subtitle: Text(
-                          "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to reset"),
+                          "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to redo setup"),
                       onTap: () async {
                         await AppState.setState(SetupState.FACTORY);
                         setState(() {
