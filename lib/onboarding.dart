@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
-import 'package:toast/toast.dart';
+import 'package:flutter/services.dart';
 
 import 'homepage.dart';
 import 'channel.dart';
@@ -18,6 +18,10 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -35,6 +39,17 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
             }),
             backgroundColor: Colors.transparent,
             drawer: ScoreboardDrawer()));
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    super.dispose();
   }
 
   Widget getOnboardWidget(BuildContext context);
@@ -142,7 +157,7 @@ class SplashScreenState extends OnboardingScreenState {
             child: FlatButton(
               child: Text(
                   "If you've already set up this scoreboard with another device, you can skip to the syncing phase by pressing here",
-                  style: TextStyle(color: Colors.grey, fontSize: 18)),
+                  style: TextStyle(color: Colors.grey, fontSize: 12)),
               onPressed: () {
                 AppState.setState(SetupState.SYNC);
                 Navigator.pushReplacement(context,
@@ -351,7 +366,7 @@ class SyncScreenState extends OnboardingScreenState {
             child: FlatButton(
               child: Text(
                   "If your scoreboard is showing an error, reset your Scoreboard by pressing and holding the side button for 10 seconds, then tap here to restart setup",
-                  style: TextStyle(color: Colors.grey, fontSize: 18)),
+                  style: TextStyle(color: Colors.grey, fontSize: 12)),
               onPressed: () {
                 AppState.setState(SetupState.SYNC);
                 Navigator.pushReplacement(
