@@ -1,4 +1,6 @@
 PODS:
+  - "app_settings (3.0.0+1)":
+    - Flutter
   - Flutter (1.0.0)
   - flutter_picker (0.0.1):
     - Flutter
@@ -6,11 +8,14 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
+  - app_settings (from `.symlinks/plugins/app_settings/ios`)
   - Flutter (from `Flutter`)
   - flutter_picker (from `.symlinks/plugins/flutter_picker/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
 
 EXTERNAL SOURCES:
+  app_settings:
+    :path: ".symlinks/plugins/app_settings/ios"
   Flutter:
     :path: Flutter
   flutter_picker:
@@ -19,10 +24,11 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences/ios"
 
 SPEC CHECKSUMS:
+  app_settings: d103828c9f5d515c4df9ee754dabd443f7cedcf3
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   flutter_picker: 8ff0d7440b4e8327fcc9e6b21a39ef9369e697c7
   shared_preferences: 1feebfa37bb57264736e16865e7ffae7fc99b523
 
-PODFILE CHECKSUM: 3dbe063e9c90a5d7c9e4e76e70a821b9e2c1d271
+PODFILE CHECKSUM: 0c0716bf3d41b30c422cc4aced86e546111782b2
 
 COCOAPODS: 1.8.4

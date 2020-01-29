@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
 import 'package:flutter/services.dart';
+import 'package:app_settings/app_settings.dart';
 
 import 'homepage.dart';
 import 'channel.dart';
@@ -212,7 +212,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
             print("Connected to server");
             connected = true;
             return getOnboardButton(
-                context, "All Connected!", WifiCredentialsScreen(), callback);
+                context, "Continue", WifiCredentialsScreen(), callback);
           } else if (snapshot.hasError) {
             //print(snapshot.error.toString());
           }
@@ -220,6 +220,18 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
               style: TextStyle(color: Colors.grey[400]));
         },
       ),
+      if (!connected)
+        RaisedButton(
+            child: Text(
+              "Go to Settings",
+            ),
+            color: Theme.of(context).accentColor,
+            elevation: 4,
+            highlightElevation: 8,
+            shape: StadiumBorder(),
+            onPressed: () {
+              AppSettings.openWIFISettings();
+            })
     ]);
   }
 }
@@ -337,9 +349,9 @@ class SyncScreenState extends OnboardingScreenState {
         [
           getOnboardTitle("Sync with Scoreboard"),
           getOnboardInstruction(
-              "Enter the code that appears on the scoreboard."),
+              "It will take a few minutes for your Scoreboard to startup and connect."),
           getOnboardInstruction(
-              "It will take a few minutes for your Scoreboard to connect and startup."),
+              "Enter the code that appears on the Scoreboard."),
           Theme(
               data: ThemeData(
                   primarySwatch: Colors.blue,
