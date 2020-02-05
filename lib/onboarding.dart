@@ -144,6 +144,29 @@ class SplashScreenState extends OnboardingScreenState {
   }
 
   Widget getOnboardWidget(BuildContext context) {
+    AppState.load().then((AppState state) {
+      if (state.policyVersion < AppState.CURRENT_POLICY_VERSION) {
+        AlertDialog policyAlert = AlertDialog(
+          title: Text("Usage and Privacy Policy"),
+          content: SingleChildScrollView(child: Text(AppState.POLICY_TEXT)),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Accept"),
+              onPressed: () async {
+                await AppState.setPolicyVersion(
+                    AppState.CURRENT_POLICY_VERSION);
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return policyAlert;
+            });
+      }
+    });
     return layoutWidgets(
         <Widget>[
           getOnboardTitle("Scoreboard Controller"),

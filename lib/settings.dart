@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'models.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'teams.dart';
@@ -247,7 +248,30 @@ class SettingsScreenState extends State<SettingsScreen> {
                           "App Version: ${ScoreboardSettings.clientVersion}")),
                   ListTile(
                       title: Text("Made for Jamie"),
-                      leading: Icon(Icons.favorite))
+                      leading: Icon(Icons.favorite)),
+                  ListTile(
+                    title: Text("Privacy and Usage Policy"),
+                    leading: Icon(FontAwesomeIcons.key),
+                    onTap: () {
+                      AlertDialog policyAlert = AlertDialog(
+                        title: Text("Prviacy and Usage Policy"),
+                        content: Text(AppState.POLICY_TEXT),
+                        actions: <Widget>[
+                          FlatButton(
+                            child: Text("OK"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          )
+                        ],
+                      );
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return policyAlert;
+                          });
+                    },
+                  )
                 ],
               ),
               ListTile(

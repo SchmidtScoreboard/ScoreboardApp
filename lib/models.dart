@@ -237,11 +237,17 @@ class AppState {
   List<SetupState> scoreboardSetupStates;
   List<String> scoreboardNames;
   int activeIndex;
+  int policyVersion;
 
   static const String ADDRESS_KEY = "addresses";
   static const String SETUP_STATE_KEY = "setup_states";
   static const String LAST_INDEX_KEY = "last_index";
+  static const String POLICY_VERSION = "policy_version";
   static const String NAMES_KEY = "names";
+
+  static const int CURRENT_POLICY_VERSION = 1;
+  static const String POLICY_TEXT =
+      "Schmidt Scoreboard does not collect or sell personal information of any kind.\n\nIt may collect Scoreboard usage information purely for internal use and feature selection, but it will never collect your wifi information or any other private information.\n\nScoreboard offers several modes to display scores from various leagues. Any of these modes may be removed at any time.";
 
   static AppState _singleton;
 
@@ -251,6 +257,7 @@ class AppState {
     scoreboardNames = ["My Scoreboard"];
     scoreboardSetupStates = [SetupState.FACTORY];
     activeIndex = 0;
+    policyVersion = 0;
   }
 
   static void resetState(AppState state) {
@@ -274,6 +281,7 @@ class AppState {
             .toList();
         _singleton.scoreboardNames = prefs.getStringList(NAMES_KEY);
         _singleton.activeIndex = prefs.getInt(LAST_INDEX_KEY);
+        _singleton.policyVersion = prefs.getInt(POLICY_VERSION) ?? 0;
         if (_singleton.scoreboardAddresses.length !=
                 _singleton.scoreboardSetupStates.length ||
             _singleton.scoreboardNames.length !=
@@ -308,6 +316,7 @@ class AppState {
               .toList());
       prefs.setStringList(NAMES_KEY, _singleton.scoreboardNames);
       prefs.setInt(LAST_INDEX_KEY, _singleton.activeIndex);
+      prefs.setInt(POLICY_VERSION, _singleton.policyVersion);
     }
   }
 
@@ -332,6 +341,12 @@ class AppState {
   static Future setActive(int index) async {
     AppState app = await AppState.load();
     app.activeIndex = index;
+    await AppState.store();
+  }
+
+  static Future setPolicyVersion(int version) async {
+    AppState app = await AppState.load();
+    app.policyVersion = version;
     await AppState.store();
   }
 
