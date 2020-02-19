@@ -247,6 +247,10 @@ class SettingsScreenState extends State<SettingsScreen> {
                       title: Text(
                           "App Version: ${ScoreboardSettings.clientVersion}")),
                   ListTile(
+                      leading: Icon(Icons.wifi_tethering),
+                      title: Text(
+                          "Scoreboard MAC Address:\n${mutableSettings.macAddress}")),
+                  ListTile(
                       title: Text("Made for Jamie"),
                       leading: Icon(Icons.favorite)),
                   ListTile(

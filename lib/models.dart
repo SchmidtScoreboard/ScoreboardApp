@@ -102,6 +102,7 @@ class ScoreboardSettings {
   String name;
   int version;
   String timezone;
+  String macAddress;
 
   ScoreboardSettings(
       {this.activeScreen,
@@ -109,7 +110,8 @@ class ScoreboardSettings {
       this.name,
       this.screens,
       this.version,
-      this.timezone});
+      this.timezone,
+      this.macAddress});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -122,7 +124,8 @@ class ScoreboardSettings {
         name: json["name"] ?? "My New Scoreboard",
         screens: screens,
         version: json["version"],
-        timezone: json["timezone"]);
+        timezone: json["timezone"],
+        macAddress: json["mac_address"] ?? "00:00:00:00:00:00");
   }
 
   ScoreboardSettings clone() {
@@ -136,7 +139,8 @@ class ScoreboardSettings {
         name: name,
         version: version,
         screens: new List<Screen>.from(screensCopy),
-        timezone: timezone);
+        timezone: timezone,
+        macAddress: macAddress);
   }
 
   bool clientNeedsUpdate() {
@@ -152,6 +156,7 @@ class ScoreboardSettings {
         this.screenOn == other.screenOn &&
         this.name == other.name &&
         this.timezone == other.timezone &&
+        this.macAddress == other.macAddress &&
         listEquals(this.screens, other.screens);
   }
 
@@ -166,6 +171,7 @@ class ScoreboardSettings {
     for (Screen s in screens) {
       ret["screens"].add(s.toJson());
     }
+    ret["mac_address"] = macAddress;
     return ret;
   }
 }
