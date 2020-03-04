@@ -168,7 +168,7 @@ Widget buildHome() {
         }
       } else if (snapshot.hasError) {
         print(snapshot.error);
-        return Text("Error :(");
+        return Text("Internal Error");
       } else {
         return Scaffold(
           appBar: AppBar(
@@ -257,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
             shouldRefreshConfig = false;
           } else if (snapshot.hasError) {
             print("Got config error " + snapshot.error.toString());
-            name = "Error :(";
+            name = "Sync Error";
             body = ListView(padding: EdgeInsets.all(10), children: <Widget>[
               Card(
                   color: Colors.red[300],
