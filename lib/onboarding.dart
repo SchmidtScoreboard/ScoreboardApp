@@ -249,38 +249,54 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
 
   @override
   Widget getOnboardWidget(BuildContext context) {
-    return layoutWidgets(<Widget>[
-      getOnboardTitle("Connect to your Scoreboard"),
-      getOnboardInstruction(
-          "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
-      FutureBuilder(
-        future: Channel.hotspotChannel.connectRequest(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            print("Connected to server");
-            connected = true;
-            return getOnboardButton(
-                context, "Continue", WifiCredentialsScreen(), callback);
-          } else if (snapshot.hasError) {
-            //print(snapshot.error.toString());
-          }
-          return Text("Waiting on connection...",
-              style: TextStyle(color: Colors.grey[400]));
-        },
-      ),
-      if (!connected)
-        RaisedButton(
-            child: Text(
-              "Go to Settings",
-            ),
-            color: Theme.of(context).accentColor,
-            elevation: 4,
-            highlightElevation: 8,
-            shape: StadiumBorder(),
-            onPressed: () {
-              AppSettings.openWIFISettings();
-            })
-    ]);
+    return layoutWidgets(
+        <Widget>[
+          getOnboardTitle("Connect to your Scoreboard"),
+          getOnboardInstruction(
+              "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
+          FutureBuilder(
+            future: Channel.hotspotChannel.connectRequest(),
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if (snapshot.hasData) {
+                print("Connected to server");
+                connected = true;
+                return getOnboardButton(
+                    context, "Continue", WifiCredentialsScreen(), callback);
+              } else if (snapshot.hasError) {
+                //print(snapshot.error.toString());
+              }
+              return Column(children: [
+                Text("Waiting on connection...",
+                    style: TextStyle(color: Colors.grey[400])),
+                Padding(
+                    padding: EdgeInsets.all(10),
+                    child: RaisedButton(
+                        child: Text(
+                          "Go to Settings",
+                        ),
+                        color: Theme.of(context).accentColor,
+                        elevation: 4,
+                        highlightElevation: 8,
+                        shape: StadiumBorder(),
+                        onPressed: () {
+                          AppSettings.openWIFISettings();
+                        }))
+              ]);
+            },
+          ),
+        ],
+        Padding(
+            padding: EdgeInsets.all(20),
+            child: FlatButton(
+              child: Text(
+                  "If you've already set up this scoreboard with another device, you can skip to the syncing phase by pressing here",
+                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+              onPressed: () {
+                AppState.setState(SetupState.SYNC);
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => SyncScreen()));
+              },
+            )));
   }
 }
 
@@ -394,6 +410,8 @@ class SyncScreenState extends OnboardingScreenState {
               "It will take a few minutes for your Scoreboard to startup and connect."),
           getOnboardInstruction(
               "Enter the code that appears on the Scoreboard."),
+          getOnboardInstruction(
+              "You can double tap the side button to show the Sync Code"),
           Theme(
               data: Theme.of(context),
               child: TextField(
