@@ -22,23 +22,25 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Colors.blue,
-              Colors.blue[900],
-            ],
-          ),
-        ),
-        child: Scaffold(
-            body: Builder(builder: (BuildContext context) {
-              return getOnboardWidget(context);
-            }),
-            backgroundColor: Colors.transparent,
-            drawer: ScoreboardDrawer()));
+    // return Container(
+    //     decoration: BoxDecoration(
+    //       gradient: LinearGradient(
+    //         begin: Alignment.topRight,
+    //         end: Alignment.bottomLeft,
+    //         colors: [
+    //           Colors.blue,
+    //           Colors.blue[900],
+    //         ],
+    //       ),
+    //     ),
+    //     child:
+
+    return Scaffold(
+        body: Builder(builder: (BuildContext context) {
+          return getOnboardWidget(context);
+        }),
+        backgroundColor: Colors.transparent,
+        drawer: ScoreboardDrawer());
   }
 
   @override
@@ -307,10 +309,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
       getOnboardInstruction(
           "Note that fields are case-sensitive. Scoreboard will restart and connect to WiFi"),
       Theme(
-          data: ThemeData(
-              primarySwatch: Colors.blue,
-              accentColor: Colors.orangeAccent,
-              brightness: Brightness.dark),
+          data: Theme.of(context),
           child: TextField(
             decoration: InputDecoration(
               icon: Icon(Icons.wifi),
@@ -329,10 +328,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
             },
           )),
       Theme(
-          data: ThemeData(
-              primarySwatch: Colors.blue,
-              accentColor: Colors.orangeAccent,
-              brightness: Brightness.dark),
+          data: Theme.of(context),
           child: TextField(
             decoration:
                 InputDecoration(icon: Icon(Icons.lock), labelText: "Password"),
@@ -376,10 +372,7 @@ class SyncScreenState extends OnboardingScreenState {
           getOnboardInstruction(
               "Enter the code that appears on the Scoreboard."),
           Theme(
-              data: ThemeData(
-                  primarySwatch: Colors.blue,
-                  accentColor: Colors.orangeAccent,
-                  brightness: Brightness.dark),
+              data: Theme.of(context),
               child: TextField(
                 decoration: InputDecoration(labelText: "Code"),
                 textCapitalization: TextCapitalization.characters,

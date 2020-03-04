@@ -260,7 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
             name = "Error :(";
             body = ListView(padding: EdgeInsets.all(10), children: <Widget>[
               Card(
-                  color: Colors.red[100],
+                  color: Colors.red[300],
                   child: Padding(
                       padding: EdgeInsets.all(10),
                       child: ListTile(
@@ -272,7 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             "Make sure your scoreboard is plugged in and your device is connected to the same WiFi network"),
                       ))),
               Card(
-                color: Colors.red[200],
+                color: Colors.red[300],
                 child: Padding(
                     padding: EdgeInsets.all(10),
                     child: ListTile(

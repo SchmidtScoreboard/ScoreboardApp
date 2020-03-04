@@ -228,6 +228,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                         mutableSettings.timezone = timezones[value[0]];
                         setState(() {});
                       },
+                      backgroundColor: Colors.transparent,
+                      textStyle: TextStyle(color: Colors.white, fontSize: 18),
                       title: Text("Change the timezone"),
                       hideHeader: true,
                       looping: false);
@@ -452,6 +454,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                     data: [NumberPickerColumn(begin: 5, end: 120, jump: 5)]),
                 hideHeader: true,
                 title: Text("Select a rotation time in seconds"),
+                backgroundColor: Colors.transparent,
+                textStyle: TextStyle(color: Colors.white, fontSize: 18),
                 onConfirm: (Picker picker, List value) {
                   screen.rotationTime = picker.getSelectedValues()[0];
                   setState(() {});
@@ -481,6 +485,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                         screen.focusTeams.add(displayData[value[0]].id);
                         setState(() {});
                       },
+                      backgroundColor: Colors.transparent,
+                      textStyle: TextStyle(color: Colors.white, fontSize: 18),
                       title: Text("Add a favorite team"),
                       hideHeader: true);
                   picker.showDialog(context);
