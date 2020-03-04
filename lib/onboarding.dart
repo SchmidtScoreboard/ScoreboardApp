@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:app_settings/app_settings.dart';
 
@@ -174,6 +176,27 @@ class SplashScreenState extends OnboardingScreenState {
           getOnboardTitle("Scoreboard Controller"),
           getOnboardInstruction(
               "Welcome to the scoreboard controller app! Make sure your scoreboard is plugged in and powered on, then we'll get connected!\n\nIf your scoreboard is showing an error, hold down the side button for ten seconds to reset it."),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: "If you'd like to purchase a Scoreboard, check out ",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+                TextSpan(
+                  text: "schmidtscoreboard.com",
+                  style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.orangeAccent,
+                      fontWeight: FontWeight.bold),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      launch("http://schmidtscoreboard.com");
+                    },
+                ),
+              ],
+            ),
+          ),
           getOnboardButton(
               context, "Get Started", ConnectToHotspotScreen(), callback),
         ],

@@ -6,12 +6,21 @@ PODS:
     - Flutter
   - shared_preferences (0.0.1):
     - Flutter
+  - url_launcher (0.0.1):
+    - Flutter
+  - url_launcher_macos (0.0.1):
+    - Flutter
+  - url_launcher_web (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
   - app_settings (from `.symlinks/plugins/app_settings/ios`)
   - Flutter (from `Flutter`)
   - flutter_picker (from `.symlinks/plugins/flutter_picker/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
+  - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
+  - url_launcher_macos (from `.symlinks/plugins/url_launcher_macos/ios`)
+  - url_launcher_web (from `.symlinks/plugins/url_launcher_web/ios`)
 
 EXTERNAL SOURCES:
   app_settings:
@@ -22,13 +31,22 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_picker/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
+  url_launcher:
+    :path: ".symlinks/plugins/url_launcher/ios"
+  url_launcher_macos:
+    :path: ".symlinks/plugins/url_launcher_macos/ios"
+  url_launcher_web:
+    :path: ".symlinks/plugins/url_launcher_web/ios"
 
 SPEC CHECKSUMS:
   app_settings: d103828c9f5d515c4df9ee754dabd443f7cedcf3
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   flutter_picker: 8ff0d7440b4e8327fcc9e6b21a39ef9369e697c7
   shared_preferences: 1feebfa37bb57264736e16865e7ffae7fc99b523
+  url_launcher: a1c0cc845906122c4784c542523d8cacbded5626
+  url_launcher_macos: fd7894421cd39320dce5f292fc99ea9270b2a313
+  url_launcher_web: e5527357f037c87560776e36436bf2b0288b965c
 
-PODFILE CHECKSUM: 0c0716bf3d41b30c422cc4aced86e546111782b2
+PODFILE CHECKSUM: 8d1568faedcab56a33296f3856ec16c04b2eda64
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.0
