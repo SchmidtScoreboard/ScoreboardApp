@@ -338,10 +338,14 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
     print("Got error callback wifi setup");
     Scaffold.of(context).showSnackBar(new SnackBar(
       content: Text(
-          "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?"),
+        "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?",
+        style: TextStyle(color: Colors.white),
+      ),
       duration: Duration(minutes: 10),
+      backgroundColor: Colors.redAccent,
       action: SnackBarAction(
         label: "Dismiss",
+        textColor: Colors.white,
         onPressed: () {},
       ),
     ));
@@ -489,10 +493,14 @@ class SyncScreenState extends OnboardingScreenState {
   void errorCallback(BuildContext context) {
     Scaffold.of(context).showSnackBar(new SnackBar(
       content: Text(
-          "Sync failed. Is your Scoreboard connected to the same WiFi network as this device?"),
+        "Sync failed. Is your Scoreboard connected to the same WiFi network as this device?",
+        style: TextStyle(color: Colors.white),
+      ),
       duration: Duration(minutes: 10),
+      backgroundColor: Colors.redAccent,
       action: SnackBarAction(
         label: "Dismiss",
+        textColor: Colors.white,
         onPressed: () {},
       ),
     ));
