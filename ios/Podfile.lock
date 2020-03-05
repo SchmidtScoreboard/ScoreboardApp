@@ -4,6 +4,10 @@ PODS:
   - Flutter (1.0.0)
   - flutter_picker (0.0.1):
     - Flutter
+  - keyboard_visibility (0.5.0):
+    - Flutter
+    - Reachability
+  - Reachability (3.2)
   - shared_preferences (0.0.1):
     - Flutter
   - url_launcher (0.0.1):
@@ -17,10 +21,15 @@ DEPENDENCIES:
   - app_settings (from `.symlinks/plugins/app_settings/ios`)
   - Flutter (from `Flutter`)
   - flutter_picker (from `.symlinks/plugins/flutter_picker/ios`)
+  - keyboard_visibility (from `.symlinks/plugins/keyboard_visibility/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - url_launcher (from `.symlinks/plugins/url_launcher/ios`)
   - url_launcher_macos (from `.symlinks/plugins/url_launcher_macos/ios`)
   - url_launcher_web (from `.symlinks/plugins/url_launcher_web/ios`)
+
+SPEC REPOS:
+  trunk:
+    - Reachability
 
 EXTERNAL SOURCES:
   app_settings:
@@ -29,6 +38,8 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_picker:
     :path: ".symlinks/plugins/flutter_picker/ios"
+  keyboard_visibility:
+    :path: ".symlinks/plugins/keyboard_visibility/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
   url_launcher:
@@ -42,6 +53,8 @@ SPEC CHECKSUMS:
   app_settings: d103828c9f5d515c4df9ee754dabd443f7cedcf3
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   flutter_picker: 8ff0d7440b4e8327fcc9e6b21a39ef9369e697c7
+  keyboard_visibility: 96a24de806fe6823c3ad956c01ba2ec6d056616f
+  Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
   shared_preferences: 1feebfa37bb57264736e16865e7ffae7fc99b523
   url_launcher: a1c0cc845906122c4784c542523d8cacbded5626
   url_launcher_macos: fd7894421cd39320dce5f292fc99ea9270b2a313
@@ -49,4 +62,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 8d1568faedcab56a33296f3856ec16c04b2eda64
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.0

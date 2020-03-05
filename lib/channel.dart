@@ -10,12 +10,13 @@ class Channel {
   static final Channel localChannel =
       Channel(ipAddress: "http://127.0.0.1:5005/");
   static final Channel personalLaptopChannel =
-      Channel(ipAddress: "http://192.168.0.190:5005/");
+      Channel(ipAddress: "http://192.168.4.30:5005/");
   static final Channel testingChannel =
       Channel(ipAddress: "http://192.168.0.197:5005/");
   static final Channel hotspotChannel =
       // Channel(ipAddress: "http://192.168.4.1:5005/");
-      localChannel;
+      // localChannel;
+      personalLaptopChannel;
 
   // String root = 'http://192.168.0.197:5005/';
   // String root = "http://127.0.0.1:5005/";

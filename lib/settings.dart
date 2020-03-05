@@ -30,11 +30,15 @@ class SettingsScreenState extends State<SettingsScreen> {
   String wifi = "";
   String password = "";
   bool requesting = false;
+  bool showWifiPassword = false;
   @override
   void initState() {
     print("Initializing settings state");
     originalSettings = widget.settings.clone();
     mutableSettings = widget.settings.clone();
+    passNode.addListener(() {
+      setState(() {});
+    });
 
     super.initState();
   }
@@ -195,25 +199,46 @@ class SettingsScreenState extends State<SettingsScreen> {
                       padding:
                           EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       child: Theme(
-                        data: Theme.of(context)
-                            .copyWith(brightness: Brightness.dark),
-                        child: TextField(
-                          decoration: InputDecoration(
-                              icon: Icon(Icons.lock), labelText: "Password"),
-                          maxLines: 1,
-                          obscureText: true,
-                          autocorrect: false,
-                          maxLength: 63,
-                          textInputAction: TextInputAction.send,
-                          focusNode: passNode,
-                          onChanged: (String s) {
-                            setState(() {
-                              password = s;
-                            });
-                          },
-                          onEditingComplete: () {},
-                        ),
-                      )),
+                          data: Theme.of(context)
+                              .copyWith(brightness: Brightness.dark),
+                          child: Stack(children: <Widget>[
+                            TextField(
+                              decoration: InputDecoration(
+                                  icon: Icon(Icons.lock),
+                                  labelText: "Password"),
+                              maxLines: 1,
+                              obscureText: showWifiPassword,
+                              autocorrect: false,
+                              maxLength: 63,
+                              textInputAction: TextInputAction.send,
+                              focusNode: passNode,
+                              onChanged: (String s) {
+                                setState(() {
+                                  password = s;
+                                });
+                              },
+                              onEditingComplete: () {},
+                            ),
+                            Positioned(
+                                bottom: 14,
+                                right: 0,
+                                child: IconButton(
+                                    color: Theme.of(context).accentColor,
+                                    disabledColor:
+                                        Theme.of(context).disabledColor,
+                                    icon: showWifiPassword
+                                        ? Icon(FontAwesomeIcons.eyeSlash)
+                                        : Icon(FontAwesomeIcons.eye),
+                                    iconSize: 16,
+                                    onPressed: passNode.hasFocus
+                                        ? () {
+                                            setState(() {
+                                              showWifiPassword =
+                                                  !showWifiPassword;
+                                            });
+                                          }
+                                        : null)),
+                          ]))),
                 ],
               ),
               for (var screen in mutableSettings.screens)
@@ -373,6 +398,7 @@ class SettingsScreenState extends State<SettingsScreen> {
               maintainInteractivity: false,
               child: SafeArea(
                 bottom: true,
+                minimum: EdgeInsets.all(20),
                 child: FloatingActionButton.extended(
                   onPressed: () {
                     submitCallback();

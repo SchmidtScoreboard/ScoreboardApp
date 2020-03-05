@@ -5,6 +5,8 @@ import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:app_settings/app_settings.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:keyboard_visibility/keyboard_visibility.dart';
 
 import 'homepage.dart';
 import 'channel.dart';
@@ -17,6 +19,20 @@ abstract class OnboardingScreen extends StatefulWidget {}
 
 abstract class OnboardingScreenState extends State<OnboardingScreen> {
   OnboardingStatus status = OnboardingStatus.ready;
+  bool keyboardShowing = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    KeyboardVisibilityNotification().addNewListener(
+      onChange: (bool visible) {
+        setState(() {
+          keyboardShowing = visible;
+        });
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,24 +40,13 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    // return Container(
-    //     decoration: BoxDecoration(
-    //       gradient: LinearGradient(
-    //         begin: Alignment.topRight,
-    //         end: Alignment.bottomLeft,
-    //         colors: [
-    //           Colors.blue,
-    //           Colors.blue[900],
-    //         ],
-    //       ),
-    //     ),
-    //     child:
 
     return Scaffold(
         body: Builder(builder: (BuildContext context) {
           return getOnboardWidget(context);
         }),
-        backgroundColor: Colors.transparent,
+        // backgroundColor: ,
+        backgroundColor: Theme.of(context).primaryColorDark,
         drawer: ScoreboardDrawer());
   }
 
@@ -62,7 +67,9 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
     return Text(
       text,
       style: TextStyle(
-          fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+          fontSize: 36,
+          color: Theme.of(context).accentColor,
+          fontWeight: FontWeight.bold),
       textAlign: TextAlign.center,
     );
   }
@@ -78,7 +85,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       child: status == OnboardingStatus.ready
           ? Text(
               text,
-              // style: TextStyle(color: Colors.white),
             )
           : Padding(
               padding: EdgeInsets.all(10),
@@ -119,6 +125,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
         height: 20,
       ));
     }
+    print("Keyboard showing? $keyboardShowing");
     Widget alignedFooter = SafeArea(
         minimum: const EdgeInsets.only(bottom: 30),
         child: Align(alignment: FractionalOffset.bottomCenter, child: footer));
@@ -129,7 +136,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(children: paddedWidgets)))),
-      if (footer != null) alignedFooter
+      if (footer != null && !keyboardShowing) alignedFooter
     ]);
   }
 }
@@ -187,7 +194,7 @@ class SplashScreenState extends OnboardingScreenState {
                   text: "schmidtscoreboard.com",
                   style: TextStyle(
                       fontSize: 18,
-                      color: Colors.orangeAccent,
+                      color: Theme.of(context).accentColor,
                       fontWeight: FontWeight.bold),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
@@ -312,6 +319,20 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   FocusNode passNode = FocusNode();
   String wifi;
   String password;
+  bool showWifiPassword = false;
+
+  @override
+  void initState() {
+    super.initState();
+    passNode.addListener(() {
+      setState(() {});
+    });
+    KeyboardVisibilityNotification().addNewListener(
+      onChange: (bool visible) {
+        print(visible);
+      },
+    );
+  }
 
   void errorCallback(BuildContext context) {
     print("Got error callback wifi setup");
@@ -368,19 +389,38 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
           )),
       Theme(
           data: Theme.of(context),
-          child: TextField(
-            decoration:
-                InputDecoration(icon: Icon(Icons.lock), labelText: "Password"),
-            maxLines: 1,
-            obscureText: true,
-            autocorrect: false,
-            maxLength: 63,
-            textInputAction: TextInputAction.send,
-            focusNode: passNode,
-            onChanged: (String s) {
-              password = s;
-            },
-          )),
+          child: Stack(children: <Widget>[
+            TextField(
+              decoration: InputDecoration(
+                  icon: Icon(Icons.lock), labelText: "Password"),
+              maxLines: 1,
+              obscureText: showWifiPassword,
+              autocorrect: false,
+              maxLength: 63,
+              textInputAction: TextInputAction.send,
+              focusNode: passNode,
+              onChanged: (String s) {
+                password = s;
+              },
+            ),
+            Positioned(
+                bottom: 14,
+                right: 0,
+                child: IconButton(
+                    color: Theme.of(context).accentColor,
+                    disabledColor: Theme.of(context).disabledColor,
+                    icon: showWifiPassword
+                        ? Icon(FontAwesomeIcons.eyeSlash)
+                        : Icon(FontAwesomeIcons.eye),
+                    iconSize: 16,
+                    onPressed: passNode.hasFocus
+                        ? () {
+                            setState(() {
+                              showWifiPassword = !showWifiPassword;
+                            });
+                          }
+                        : null)),
+          ])),
       Padding(
           padding: EdgeInsets.only(top: 20),
           child: getOnboardButton(context, "Submit", SyncScreen(), callback,
