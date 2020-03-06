@@ -207,7 +207,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                   icon: Icon(Icons.lock),
                                   labelText: "Password"),
                               maxLines: 1,
-                              obscureText: showWifiPassword,
+                              obscureText: !showWifiPassword,
                               autocorrect: false,
                               maxLength: 63,
                               textInputAction: TextInputAction.send,

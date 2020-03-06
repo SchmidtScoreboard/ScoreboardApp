@@ -398,7 +398,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
               decoration: InputDecoration(
                   icon: Icon(Icons.lock), labelText: "Password"),
               maxLines: 1,
-              obscureText: showWifiPassword,
+              obscureText: !showWifiPassword,
               autocorrect: false,
               maxLength: 63,
               textInputAction: TextInputAction.send,
