@@ -53,7 +53,6 @@ class Channel {
   Future<ScoreboardSettings> configureSettings(
       ScoreboardSettings newSettings) async {
     var url = ipAddress + "configure";
-    //TODO implement toJson in scoreboard settings
     print("Sending scoreboard: $newSettings");
     var body = json.encode(newSettings.toJson());
 

@@ -1,5 +1,5 @@
-name: scoreboard
-description: A new Flutter project.
+name: Scoreboard
+description: Setup, manage, and control the Schmidt Scoreboard from your iOS or Android device
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -42,6 +42,15 @@ dev_dependencies:
   test:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: "^0.7.3"
+  
+flutter_icons:
+  image_path_android: "assets/images/glowing_dots_ios.png"
+  image_path_ios: "assets/images/glowing_dots_ios.png"
+  android: true # can specify file name here e.g. "ic_launcher"
+  ios: true # can specify file name here e.g. "My-Launcher-Icon"
+  adaptive_icon_background: "assets/images/glowing_dots_bg.png" # only available for Android 8.0 devices and above
+  adaptive_icon_foreground: "assets/images/glowing_dots_fg.png" # only available for Android 8.0 devices and above
 
 
 # For information on the generic Dart part of this file, see the
