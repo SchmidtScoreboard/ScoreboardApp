@@ -271,6 +271,7 @@ class AppState {
     state.scoreboardNames = ["My Scoreboard"];
     state.scoreboardSetupStates = [SetupState.FACTORY];
     state.activeIndex = 0;
+    state.policyVersion = 0;
   }
 
   static Future<AppState> load() async {
