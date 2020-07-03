@@ -1,3 +1,4 @@
+import 'package:Scoreboard/teams.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'models.dart';
@@ -33,6 +34,10 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
                       Text(
                         'My Scoreboards',
                         style: TextStyle(fontSize: 18),
+                      ),
+                      Text(
+                        'If you own multiple Schmidt Scoreboards, use this menu to swap between them',
+                        style: TextStyle(fontSize: 12),
                       ),
                     ],
                   ),
@@ -361,9 +366,11 @@ class _MyHomePageState extends State<MyHomePage> {
             shouldRefreshConfig = true;
             refreshTimer.cancel();
             Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => SettingsScreen(settings: settings)));
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            SettingsScreen(settings: settings)))
+                .then((value) => setState(() => {}));
           }),
     ];
   }
@@ -411,55 +418,71 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildRow(Screen screen) {
+    String subtitle = screen.subtitle;
+    if (screen.focusTeams.length > 0) {
+      subtitle += "\n\nFavorite teams:";
+      for (var teamId in screen.focusTeams) {
+        subtitle += "\n  ";
+        Team team;
+        if (screen.id == ScreenId.NHL) {
+          team = Team.nhlTeams[teamId];
+        } else if (screen.id == ScreenId.MLB) {
+          team = Team.mlbTeams[teamId];
+        } else {
+          print(
+              "Something went wrong, trying to get a team for a non NHL or MLB card");
+        }
+        subtitle += team.city + " " + team.name;
+      }
+    }
     return new Card(
       color: screen.id == settings.activeScreen && settings.screenOn
           ? Theme.of(context).accentColor
           : Colors.grey,
       child: InkWell(
-          splashColor: Colors.blue.withAlpha(30),
-          onTap: () async {
-            if (screen.id != settings.activeScreen) {
-              setState(() {
-                print("Selecting");
-                settings.activeScreen = screen.id;
-                settings.screenOn = true;
-                refreshingScreenSelect = true;
-              });
-            }
-            AppState state = await AppState.load();
-            String ip = state.scoreboardAddresses[state.activeIndex];
-            print("Setting sport for scoreboard at address: $ip");
-            ScoreboardSettings newSettings =
-                await Channel(ipAddress: ip).sportRequest(screen.id);
+        splashColor: Colors.blue.withAlpha(30),
+        onTap: () async {
+          if (screen.id != settings.activeScreen) {
             setState(() {
-              print("Done select");
-              settings = newSettings;
-              refreshingScreenSelect = false;
+              print("Selecting");
+              settings.activeScreen = screen.id;
+              settings.screenOn = true;
+              refreshingScreenSelect = true;
             });
-          },
-          child: Column(
-            children: <Widget>[
-              ListTile(
-                leading:
-                    screen.id == settings.activeScreen && refreshingScreenSelect
-                        ? CircularProgressIndicator(
-                            valueColor:
-                                new AlwaysStoppedAnimation<Color>(Colors.white),
-                          )
-                        : Icon(
-                            screen.getIcon(),
-                            color: Colors.white,
-                            size: 40,
-                          ),
-                title: Text(
-                  screen.name,
-                  style: TextStyle(fontSize: 24, color: Colors.white),
-                ),
-                subtitle: Text(screen.subtitle,
-                    style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          )),
+          }
+          AppState state = await AppState.load();
+          String ip = state.scoreboardAddresses[state.activeIndex];
+          print("Setting sport for scoreboard at address: $ip");
+          ScoreboardSettings newSettings =
+              await Channel(ipAddress: ip).sportRequest(screen.id);
+          setState(() {
+            print("Done select");
+            settings = newSettings;
+            refreshingScreenSelect = false;
+          });
+        },
+        child: ListTile(
+          leading: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                screen.id == settings.activeScreen && refreshingScreenSelect
+                    ? CircularProgressIndicator(
+                        valueColor:
+                            new AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                    : Icon(
+                        screen.getIcon(),
+                        color: Colors.white,
+                        size: 40,
+                      ),
+              ]),
+          title: Text(
+            screen.name,
+            style: TextStyle(fontSize: 24, color: Colors.white),
+          ),
+          subtitle: Text(subtitle, style: TextStyle(color: Colors.white)),
+        ),
+      ),
     );
   }
 

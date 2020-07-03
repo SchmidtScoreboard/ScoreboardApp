@@ -451,6 +451,27 @@ class SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void showAddTeamDialog(Map<int, Team> teamMap, Screen screen) {
+    List<Team> displayData = [];
+    for (int teamId in teamMap.keys) {
+      if (!screen.focusTeams.contains(teamId)) {
+        displayData.add(teamMap[teamId]);
+      }
+    }
+    displayData.sort();
+    Picker picker = new Picker(
+        adapter: PickerDataAdapter<Team>(pickerdata: displayData),
+        onConfirm: (Picker picker, List value) {
+          screen.focusTeams.add(displayData[value[0]].id);
+          setState(() {});
+        },
+        backgroundColor: Colors.transparent,
+        textStyle: TextStyle(color: Colors.white, fontSize: 18),
+        title: Text("Add a favorite team"),
+        hideHeader: true);
+    picker.showDialog(context);
+  }
+
   Widget getScreenWidget(Screen screen) {
     Map<int, Team> teamMap;
     switch (screen.id) {
@@ -490,30 +511,13 @@ class SettingsScreenState extends State<SettingsScreen> {
         ListTile(
             leading: Icon(Icons.favorite),
             title: Text("Favorite teams:"),
+            onTap: () {
+              showAddTeamDialog(teamMap, screen);
+            },
             trailing: IconButton(
                 icon: Icon(Icons.add),
                 onPressed: () {
-                  List<Team> displayData = [];
-                  for (int teamId in teamMap.keys) {
-                    if (!screen.focusTeams.contains(teamId)) {
-                      displayData.add(teamMap[teamId]);
-                      // displayData.add(
-                      //     teamMap[teamId].city + " " + teamMap[teamId].name);
-                      // teamIds.add(teamId);
-                    }
-                  }
-                  displayData.sort();
-                  Picker picker = new Picker(
-                      adapter: PickerDataAdapter<Team>(pickerdata: displayData),
-                      onConfirm: (Picker picker, List value) {
-                        screen.focusTeams.add(displayData[value[0]].id);
-                        setState(() {});
-                      },
-                      backgroundColor: Colors.transparent,
-                      textStyle: TextStyle(color: Colors.white, fontSize: 18),
-                      title: Text("Add a favorite team"),
-                      hideHeader: true);
-                  picker.showDialog(context);
+                  showAddTeamDialog(teamMap, screen);
                 })),
         Column(
             children: screen.focusTeams

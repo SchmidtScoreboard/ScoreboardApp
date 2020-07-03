@@ -20,6 +20,7 @@ abstract class OnboardingScreen extends StatefulWidget {}
 abstract class OnboardingScreenState extends State<OnboardingScreen> {
   OnboardingStatus status = OnboardingStatus.ready;
   bool keyboardShowing = false;
+  var scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -42,6 +43,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
     ]);
 
     return Scaffold(
+        key: scaffoldKey,
         body: Builder(builder: (BuildContext context) {
           return getOnboardWidget(context);
         }),
@@ -125,7 +127,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
         height: 20,
       ));
     }
-    print("Keyboard showing? $keyboardShowing");
     Widget alignedFooter = SafeArea(
         minimum: const EdgeInsets.only(bottom: 30),
         child: Align(alignment: FractionalOffset.bottomCenter, child: footer));
@@ -136,6 +137,12 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(children: paddedWidgets)))),
+      SafeArea(
+        child: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () => scaffoldKey.currentState.openDrawer(),
+        ),
+      ),
       if (footer != null && !keyboardShowing) alignedFooter
     ]);
   }
@@ -209,10 +216,12 @@ class SplashScreenState extends OnboardingScreenState {
         ],
         Padding(
             padding: EdgeInsets.all(20),
-            child: FlatButton(
+            child: RaisedButton(
+              color: Theme.of(context).accentColor,
+              padding: EdgeInsets.all(5),
               child: Text(
                   "If you've already set up this scoreboard with another device, you can skip to the syncing phase by pressing here",
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
               onPressed: () {
                 AppState.setState(SetupState.SYNC);
                 Navigator.pushReplacement(context,
@@ -294,10 +303,12 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
         ],
         Padding(
             padding: EdgeInsets.all(20),
-            child: FlatButton(
+            child: RaisedButton(
+              color: Theme.of(context).accentColor,
+              padding: EdgeInsets.all(5),
               child: Text(
                   "If you've already set up this scoreboard with another device, you can skip to the syncing phase by pressing here",
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
               onPressed: () {
                 AppState.setState(SetupState.SYNC);
                 Navigator.pushReplacement(context,
@@ -320,6 +331,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   String wifi;
   String password;
   bool showWifiPassword = false;
+  bool sentCredentials = false;
 
   @override
   void initState() {
@@ -335,33 +347,66 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   }
 
   void errorCallback(BuildContext context) {
-    print("Got error callback wifi setup");
-    Scaffold.of(context).showSnackBar(new SnackBar(
-      content: Text(
-        "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?",
-        style: TextStyle(color: Colors.white),
-      ),
-      duration: Duration(minutes: 10),
-      backgroundColor: Colors.redAccent,
-      action: SnackBarAction(
-        label: "Dismiss",
-        textColor: Colors.white,
-        onPressed: () {},
-      ),
-    ));
+    if (sentCredentials) {
+      print("Got error callback wifi setup");
+      Scaffold.of(context).showSnackBar(new SnackBar(
+        content: Text(
+          "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?",
+          style: TextStyle(color: Colors.white),
+        ),
+        duration: Duration(minutes: 10),
+        backgroundColor: Colors.redAccent,
+        action: SnackBarAction(
+          label: "Dismiss",
+          textColor: Colors.white,
+          onPressed: () {},
+        ),
+      ));
+    }
     status = OnboardingStatus.ready;
   }
 
   Future<bool> callback(BuildContext context) async {
     Scaffold.of(context).hideCurrentSnackBar();
-    try {
-      await Channel.hotspotChannel.wifiRequest(wifi, password);
-      await AppState.setState(SetupState.SYNC);
-    } catch (e) {
-      print(e.toString());
+    sentCredentials = false;
+
+    AlertDialog wifiConfirm = AlertDialog(
+      title: Text("Confirm WiFi Credentials"),
+      content: Text(
+          'Your Scoreboard will attempt to connect to "$wifi" with password "$password. If this is incorrect, you will have to restart setup. Both WiFi name and password are case sensitive.'),
+      actions: <Widget>[
+        FlatButton(
+          child: Text("Confirm"),
+          onPressed: () async {
+            Navigator.of(context).pop(true);
+          },
+        ),
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () async {
+            Navigator.of(context).pop(false);
+          },
+        )
+      ],
+    );
+    bool result = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return wifiConfirm;
+        });
+    if (result) {
+      sentCredentials = true;
+      try {
+        await Channel.hotspotChannel.wifiRequest(wifi, password);
+        await AppState.setState(SetupState.SYNC);
+      } catch (e) {
+        print(e.toString());
+        return false;
+      }
+      return true;
+    } else {
       return false;
     }
-    return true;
   }
 
   @override
@@ -476,16 +521,16 @@ class SyncScreenState extends OnboardingScreenState {
         ],
         Padding(
             padding: EdgeInsets.all(20),
-            child: FlatButton(
+            child: RaisedButton(
+              color: Theme.of(context).accentColor,
+              padding: EdgeInsets.all(5),
               child: Text(
                   "If your scoreboard is showing an error, reset your Scoreboard by pressing and holding the side button for 10 seconds, then tap here to restart setup",
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
               onPressed: () {
                 AppState.setState(SetupState.SYNC);
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ConnectToHotspotScreen()));
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => SplashScreen()));
               },
             )));
   }
