@@ -268,20 +268,24 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
     return layoutWidgets(
         <Widget>[
           getOnboardTitle("Connect to your Scoreboard"),
-          getOnboardInstruction(
-              "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
           FutureBuilder(
             future: Channel.hotspotChannel.connectRequest(),
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               if (snapshot.hasData) {
                 print("Connected to server");
-                connected = true;
-                return getOnboardButton(
-                    context, "Continue", WifiCredentialsScreen(), callback);
+                return Column(children: <Widget>[
+                  getOnboardInstruction(
+                      "Your device is now connected to the Schmidt Scoreboard."),
+                  SizedBox(height: 20),
+                  getOnboardButton(
+                      context, "Continue", WifiCredentialsScreen(), callback),
+                ]);
               } else if (snapshot.hasError) {
                 //print(snapshot.error.toString());
               }
               return Column(children: [
+                getOnboardInstruction(
+                    "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
                 Text("Waiting on connection...",
                     style: TextStyle(color: Colors.grey[400])),
                 Padding(
@@ -372,8 +376,26 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
 
     AlertDialog wifiConfirm = AlertDialog(
       title: Text("Confirm WiFi Credentials"),
-      content: Text(
-          'Your Scoreboard will attempt to connect to "$wifi" with password "$password. If this is incorrect, you will have to restart setup. Both WiFi name and password are case sensitive.'),
+      content: RichText(
+          text: TextSpan(
+        style: TextStyle(
+          fontSize: 14.0,
+          color: Colors.white,
+        ),
+        children: <TextSpan>[
+          TextSpan(text: 'Your Scoreboard will attempt to connect to "'),
+          TextSpan(
+            text: '$wifi',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          TextSpan(text: '" with password "'),
+          TextSpan(
+              text: '$password', style: TextStyle(fontWeight: FontWeight.bold)),
+          TextSpan(
+              text:
+                  '". Please double check that this is correct. If it is incorrect, you will have to restart setup entirely. Both WiFi name and password are case sensitive.')
+        ],
+      )),
       actions: <Widget>[
         FlatButton(
           child: Text("Confirm"),
