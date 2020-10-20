@@ -99,6 +99,7 @@ class ScoreboardSettings {
   int activeScreen;
   bool screenOn;
   List<Screen> screens;
+  int setupState;
   String name;
   int version;
   String timezone;
@@ -109,6 +110,7 @@ class ScoreboardSettings {
       this.screenOn,
       this.name,
       this.screens,
+      this.setupState,
       this.version,
       this.timezone,
       this.macAddress});
@@ -123,6 +125,7 @@ class ScoreboardSettings {
         screenOn: json["screen_on"],
         name: json["name"] ?? "My New Scoreboard",
         screens: screens,
+        setupState: json["setup_state"],
         version: json["version"],
         timezone: json["timezone"],
         macAddress: json["mac_address"] ?? "00:00:00:00:00:00");
@@ -139,6 +142,7 @@ class ScoreboardSettings {
         name: name,
         version: version,
         screens: new List<Screen>.from(screensCopy),
+        setupState: setupState,
         timezone: timezone,
         macAddress: macAddress);
   }
@@ -165,6 +169,7 @@ class ScoreboardSettings {
     ret["active_screen"] = activeScreen;
     ret["screen_on"] = screenOn;
     ret["screens"] = [];
+    ret["setup_state"] = setupState;
     ret["name"] = name;
     ret["version"] = version;
     ret["timezone"] = timezone;

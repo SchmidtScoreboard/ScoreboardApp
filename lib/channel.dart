@@ -14,7 +14,7 @@ class Channel {
   static final Channel testingChannel =
       Channel(ipAddress: "http://192.168.0.197:5005/");
   static final Channel hotspotChannel =
-      Channel(ipAddress: "http://192.168.4.1:5005/");
+      Channel(ipAddress: "http://42.42.42.1:5005/");
   // localChannel;
   // personalLaptopChannel;
 
@@ -96,6 +96,9 @@ class Channel {
     if (response.statusCode == 200) {
       print(response.body);
       return ScoreboardSettings.fromJson(json.decode(response.body));
+    }
+    if (response.statusCode == 404) {
+      return null;
     } else {
       throw Exception("Failed to connect to scoreboard");
     }

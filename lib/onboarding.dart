@@ -336,6 +336,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   String password;
   bool showWifiPassword = false;
   bool sentCredentials = false;
+  String errorString = null;
 
   @override
   void initState() {
@@ -353,9 +354,13 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   void errorCallback(BuildContext context) {
     if (sentCredentials) {
       print("Got error callback wifi setup");
+      if (errorString == null) {
+        errorString =
+            "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?";
+      }
       Scaffold.of(context).showSnackBar(new SnackBar(
         content: Text(
-          "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?",
+          errorString,
           style: TextStyle(color: Colors.white),
         ),
         duration: Duration(minutes: 10),
@@ -419,9 +424,18 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
     if (result) {
       sentCredentials = true;
       try {
-        await Channel.hotspotChannel.wifiRequest(wifi, password);
-        await AppState.setState(SetupState.SYNC);
+        ScoreboardSettings settings =
+            await Channel.hotspotChannel.wifiRequest(wifi, password);
+        if (settings == null) {
+          print("Failed to setup wifi");
+          errorString =
+              "Failed to setup wifi, make sure the Wifi Name and Password are correct.";
+          return false;
+        } else {
+          await AppState.setState(SetupState.SYNC);
+        }
       } catch (e) {
+        errorString = null;
         print(e.toString());
         return false;
       }
@@ -517,12 +531,9 @@ class SyncScreenState extends OnboardingScreenState {
     return layoutWidgets(
         [
           getOnboardTitle("Sync with Scoreboard"),
+          getOnboardInstruction("Your scoreboard is now connected to WiFi!"),
           getOnboardInstruction(
-              "It will take a few minutes for your Scoreboard to startup and connect."),
-          getOnboardInstruction(
-              "Enter the code that appears on the Scoreboard."),
-          getOnboardInstruction(
-              "You can double tap the side button to show the Sync Code"),
+              "Enter the code that appears on the Scoreboard to sync."),
           Theme(
               data: Theme.of(context),
               child: TextField(
@@ -560,7 +571,7 @@ class SyncScreenState extends OnboardingScreenState {
   void errorCallback(BuildContext context) {
     Scaffold.of(context).showSnackBar(new SnackBar(
       content: Text(
-        "Sync failed. Is your Scoreboard connected to the same WiFi network as this device?",
+        "Sync failed. Is your phone connected to the same WiFi network as the Scoreboard?",
         style: TextStyle(color: Colors.white),
       ),
       duration: Duration(minutes: 10),
