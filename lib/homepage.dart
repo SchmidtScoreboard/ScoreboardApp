@@ -72,7 +72,8 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
   List<Widget> _buildDrawerList(AppState state, BuildContext context) {
     List<Widget> widgets = [];
     for (int i = 0; i < state.scoreboardAddresses.length; i++) {
-      widgets.add(Slidable(
+      widgets.add(ClipRect(
+          child: Slidable(
         key: ValueKey(i),
         child: ListTile(
             title: Text(
@@ -128,7 +129,7 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
             },
           )
         ],
-      ));
+      )));
     }
     return widgets;
   }
