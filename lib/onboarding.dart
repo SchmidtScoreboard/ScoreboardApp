@@ -531,7 +531,8 @@ class SyncScreenState extends OnboardingScreenState {
     return layoutWidgets(
         [
           getOnboardTitle("Sync with Scoreboard"),
-          getOnboardInstruction("Your scoreboard is now connected to WiFi!"),
+          getOnboardInstruction("Your scoreboard is connecting to wifi!"),
+          getOnboardInstruction("It may take a few minutes to connect"),
           getOnboardInstruction(
               "Enter the code that appears on the Scoreboard to sync."),
           Theme(
@@ -558,12 +559,14 @@ class SyncScreenState extends OnboardingScreenState {
               color: Theme.of(context).accentColor,
               padding: EdgeInsets.all(5),
               child: Text(
-                  "If your scoreboard is showing an error, reset your Scoreboard by pressing and holding the side button for 10 seconds, then tap here to restart setup",
+                  "If your scoreboard fails to connect, tap here to retry connection",
                   style: TextStyle(color: Colors.white, fontSize: 12)),
               onPressed: () {
-                AppState.setState(SetupState.SYNC);
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => SplashScreen()));
+                AppState.setState(SetupState.WIFI_CONNECT);
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => WifiCredentialsScreen()));
               },
             )));
   }
