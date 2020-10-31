@@ -4,7 +4,6 @@ import 'models.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
-import 'package:app_settings/app_settings.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:keyboard_visibility/keyboard_visibility.dart';
 
@@ -288,19 +287,6 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
                     "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
                 Text("Waiting on connection...",
                     style: TextStyle(color: Colors.grey[400])),
-                Padding(
-                    padding: EdgeInsets.all(10),
-                    child: RaisedButton(
-                        child: Text(
-                          "Go to Settings",
-                        ),
-                        color: Theme.of(context).accentColor,
-                        elevation: 4,
-                        highlightElevation: 8,
-                        shape: StadiumBorder(),
-                        onPressed: () {
-                          AppSettings.openWIFISettings();
-                        }))
               ]);
             },
           ),
@@ -532,9 +518,9 @@ class SyncScreenState extends OnboardingScreenState {
         [
           getOnboardTitle("Sync with Scoreboard"),
           getOnboardInstruction("Your scoreboard is connecting to wifi!"),
-          getOnboardInstruction("It may take a few minutes to connect"),
+          getOnboardInstruction("It may take a few minutes to connect."),
           getOnboardInstruction(
-              "Enter the code that appears on the Scoreboard to sync."),
+              "Once connected, enter the code that appears on the Scoreboard to sync."),
           Theme(
               data: Theme.of(context),
               child: TextField(
