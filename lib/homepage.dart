@@ -203,6 +203,24 @@ class _MyHomePageState extends State<MyHomePage> {
   bool refreshingPower = false;
   bool shouldRefreshConfig = true;
   bool scoreboardUpdateAvailable = false;
+
+  List<Screen> screens = [
+    Screen(
+        id: ScreenId.NHL,
+        name: "Hockey",
+        subtitle: "Show scores from professional hockey"),
+    Screen(
+        id: ScreenId.MLB,
+        name: "Baseball",
+        subtitle: "Show scores from professional baseball"),
+    Screen(
+        id: ScreenId.CLOCK, name: "Clock", subtitle: "Show the current time"),
+    // Screen(
+    //     id: ScreenId.SMART,
+    //     name: "Smart Switch",
+    //     subtitle:
+    //         "Automatically switch between leagues when your favorite teams are playing")
+  ];
   @override
   void initState() {
     super.initState();
@@ -410,9 +428,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Container(
       child: ListView.builder(
         padding: const EdgeInsets.all(10.0),
-        itemCount: settings.screens.length,
+        itemCount: screens.length,
         itemBuilder: (context, i) {
-          return _buildRow(settings.screens[i]);
+          return _buildRow(screens[i]);
         },
       ),
     );
@@ -420,15 +438,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildRow(Screen screen) {
     String subtitle = screen.subtitle;
-    if (screen.focusTeams.length > 0) {
+    var localTeams = [];
+    for (var team in settings.focusTeams) {
+      if (team.screenId == screen.id) {
+        localTeams.add(team);
+      }
+    }
+    if (localTeams.length > 0) {
       subtitle += "\n\nFavorite teams:";
-      for (var teamId in screen.focusTeams) {
+      for (var focusTeam in localTeams) {
         subtitle += "\n  ";
         Team team;
         if (screen.id == ScreenId.NHL) {
-          team = Team.nhlTeams[teamId];
+          team = Team.nhlTeams[focusTeam.teamId];
         } else if (screen.id == ScreenId.MLB) {
-          team = Team.mlbTeams[teamId];
+          team = Team.mlbTeams[focusTeam.teamId];
         } else {
           print(
               "Something went wrong, trying to get a team for a non NHL or MLB card");

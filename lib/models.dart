@@ -17,6 +17,30 @@ class ScreenId {
   static const HOTSPOT = 101;
   static const WIFIDETAILS = 102;
   static const SYNC = 103;
+  static const SMART = 10000;
+}
+
+class FocusTeam {
+  int screenId;
+  int teamId;
+  FocusTeam({this.screenId, this.teamId});
+  factory FocusTeam.fromJson(Map<String, dynamic> json) {
+    return FocusTeam(screenId: json["screen_id"], teamId: json['team_id']);
+  }
+  bool operator ==(other) {
+    return this.screenId == other.screenId && this.teamId == other.teamId;
+  }
+
+  FocusTeam clone() {
+    return new FocusTeam(screenId: screenId, teamId: teamId);
+  }
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> ret = {};
+    ret["screen_id"] = screenId;
+    ret["team_id"] = teamId;
+    return ret;
+  }
 }
 
 class Screen {
@@ -94,7 +118,7 @@ class Screen {
 }
 
 class ScoreboardSettings {
-  static final int clientVersion = 1;
+  static final int clientVersion = 2;
 
   int activeScreen;
   bool screenOn;
@@ -104,6 +128,9 @@ class ScoreboardSettings {
   int version;
   String timezone;
   String macAddress;
+  bool alwaysRotate;
+  int rotationTime;
+  List<FocusTeam> focusTeams;
 
   ScoreboardSettings(
       {this.activeScreen,
@@ -113,12 +140,21 @@ class ScoreboardSettings {
       this.setupState,
       this.version,
       this.timezone,
-      this.macAddress});
+      this.macAddress,
+      this.rotationTime,
+      this.focusTeams});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
     for (var screen in json["screens"]) {
       screens.add(Screen.fromJson(screen));
+    }
+
+    List<FocusTeam> focusTeams = [];
+    if (json["favorite_teams"] != null) {
+      for (var team in json["favorite_teams"]) {
+        focusTeams.add(FocusTeam.fromJson(team));
+      }
     }
     return ScoreboardSettings(
         activeScreen: json["active_screen"],
@@ -128,13 +164,19 @@ class ScoreboardSettings {
         setupState: json["setup_state"],
         version: json["version"],
         timezone: json["timezone"],
-        macAddress: json["mac_address"] ?? "00:00:00:00:00:00");
+        macAddress: json["mac_address"] ?? "00:00:00:00:00:00",
+        rotationTime: json['rotation_time'] ?? 10,
+        focusTeams: focusTeams);
   }
 
   ScoreboardSettings clone() {
     List<Screen> screensCopy = [];
     for (Screen s in screens) {
       screensCopy.add(s.clone());
+    }
+    List<FocusTeam> focus = [];
+    for (FocusTeam i in focusTeams) {
+      focus.add(i.clone());
     }
     return new ScoreboardSettings(
         activeScreen: activeScreen,
@@ -144,7 +186,9 @@ class ScoreboardSettings {
         screens: new List<Screen>.from(screensCopy),
         setupState: setupState,
         timezone: timezone,
-        macAddress: macAddress);
+        macAddress: macAddress,
+        rotationTime: rotationTime,
+        focusTeams: focus);
   }
 
   bool clientNeedsUpdate() {
@@ -161,7 +205,9 @@ class ScoreboardSettings {
         this.name == other.name &&
         this.timezone == other.timezone &&
         this.macAddress == other.macAddress &&
-        listEquals(this.screens, other.screens);
+        listEquals(this.screens, other.screens) &&
+        this.rotationTime == other.rotationTime &&
+        listEquals(this.focusTeams, other.focusTeams);
   }
 
   Map<String, dynamic> toJson() {
@@ -177,6 +223,8 @@ class ScoreboardSettings {
       ret["screens"].add(s.toJson());
     }
     ret["mac_address"] = macAddress;
+    ret["rotation_time"] = rotationTime;
+    ret["favorite_teams"] = focusTeams;
     return ret;
   }
 }

@@ -104,6 +104,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var teamMaps = {ScreenId.MLB: Team.mlbTeams, ScreenId.NHL: Team.nhlTeams};
     print("Mutable settings name: " + mutableSettings.name);
     bool scoreboardOutOfDate =
         mutableSettings.version < ScoreboardSettings.clientVersion;
@@ -239,8 +240,61 @@ class SettingsScreenState extends State<SettingsScreen> {
                           ]))),
                 ],
               ),
-              for (var screen in mutableSettings.screens)
-                getScreenWidget(screen),
+              ListTile(
+                leading: Icon(Icons.timer),
+                title: Text("Rotation time"),
+                trailing: Text("${mutableSettings.rotationTime} seconds"),
+                onTap: () {
+                  Picker picker = new Picker(
+                      adapter: NumberPickerAdapter(data: [
+                        NumberPickerColumn(begin: 5, end: 120, jump: 5)
+                      ]),
+                      hideHeader: true,
+                      title: Text("Select a rotation time in seconds"),
+                      backgroundColor: Colors.transparent,
+                      textStyle: TextStyle(color: Colors.white, fontSize: 18),
+                      onConfirm: (Picker picker, List value) {
+                        mutableSettings.rotationTime =
+                            picker.getSelectedValues()[0];
+                        setState(() {});
+                      });
+                  picker.showDialog(context);
+                },
+              ),
+              ListTile(
+                  leading: Icon(Icons.favorite),
+                  title: Text("Favorite teams:"),
+                  onTap: () {
+                    showAddTeamDialog(teamMaps);
+                  },
+                  trailing: IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: () {
+                        showAddTeamDialog(teamMaps);
+                      })),
+              Column(
+                  children: mutableSettings.focusTeams
+                      .map((FocusTeam team) => Slidable(
+                            key: ValueKey(team.teamId),
+                            child: ListTile(
+                                key: ValueKey(team.teamId),
+                                title: Text("    " +
+                                    teamMaps[team.screenId][team.teamId].city +
+                                    " " +
+                                    teamMaps[team.screenId][team.teamId].name)),
+                            actionPane: SlidableDrawerActionPane(),
+                            secondaryActions: <Widget>[
+                              IconSlideAction(
+                                icon: Icons.delete,
+                                color: Colors.red,
+                                onTap: () {
+                                  mutableSettings.focusTeams.remove(team);
+                                  setState(() {});
+                                },
+                              )
+                            ],
+                          ))
+                      .toList()),
               ListTile(
                 leading: Icon(Icons.access_time),
                 title: Text("Timezone: ${mutableSettings.timezone}"),
@@ -326,7 +380,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           },
                         ),
                         FlatButton(
-                          child: Text("Reboot"),
+                          child: Text("Update"),
                           onPressed: () async {
                             AppState state = await AppState.load();
                             String ip =
@@ -451,100 +505,38 @@ class SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void showAddTeamDialog(Map<int, Team> teamMap, Screen screen) {
-    List<Team> displayData = [];
-    for (int teamId in teamMap.keys) {
-      if (!screen.focusTeams.contains(teamId)) {
-        displayData.add(teamMap[teamId]);
-      }
-    }
-    displayData.sort();
+  void showAddTeamDialog(Map<int, Map<int, Team>> teamMaps) {
+    var leagues = ["Hockey", "Baseball"];
     Picker picker = new Picker(
-        adapter: PickerDataAdapter<Team>(pickerdata: displayData),
+        adapter: PickerDataAdapter<String>(pickerdata: leagues),
         onConfirm: (Picker picker, List value) {
-          screen.focusTeams.add(displayData[value[0]].id);
-          setState(() {});
+          int screenId = value[0];
+          List<Team> displayData = [];
+          for (int teamId in teamMaps[screenId].keys) {
+            if (!mutableSettings.focusTeams
+                .contains(FocusTeam(screenId: screenId, teamId: teamId))) {
+              displayData.add(teamMaps[screenId][teamId]);
+            }
+          }
+          displayData.sort();
+          Picker picker = new Picker(
+              adapter: PickerDataAdapter<Team>(pickerdata: displayData),
+              onConfirm: (Picker picker, List value) {
+                mutableSettings.focusTeams.add(FocusTeam(
+                    screenId: screenId, teamId: displayData[value[0]].id));
+                setState(() {});
+              },
+              backgroundColor: Colors.transparent,
+              textStyle: TextStyle(color: Colors.white, fontSize: 18),
+              title: Text("Add a favorite team"),
+              hideHeader: true);
+          picker.showDialog(context);
         },
         backgroundColor: Colors.transparent,
         textStyle: TextStyle(color: Colors.white, fontSize: 18),
-        title: Text("Add a favorite team"),
+        title: Text("Select a Sport"),
         hideHeader: true);
     picker.showDialog(context);
-  }
-
-  Widget getScreenWidget(Screen screen) {
-    Map<int, Team> teamMap;
-    switch (screen.id) {
-      case ScreenId.MLB:
-        teamMap = Team.mlbTeams;
-        break;
-      case ScreenId.NHL:
-        teamMap = Team.nhlTeams;
-        break;
-      default:
-        return Container();
-    }
-    return //Theme(data: ThemeData(accentColor: Colors.blue), child:
-        ExpansionTile(
-      title: Text("${screen.name} Settings"),
-      leading: Icon(screen.getIcon()),
-      children: <Widget>[
-        ListTile(
-          leading: Icon(Icons.timer),
-          title: Text("Rotation time"),
-          trailing: Text("${screen.rotationTime} seconds"),
-          onTap: () {
-            Picker picker = new Picker(
-                adapter: NumberPickerAdapter(
-                    data: [NumberPickerColumn(begin: 5, end: 120, jump: 5)]),
-                hideHeader: true,
-                title: Text("Select a rotation time in seconds"),
-                backgroundColor: Colors.transparent,
-                textStyle: TextStyle(color: Colors.white, fontSize: 18),
-                onConfirm: (Picker picker, List value) {
-                  screen.rotationTime = picker.getSelectedValues()[0];
-                  setState(() {});
-                });
-            picker.showDialog(context);
-          },
-        ),
-        ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text("Favorite teams:"),
-            onTap: () {
-              showAddTeamDialog(teamMap, screen);
-            },
-            trailing: IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () {
-                  showAddTeamDialog(teamMap, screen);
-                })),
-        Column(
-            children: screen.focusTeams
-                .map((int teamId) => Slidable(
-                      key: ValueKey(teamId),
-                      child: ListTile(
-                          key: ValueKey(teamId),
-                          title: Text("    " +
-                              teamMap[teamId].city +
-                              " " +
-                              teamMap[teamId].name)),
-                      actionPane: SlidableDrawerActionPane(),
-                      secondaryActions: <Widget>[
-                        IconSlideAction(
-                          icon: Icons.delete,
-                          color: Colors.red,
-                          onTap: () {
-                            screen.focusTeams.remove(teamId);
-                            setState(() {});
-                          },
-                        )
-                      ],
-                    ))
-                .toList()),
-      ],
-    );
-    //);
   }
 }
 

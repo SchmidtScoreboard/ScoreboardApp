@@ -10,6 +10,8 @@ import 'package:keyboard_visibility/keyboard_visibility.dart';
 import 'homepage.dart';
 import 'channel.dart';
 
+const borderRadius = 18.0;
+
 // import 'package:fast_qr_reader_view/fast_qr_reader_view.dart';
 
 enum OnboardingStatus { ready, loading, error }
@@ -20,6 +22,26 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   OnboardingStatus status = OnboardingStatus.ready;
   bool keyboardShowing = false;
   var scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Widget getResetButton(bool isDoubleButton) {
+    return RaisedButton(
+      color: Theme.of(context).accentColor,
+      padding: EdgeInsets.all(5),
+      shape: RoundedRectangleBorder(
+          borderRadius: isDoubleButton
+              ? BorderRadius.only(
+                  bottomRight: Radius.circular(borderRadius),
+                  topRight: Radius.circular(borderRadius))
+              : BorderRadius.all(Radius.circular(borderRadius))),
+      child: Text("Restart Setup",
+          style: TextStyle(color: Colors.white, fontSize: 12)),
+      onPressed: () {
+        AppState.setState(SetupState.FACTORY);
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => SplashScreen()));
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -216,10 +238,12 @@ class SplashScreenState extends OnboardingScreenState {
         Padding(
             padding: EdgeInsets.all(20),
             child: RaisedButton(
+              shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.all(Radius.circular(borderRadius))),
               color: Theme.of(context).accentColor,
               padding: EdgeInsets.all(5),
-              child: Text(
-                  "If you've already set up this scoreboard with another device, you can skip to the syncing phase by pressing here",
+              child: Text("Skip to Sync",
                   style: TextStyle(color: Colors.white, fontSize: 12)),
               onPressed: () {
                 AppState.setState(SetupState.SYNC);
@@ -293,18 +317,24 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
         ],
         Padding(
             padding: EdgeInsets.all(20),
-            child: RaisedButton(
-              color: Theme.of(context).accentColor,
-              padding: EdgeInsets.all(5),
-              child: Text(
-                  "If you've already set up this scoreboard with another device, you can skip to the syncing phase by pressing here",
-                  style: TextStyle(color: Colors.white, fontSize: 12)),
-              onPressed: () {
-                AppState.setState(SetupState.SYNC);
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => SyncScreen()));
-              },
-            )));
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              RaisedButton(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(borderRadius),
+                        topLeft: Radius.circular(borderRadius))),
+                color: Theme.of(context).accentColor,
+                padding: EdgeInsets.all(5),
+                child: Text("Skip to Sync",
+                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                onPressed: () {
+                  AppState.setState(SetupState.SYNC);
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (context) => SyncScreen()));
+                },
+              ),
+              getResetButton(true)
+            ])));
   }
 }
 
@@ -384,7 +414,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
               text: '$password', style: TextStyle(fontWeight: FontWeight.bold)),
           TextSpan(
               text:
-                  '". Please double check that this is correct. If it is incorrect, you will have to restart setup entirely. Both WiFi name and password are case sensitive.')
+                  '". Please double check that this is correct. Both WiFi name and password are case sensitive.')
         ],
       )),
       actions: <Widget>[
@@ -436,9 +466,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
     return layoutWidgets(<Widget>[
       getOnboardTitle("Enter your WiFi Information"),
       getOnboardInstruction(
-          "Scoreboard needs your wifi information so that it can fetch data from the Internet. Please provide it in the fields below."),
-      getOnboardInstruction(
-          "Note that fields are case-sensitive. Scoreboard will restart and connect to WiFi"),
+          "Scoreboard needs your wifi information so that it can fetch data from the Internet."),
       Theme(
           data: Theme.of(context),
           child: TextField(
@@ -496,7 +524,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
           padding: EdgeInsets.only(top: 20),
           child: getOnboardButton(context, "Submit", SyncScreen(), callback,
               errorCallback: errorCallback))
-    ]);
+    ], getResetButton(false));
   }
 }
 
@@ -541,20 +569,26 @@ class SyncScreenState extends OnboardingScreenState {
         ],
         Padding(
             padding: EdgeInsets.all(20),
-            child: RaisedButton(
-              color: Theme.of(context).accentColor,
-              padding: EdgeInsets.all(5),
-              child: Text(
-                  "If your scoreboard fails to connect, tap here to retry connection",
-                  style: TextStyle(color: Colors.white, fontSize: 12)),
-              onPressed: () {
-                AppState.setState(SetupState.WIFI_CONNECT);
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => WifiCredentialsScreen()));
-              },
-            )));
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              RaisedButton(
+                color: Theme.of(context).accentColor,
+                padding: EdgeInsets.all(5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(borderRadius),
+                        bottomLeft: Radius.circular(borderRadius))),
+                child: Text("Retry Wifi",
+                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                onPressed: () {
+                  AppState.setState(SetupState.WIFI_CONNECT);
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => WifiCredentialsScreen()));
+                },
+              ),
+              getResetButton(true)
+            ])));
   }
 
   void errorCallback(BuildContext context) {
@@ -584,6 +618,7 @@ class SyncScreenState extends OnboardingScreenState {
       await Channel(ipAddress: address).syncRequest();
     } catch (e) {
       // Do nothing
+      print(e.toString());
       return false;
     }
     await AppState.setState(SetupState.READY);
