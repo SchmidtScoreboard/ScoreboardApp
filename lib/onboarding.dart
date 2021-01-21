@@ -419,17 +419,17 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
       )),
       actions: <Widget>[
         FlatButton(
+          child: Text("Cancel"),
+          onPressed: () async {
+            Navigator.of(context).pop(false);
+          },
+        ),
+        FlatButton(
           child: Text("Confirm"),
           onPressed: () async {
             Navigator.of(context).pop(true);
           },
         ),
-        FlatButton(
-          child: Text("Cancel"),
-          onPressed: () async {
-            Navigator.of(context).pop(false);
-          },
-        )
       ],
     );
     bool result = await showDialog(
