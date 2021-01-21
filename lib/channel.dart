@@ -139,4 +139,15 @@ class Channel {
       throw Exception("Failed to connect to scoreboard");
     }
   }
+
+  Future<String> getVersion() async {
+    String url = ipAddress + "version";
+    final response = await http.get(url).timeout(Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      throw Exception("Failed to load version");
+    }
+  }
 }

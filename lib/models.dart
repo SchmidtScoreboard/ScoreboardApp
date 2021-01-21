@@ -131,6 +131,7 @@ class ScoreboardSettings {
   bool alwaysRotate;
   int rotationTime;
   List<FocusTeam> focusTeams;
+  int brightness;
 
   ScoreboardSettings(
       {this.activeScreen,
@@ -142,7 +143,8 @@ class ScoreboardSettings {
       this.timezone,
       this.macAddress,
       this.rotationTime,
-      this.focusTeams});
+      this.focusTeams,
+      this.brightness});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -166,7 +168,8 @@ class ScoreboardSettings {
         timezone: json["timezone"],
         macAddress: json["mac_address"] ?? "00:00:00:00:00:00",
         rotationTime: json['rotation_time'] ?? 10,
-        focusTeams: focusTeams);
+        focusTeams: focusTeams,
+        brightness: json['brightness'] ?? null);
   }
 
   ScoreboardSettings clone() {
@@ -188,7 +191,8 @@ class ScoreboardSettings {
         timezone: timezone,
         macAddress: macAddress,
         rotationTime: rotationTime,
-        focusTeams: focus);
+        focusTeams: focus,
+        brightness: brightness);
   }
 
   bool clientNeedsUpdate() {
@@ -207,7 +211,8 @@ class ScoreboardSettings {
         this.macAddress == other.macAddress &&
         listEquals(this.screens, other.screens) &&
         this.rotationTime == other.rotationTime &&
-        listEquals(this.focusTeams, other.focusTeams);
+        listEquals(this.focusTeams, other.focusTeams) &&
+        this.brightness == other.brightness;
   }
 
   Map<String, dynamic> toJson() {
@@ -225,9 +230,15 @@ class ScoreboardSettings {
     ret["mac_address"] = macAddress;
     ret["rotation_time"] = rotationTime;
     ret["favorite_teams"] = focusTeams;
+    ret["brightness"] = brightness;
     return ret;
   }
 }
+
+const LOW_BRIGHTNESS = 25;
+const MID_BRIGHTNESS = 50;
+const HIGH_BRIGHTNESS = 75;
+const MAX_BRIGHTNESS = 100;
 
 // Scoreboard uses Diffie-Hellman Key Exchange of ~500 digit keys
 class VerificationKey {

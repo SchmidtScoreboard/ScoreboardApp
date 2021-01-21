@@ -34,6 +34,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     print("Initializing settings state");
     originalSettings = widget.settings.clone();
     mutableSettings = widget.settings.clone();
+    print("Brightness:  ${originalSettings.brightness}");
     passNode.addListener(() {
       setState(() {});
     });
@@ -46,22 +47,57 @@ class SettingsScreenState extends State<SettingsScreen> {
   bool settingsDirty() => mutableSettings != originalSettings;
   bool wifiDirty() => wifi.isNotEmpty && password.isNotEmpty;
   bool nameDirty() => mutableSettings.name != originalSettings.name;
+  bool brightnessDirty() =>
+      mutableSettings.brightness != originalSettings.brightness;
+
+  Future handleChanges() async {
+    ScoreboardSettings settings = await handleSettings();
+    await handleName();
+    await handleWifi();
+
+    setState(() {
+      print(settings.name);
+      originalSettings = settings.clone();
+      mutableSettings = settings.clone();
+      requesting = false;
+    });
+  }
 
   Future submitCallback() async {
     if (!requesting) {
       setState(() {
         requesting = true;
       });
-      ScoreboardSettings settings = await handleSettings();
-      await handleName();
-      await handleWifi();
-
-      setState(() {
-        print(settings.name);
-        originalSettings = settings.clone();
-        mutableSettings = settings.clone();
-        requesting = false;
-      });
+      if (brightnessDirty()) {
+        // Show a popup
+        AlertDialog policyAlert = AlertDialog(
+          title: Text("Restart Required"),
+          content: Text(
+              "Changing brightness requires a restart of your scoreboard. Continue?"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await handleChanges();
+              },
+            ),
+          ],
+        );
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return policyAlert;
+            });
+      } else {
+        await handleChanges();
+      }
     }
   }
 
@@ -102,12 +138,50 @@ class SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  int brightnessToBrightnessSelection(int brightness) {
+    if (brightness == LOW_BRIGHTNESS) {
+      return 0;
+    } else if (brightness == MID_BRIGHTNESS) {
+      return 1;
+    } else if (brightness == HIGH_BRIGHTNESS) {
+      return 2;
+    } else {
+      return 3;
+    }
+  }
+
+  int brightnesSelectionToBrightness(int selection) {
+    if (selection == 0) {
+      return LOW_BRIGHTNESS;
+    } else if (selection == 1) {
+      return MID_BRIGHTNESS;
+    } else if (selection == 2) {
+      return HIGH_BRIGHTNESS;
+    } else {
+      return MAX_BRIGHTNESS;
+    }
+  }
+
+  Map<int, Widget> getBrightnessWidgets() {
+    var map = {
+      0: Text("  Low  "),
+      1: Text("  Mid  "),
+      2: Text("  High  "),
+      3: Text("  Max  ")
+    };
+    // map.map(
+    //     (key, value) => MapEntry(key, Container(width: 1000, child: value)));
+    return map;
+  }
+
   @override
   Widget build(BuildContext context) {
     var teamMaps = {ScreenId.MLB: Team.mlbTeams, ScreenId.NHL: Team.nhlTeams};
     print("Mutable settings name: " + mutableSettings.name);
     bool scoreboardOutOfDate =
         mutableSettings.version < ScoreboardSettings.clientVersion;
+    int brightnessSelect =
+        brightnessToBrightnessSelection(mutableSettings.brightness ?? 100);
     return WillPopScope(
       child: Scaffold(
           appBar: AppBar(
@@ -313,18 +387,50 @@ class SettingsScreenState extends State<SettingsScreen> {
                   picker.showDialog(context);
                 },
               ),
+              if (originalSettings.brightness != null)
+                ExpansionTile(
+                    leading: Icon(Icons.brightness_6),
+                    title: Text("Set Brightness"),
+                    children: <Widget>[
+                      CupertinoSegmentedControl(
+                        children: getBrightnessWidgets(),
+                        padding: EdgeInsets.all(10),
+                        unselectedColor: Theme.of(context).backgroundColor,
+                        selectedColor: Colors.white,
+                        borderColor: Colors.white,
+                        onValueChanged: (int val) {
+                          setState(() {
+                            brightnessSelect = val;
+                            mutableSettings.brightness =
+                                brightnesSelectionToBrightness(
+                                    brightnessSelect);
+                          });
+                        },
+                        groupValue: brightnessSelect,
+                      )
+                    ]),
               ExpansionTile(
                 leading: Icon(Icons.info),
                 title: Text("About"),
                 children: <Widget>[
                   ListTile(
                       leading: Icon(Icons.tv),
-                      title: Text(
-                          "Scoreboard Version: ${mutableSettings.version}")),
-                  ListTile(
-                      leading: Icon(Icons.phone_iphone),
-                      title: Text(
-                          "App Version: ${ScoreboardSettings.clientVersion}")),
+                      title: FutureBuilder(future: () async {
+                        AppState state = await AppState.load();
+                        String ip =
+                            state.scoreboardAddresses[state.activeIndex];
+                        return Channel(ipAddress: ip).getVersion();
+                      }(), builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          if (snapshot.hasData) {
+                            return Text("Scoreboard Version: ${snapshot.data}");
+                          } else {
+                            return Text("Failed to fetch scoreboard version");
+                          }
+                        } else {
+                          return Text("Fetching scoreboard version...");
+                        }
+                      })),
                   ListTile(
                       leading: Icon(Icons.wifi_tethering),
                       title: Text(
