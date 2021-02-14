@@ -204,7 +204,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool shouldRefreshConfig = true;
   bool scoreboardUpdateAvailable = false;
 
-  List<Screen> screens = [
+  List<Screen> proScreens = [
     Screen(
         id: ScreenId.NHL,
         name: "Hockey",
@@ -213,6 +213,20 @@ class _MyHomePageState extends State<MyHomePage> {
         id: ScreenId.MLB,
         name: "Baseball",
         subtitle: "Show scores from professional baseball"),
+    Screen(
+        id: ScreenId.BASKETBALL,
+        name: "Basketball",
+        subtitle: "Show scores from professional basketball"),
+  ];
+
+  List<Screen> collegeScreens = [
+    Screen(
+        id: ScreenId.COLLEGE_BASKETBALL,
+        name: "College Basketball",
+        subtitle: "Show scores from college basketball"),
+  ];
+
+  List<Screen> otherScreens = [
     Screen(
         id: ScreenId.CLOCK, name: "Clock", subtitle: "Show the current time"),
     // Screen(
@@ -424,43 +438,20 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildHome() {
-    return Container(
-      child: ListView.builder(
-        padding: const EdgeInsets.all(10.0),
-        itemCount: screens.length,
-        itemBuilder: (context, i) {
-          return _buildRow(screens[i]);
-        },
-      ),
+  Widget getTable(List<Screen> screens) {
+    List<Widget> items = screens.map((screen) => getScreen(screen)).toList();
+    return GridView.count(
+      shrinkWrap: true,
+      primary: false,
+      children: items,
+      crossAxisCount: 2,
+      childAspectRatio: 5 / 4,
     );
   }
 
-  Widget _buildRow(Screen screen) {
-    String subtitle = screen.subtitle;
-    var localTeams = [];
-    for (var team in settings.focusTeams) {
-      if (team.screenId == screen.id) {
-        localTeams.add(team);
-      }
-    }
-    if (localTeams.length > 0) {
-      subtitle += "\n\nFavorite teams:";
-      for (var focusTeam in localTeams) {
-        subtitle += "\n  ";
-        Team team;
-        if (screen.id == ScreenId.NHL) {
-          team = Team.nhlTeams[focusTeam.teamId];
-        } else if (screen.id == ScreenId.MLB) {
-          team = Team.mlbTeams[focusTeam.teamId];
-        } else {
-          print(
-              "Something went wrong, trying to get a team for a non NHL or MLB card");
-        }
-        subtitle += team.city + " " + team.name;
-      }
-    }
+  Widget getScreen(Screen screen) {
     return new Card(
+      margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
       color: screen.id == settings.activeScreen && settings.screenOn
           ? Theme.of(context).accentColor
           : Colors.grey,
@@ -486,29 +477,40 @@ class _MyHomePageState extends State<MyHomePage> {
             refreshingScreenSelect = false;
           });
         },
-        child: ListTile(
-          leading: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                screen.id == settings.activeScreen && refreshingScreenSelect
-                    ? CircularProgressIndicator(
-                        valueColor:
-                            new AlwaysStoppedAnimation<Color>(Colors.white),
-                      )
-                    : Icon(
-                        screen.getIcon(),
-                        color: Colors.white,
-                        size: 40,
-                      ),
-              ]),
-          title: Text(
-            screen.name,
-            style: TextStyle(fontSize: 24, color: Colors.white),
-          ),
-          subtitle: Text(subtitle, style: TextStyle(color: Colors.white)),
-        ),
+        child: screen.id == settings.activeScreen && refreshingScreenSelect
+            ? CircularProgressIndicator(
+                valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+            : Icon(
+                screen.getIcon(),
+                color: Colors.white,
+                size: 100,
+              ),
       ),
     );
+  }
+
+  Widget getCategoryText(String text) {
+    return Padding(
+        padding: EdgeInsets.only(left: 10.0),
+        child: Text(text, style: TextStyle(fontSize: 20)));
+  }
+
+  Widget _buildHome() {
+    return Container(
+        child: ListView(
+      shrinkWrap: true,
+      children: [
+        Padding(
+            padding: EdgeInsets.only(top: 10.0),
+            child: getCategoryText("Professional")),
+        getTable(proScreens),
+        getCategoryText("College"),
+        getTable(collegeScreens),
+        getCategoryText("Other"),
+        getTable(otherScreens),
+      ],
+    ));
   }
 
   void _checkVersion() async {

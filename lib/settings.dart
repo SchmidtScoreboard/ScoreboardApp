@@ -176,7 +176,12 @@ class SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    var teamMaps = {ScreenId.MLB: Team.mlbTeams, ScreenId.NHL: Team.nhlTeams};
+    var teamMaps = {
+      ScreenId.MLB: Team.mlbTeams,
+      ScreenId.NHL: Team.nhlTeams,
+      ScreenId.COLLEGE_BASKETBALL: Team.ncaaTeams,
+      ScreenId.BASKETBALL: Team.nbaTeams
+    };
     print("Mutable settings name: " + mutableSettings.name);
     bool scoreboardOutOfDate =
         mutableSettings.version < ScoreboardSettings.clientVersion;
@@ -348,14 +353,15 @@ class SettingsScreenState extends State<SettingsScreen> {
                       })),
               Column(
                   children: mutableSettings.focusTeams
+                      .where((FocusTeam team) =>
+                          teamMaps.containsKey(team.screenId))
                       .map((FocusTeam team) => Slidable(
                             key: ValueKey(team.teamId),
                             child: ListTile(
                                 key: ValueKey(team.teamId),
                                 title: Text("    " +
-                                    teamMaps[team.screenId][team.teamId].city +
-                                    " " +
-                                    teamMaps[team.screenId][team.teamId].name)),
+                                    teamMaps[team.screenId][team.teamId]
+                                        .toString())),
                             actionPane: SlidableDrawerActionPane(),
                             secondaryActions: <Widget>[
                               IconSlideAction(
@@ -612,7 +618,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   void showAddTeamDialog(Map<int, Map<int, Team>> teamMaps) {
-    var leagues = ["Hockey", "Baseball"];
+    var leagues = ["Hockey", "Baseball", "College Basketball", "Basketball"];
     Picker picker = new Picker(
         adapter: PickerDataAdapter<String>(pickerdata: leagues),
         onConfirm: (Picker picker, List value) {

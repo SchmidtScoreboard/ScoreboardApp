@@ -12,6 +12,8 @@ import 'package:convert/convert.dart';
 class ScreenId {
   static const NHL = 0;
   static const MLB = 1;
+  static const COLLEGE_BASKETBALL = 2;
+  static const BASKETBALL = 3;
   static const CLOCK = 50;
   static const REFRESH = 100;
   static const HOTSPOT = 101;
@@ -109,6 +111,10 @@ class Screen {
         return FontAwesomeIcons.hockeyPuck;
       case ScreenId.MLB:
         return FontAwesomeIcons.baseballBall;
+      case ScreenId.COLLEGE_BASKETBALL:
+        return FontAwesomeIcons.basketballBall;
+      case ScreenId.BASKETBALL:
+        return FontAwesomeIcons.basketballBall;
       case ScreenId.CLOCK:
         return FontAwesomeIcons.clock;
       default:
@@ -118,7 +124,7 @@ class Screen {
 }
 
 class ScoreboardSettings {
-  static final int clientVersion = 2;
+  static final int clientVersion = 3;
 
   int activeScreen;
   bool screenOn;
