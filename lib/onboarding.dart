@@ -58,10 +58,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
 
     return Scaffold(
         key: scaffoldKey,
@@ -73,16 +69,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
         drawer: ScoreboardDrawer());
   }
 
-  @override
-  void dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    super.dispose();
-  }
 
   Widget getOnboardWidget(BuildContext context);
 
@@ -149,15 +135,15 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       ));
     }
     Widget alignedFooter = SafeArea(
-        minimum: const EdgeInsets.only(bottom: 30),
-        child: Align(alignment: FractionalOffset.bottomCenter, child: footer));
+        minimum: const EdgeInsets.only(bottom: 20, right: 20),
+        child: Align(alignment: FractionalOffset.bottomRight, child: footer));
     return Stack(children: [
       SingleChildScrollView(
           child: SafeArea(
               minimum: const EdgeInsets.only(top: 70),
               child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(children: paddedWidgets)))),
+                  child: Center(child: Container(width: 500, child: Column(children: paddedWidgets)))))),
       SafeArea(
         child: IconButton(
           icon: Icon(Icons.menu),
@@ -288,6 +274,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
 
   @override
   Widget getOnboardWidget(BuildContext context) {
+    bool floatingInCenter = MediaQuery.of(context).size.height > MediaQuery.of(context).size.width;
     return layoutWidgets(
         <Widget>[
           getOnboardTitle("Connect to your Scoreboard"),
@@ -309,6 +296,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
               return Column(children: [
                 getOnboardInstruction(
                     "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
+                  SizedBox(height: 20),
                 Text("Waiting on connection...",
                     style: TextStyle(color: Colors.grey[400])),
               ]);
@@ -317,7 +305,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
         ],
         Padding(
             padding: EdgeInsets.all(20),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            child: Row(mainAxisAlignment: floatingInCenter ? MainAxisAlignment.center : MainAxisAlignment.end, children: [
               RaisedButton(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.only(
@@ -542,13 +530,11 @@ class SyncScreenState extends OnboardingScreenState {
   @override
   Widget getOnboardWidget(BuildContext context) {
     print("Building sync screen");
+    bool floatingInCenter = MediaQuery.of(context).size.height > (MediaQuery.of(context).size.width * 1.5);
     return layoutWidgets(
         [
           getOnboardTitle("Sync with Scoreboard"),
-          getOnboardInstruction("Your scoreboard is connecting to wifi!"),
-          getOnboardInstruction("It may take a few minutes to connect."),
-          getOnboardInstruction(
-              "Once connected, enter the code that appears on the Scoreboard to sync."),
+          getOnboardInstruction("Your scoreboard is connecting to wifi!\n\nIt may take a few minutes to connect.\n\nOnce connected, enter the code that appears on the Scoreboard to sync."),
           Theme(
               data: Theme.of(context),
               child: TextField(
@@ -569,7 +555,7 @@ class SyncScreenState extends OnboardingScreenState {
         ],
         Padding(
             padding: EdgeInsets.all(20),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            child: Row(mainAxisAlignment: floatingInCenter ? MainAxisAlignment.center : MainAxisAlignment.end, children: [
               RaisedButton(
                 color: Theme.of(context).accentColor,
                 padding: EdgeInsets.all(5),

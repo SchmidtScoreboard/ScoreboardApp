@@ -117,6 +117,8 @@ class Screen {
         return FontAwesomeIcons.basketballBall;
       case ScreenId.CLOCK:
         return FontAwesomeIcons.clock;
+      case ScreenId.SMART:
+        return FontAwesomeIcons.magic;
       default:
         return FontAwesomeIcons.footballBall;
     }
