@@ -229,11 +229,6 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Screen> otherScreens = [
     Screen(
         id: ScreenId.CLOCK, name: "Clock", subtitle: "Show the current time"),
-    // Screen(
-    //     id: ScreenId.SMART,
-    //     name: "Smart Switch",
-    //     subtitle:
-    //         "Automatically switch between leagues when your favorite teams are playing")
   ];
   @override
   void initState() {
@@ -278,7 +273,6 @@ class _MyHomePageState extends State<MyHomePage> {
           Widget drawer;
           String name;
           if (snapshot.hasData) {
-            print("Got config data");
             if (refreshTimer == null || !refreshTimer.isActive) {
               refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
                 setState(() {
@@ -288,7 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
             }
             settings = snapshot.data;
             name = settings.name;
-            body = _buildHome();
+            body = _buildHome(context);
             actions = _buildActions();
             fab = _buildFab();
             drawer = ScoreboardDrawer();
@@ -302,9 +296,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Padding(
                       padding: EdgeInsets.all(10),
                       child: ListTile(
-                        // leading: Column(
-                        //     mainAxisAlignment: MainAxisAlignment.center,
-                        //     children: <Widget>[Icon(Icons.error)]),
                         title: Text("Could not connect to your scoreboard"),
                         subtitle: Text(
                             "Make sure your scoreboard is plugged in and your device is connected to the same WiFi network"),
@@ -314,9 +305,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Padding(
                     padding: EdgeInsets.all(10),
                     child: ListTile(
-                      // leading: Column(
-                      //     mainAxisAlignment: MainAxisAlignment.center,
-                      //     children: <Widget>[Icon(Icons.sync)]),
                       title: Text("If scoreboard is working normally.."),
                       subtitle: Text(
                           "Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
@@ -338,9 +326,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Padding(
                     padding: EdgeInsets.all(10),
                     child: ListTile(
-                      // leading: Column(
-                      //     mainAxisAlignment: MainAxisAlignment.center,
-                      //     children: <Widget>[Icon(Icons.refresh)]),
                       title: Text("If scoreboard is showing an error..."),
                       subtitle: Text(
                           "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to redo setup"),
@@ -438,79 +423,140 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget getTable(List<Screen> screens) {
-    List<Widget> items = screens.map((screen) => getScreen(screen)).toList();
-    return GridView.count(
-      shrinkWrap: true,
-      primary: false,
-      children: items,
-      crossAxisCount: 2,
-      childAspectRatio: 5 / 4,
-    );
+  List<Row> getTable(
+      List<Screen> screens, BuildContext context, int crossAxisCount) {
+    List<Widget> items =
+        screens.map((screen) => getScreen(screen, context)).toList();
+    while (items.length % crossAxisCount != 0) {
+      items.add(new Visibility(
+          child: getScreen(screens[0], context),
+          maintainInteractivity: false,
+          visible: false,
+          maintainState: true,
+          maintainAnimation: true,
+          maintainSize: true));
+    }
+    List<Row> rows = [];
+    List<Widget> row = [];
+    List<List<Widget>> rowList = [];
+    for (var item in items) {
+      row.add(item);
+      if (row.length == crossAxisCount) {
+        rows.add(new Row(
+            mainAxisAlignment: MainAxisAlignment.center, children: row));
+        rowList.add(row);
+        row = [];
+      }
+    }
+    return rows;
   }
 
-  Widget getScreen(Screen screen) {
+  Widget getScreen(Screen screen, BuildContext context, [double margin = 5.0]) {
     return new Card(
-      margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+      margin: EdgeInsets.symmetric(horizontal: margin, vertical: 5.0),
       color: screen.id == settings.activeScreen && settings.screenOn
           ? Theme.of(context).accentColor
           : Colors.grey,
       child: InkWell(
-        splashColor: Colors.blue.withAlpha(30),
-        onTap: () async {
-          if (screen.id != settings.activeScreen) {
+          splashColor: Colors.blue.withAlpha(30),
+          onTap: () async {
+            if (screen.id != settings.activeScreen) {
+              setState(() {
+                print("Selecting");
+                settings.activeScreen = screen.id;
+                settings.screenOn = true;
+                refreshingScreenSelect = true;
+              });
+            }
+            AppState state = await AppState.load();
+            String ip = state.scoreboardAddresses[state.activeIndex];
+            print("Setting sport for scoreboard at address: $ip");
+            ScoreboardSettings newSettings =
+                await Channel(ipAddress: ip).sportRequest(screen.id);
             setState(() {
-              print("Selecting");
-              settings.activeScreen = screen.id;
-              settings.screenOn = true;
-              refreshingScreenSelect = true;
+              print("Done select");
+              settings = newSettings;
+              refreshingScreenSelect = false;
             });
-          }
-          AppState state = await AppState.load();
-          String ip = state.scoreboardAddresses[state.activeIndex];
-          print("Setting sport for scoreboard at address: $ip");
-          ScoreboardSettings newSettings =
-              await Channel(ipAddress: ip).sportRequest(screen.id);
-          setState(() {
-            print("Done select");
-            settings = newSettings;
-            refreshingScreenSelect = false;
-          });
-        },
-        child: screen.id == settings.activeScreen && refreshingScreenSelect
-            ? CircularProgressIndicator(
-                valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
-              )
-            : Icon(
-                screen.getIcon(),
-                color: Colors.white,
-                size: 100,
-              ),
-      ),
+          },
+          child: screen.id == ScreenId.SMART
+              ? Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        screen.id == settings.activeScreen &&
+                                refreshingScreenSelect
+                            ? Container(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  valueColor: new AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ))
+                            : Icon(screen.getIcon(), color: Colors.white),
+                        Text(
+                          "  Automatic",
+                          style: TextStyle(fontSize: 24),
+                        )
+                      ]))
+              : Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                  child: screen.id == settings.activeScreen &&
+                          refreshingScreenSelect
+                      ? Container(
+                          width: 70,
+                          height: 70,
+                          child: CircularProgressIndicator(
+                            valueColor:
+                                new AlwaysStoppedAnimation<Color>(Colors.white),
+                          ))
+                      : Icon(
+                          screen.getIcon(),
+                          color: Colors.white,
+                          size: 70,
+                        ),
+                )),
     );
   }
 
-  Widget getCategoryText(String text) {
+  Widget getCategoryText(String text, double padding) {
     return Padding(
-        padding: EdgeInsets.only(left: 10.0),
-        child: Text(text, style: TextStyle(fontSize: 20)));
+        padding: EdgeInsets.only(left: padding, top: 10.0),
+        child: Text(text, style: TextStyle(fontSize: 14)));
   }
 
-  Widget _buildHome() {
-    return Container(
-        child: ListView(
-      shrinkWrap: true,
+  Widget getGroup(
+      List<Screen> screens, String label, double padding, int crossAxisCount) {
+    return Padding(
+        padding: EdgeInsets.only(top: 20),
+        child: Stack(overflow: Overflow.visible, children: [
+          Column(
+            children: [...getTable(screens, context, crossAxisCount)],
+          ),
+          Positioned(
+              child: getCategoryText(label, padding), top: -22.0, left: 2.0),
+        ]));
+  }
+
+  Widget _buildHome(BuildContext context) {
+    var width = MediaQuery.of(context).size.width.floor();
+    var crossAxisCount = (width ~/ 110) - 1;
+    crossAxisCount = min(crossAxisCount, 3);
+    var rowWidth = crossAxisCount * 155 + (crossAxisCount - 1) * 5.0;
+    var padding = (width - rowWidth) / 2;
+    // print("Width is $width, $crossAxisCount, rowWidth: $rowWidth, padding: $padding");
+    var smartScreen = Screen(id: ScreenId.SMART, name: "Smart", subtitle: "");
+    return ListView(
       children: [
         Padding(
-            padding: EdgeInsets.only(top: 10.0),
-            child: getCategoryText("Professional")),
-        getTable(proScreens),
-        getCategoryText("College"),
-        getTable(collegeScreens),
-        getCategoryText("Other"),
-        getTable(otherScreens),
+            child: getScreen(smartScreen, context, padding),
+            padding: EdgeInsets.only(top: min(padding - 10, 30))),
+        getGroup(proScreens, "Professional", padding, crossAxisCount),
+        getGroup(collegeScreens, "College", padding, crossAxisCount),
+        getGroup(otherScreens, "Other", padding, crossAxisCount),
       ],
-    ));
+    );
   }
 
   void _checkVersion() async {
