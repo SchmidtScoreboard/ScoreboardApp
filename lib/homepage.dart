@@ -240,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (shouldRefreshConfig && !refreshingPower && !refreshingScreenSelect) {
       AppState state = await AppState.load();
       String ip = state.scoreboardAddresses[state.activeIndex];
-      print("Getting config from scoreboard at address: $ip");
+      // print("Getting config from scoreboard at address: $ip");
       return Channel(ipAddress: ip).configRequest();
     } else {
       return Future.value(settings);
@@ -567,8 +567,8 @@ class _MyHomePageState extends State<MyHomePage> {
     var rowWidth = getRowWidth(width, crossAxisCount, iconSize,
         cardHorizontalPadding, cardHorizontalMargin);
     var inset = getInset(width, rowWidth);
-    print(
-        "Width is $width, count: $crossAxisCount, rowWidth: $rowWidth, inset: $inset, iconSize: $iconSize");
+    // print(
+    //     "Width is $width, count: $crossAxisCount, rowWidth: $rowWidth, inset: $inset, iconSize: $iconSize");
 
     var smartScreen = Screen(id: ScreenId.SMART, name: "Smart", subtitle: "");
     return ListView(
