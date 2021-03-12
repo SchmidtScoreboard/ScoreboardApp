@@ -217,6 +217,10 @@ class _MyHomePageState extends State<MyHomePage> {
         id: ScreenId.BASKETBALL,
         name: "Basketball",
         subtitle: "Show scores from professional basketball"),
+    Screen(
+        id: ScreenId.FOOTBALL,
+        name: "Football",
+        subtitle: "Show scores from professional basketball"),
   ];
 
   List<Screen> collegeScreens = [
@@ -224,6 +228,10 @@ class _MyHomePageState extends State<MyHomePage> {
         id: ScreenId.COLLEGE_BASKETBALL,
         name: "College Basketball",
         subtitle: "Show scores from college basketball"),
+    Screen(
+        id: ScreenId.COLLEGE_FOOTBALL,
+        name: "College Football",
+        subtitle: "Show scores from college football"),
   ];
 
   List<Screen> otherScreens = [
@@ -548,11 +556,15 @@ class _MyHomePageState extends State<MyHomePage> {
     var crossAxisCount = (screenWidth ~/
             (iconWidth + cardHorizontalMargin + cardHorizontalPadding)) -
         1;
-    return min(crossAxisCount, 3);
+    return min(crossAxisCount, 4);
   }
 
   Widget _buildHome(BuildContext context) {
     int width = MediaQuery.of(context).size.width.floor();
+    double additionalPadding = (MediaQuery.of(context).padding.left +
+        MediaQuery.of(context).padding.right);
+
+    width -= additionalPadding.toInt() * 2;
     double iconSize = 100.0;
     int crossAxisCount = 1;
     const double cardHorizontalPadding = 40.0;
@@ -566,11 +578,14 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     var rowWidth = getRowWidth(width, crossAxisCount, iconSize,
         cardHorizontalPadding, cardHorizontalMargin);
-    var inset = getInset(width, rowWidth);
+    var inset = getInset(width, rowWidth) + additionalPadding;
     // print(
     //     "Width is $width, count: $crossAxisCount, rowWidth: $rowWidth, inset: $inset, iconSize: $iconSize");
 
     var smartScreen = Screen(id: ScreenId.SMART, name: "Smart", subtitle: "");
+    if (crossAxisCount == 0) {
+      return ListView(children: []);
+    }
     return ListView(
       children: [
         Padding(

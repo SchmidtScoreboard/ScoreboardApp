@@ -180,7 +180,9 @@ class SettingsScreenState extends State<SettingsScreen> {
       ScreenId.MLB: Team.mlbTeams,
       ScreenId.NHL: Team.nhlTeams,
       ScreenId.COLLEGE_BASKETBALL: Team.ncaaTeams,
-      ScreenId.BASKETBALL: Team.nbaTeams
+      ScreenId.BASKETBALL: Team.nbaTeams,
+      ScreenId.FOOTBALL: Team.nflTeams,
+      ScreenId.COLLEGE_FOOTBALL: Team.ncaaTeams,
     };
     print("Mutable settings name: " + mutableSettings.name);
     bool scoreboardOutOfDate =
@@ -368,7 +370,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                                     key: ValueKey(team.teamId),
                                     child: ListTile(
                                         key: ValueKey(team.teamId),
-                                        title: Text("    " +
+                                        title: Text("  " +
+                                            ScreenId.getEmoji(team.screenId) +
+                                            "  " +
                                             teamMaps[team.screenId][team.teamId]
                                                 .toString())),
                                     actionPane: SlidableDrawerActionPane(),
@@ -636,7 +640,14 @@ class SettingsScreenState extends State<SettingsScreen> {
   }
 
   void showAddTeamDialog(Map<int, Map<int, Team>> teamMaps) {
-    var leagues = ["Hockey", "Baseball", "College Basketball", "Basketball"];
+    var leagues = [
+      "Hockey",
+      "Baseball",
+      "College Basketball",
+      "Basketball",
+      "Football",
+      "College Football"
+    ];
     Picker picker = new Picker(
         adapter: PickerDataAdapter<String>(pickerdata: leagues),
         onConfirm: (Picker picker, List value) {

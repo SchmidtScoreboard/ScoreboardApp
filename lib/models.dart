@@ -14,12 +14,31 @@ class ScreenId {
   static const MLB = 1;
   static const COLLEGE_BASKETBALL = 2;
   static const BASKETBALL = 3;
+  static const FOOTBALL = 4;
+  static const COLLEGE_FOOTBALL = 5;
   static const CLOCK = 50;
   static const REFRESH = 100;
   static const HOTSPOT = 101;
   static const WIFIDETAILS = 102;
   static const SYNC = 103;
   static const SMART = 10000;
+
+  static String getEmoji(int value) {
+    switch (value) {
+      case ScreenId.NHL:
+        return "🏒";
+      case ScreenId.MLB:
+        return "⚾️";
+      case ScreenId.BASKETBALL:
+      case ScreenId.COLLEGE_BASKETBALL:
+        return "🏀";
+      case ScreenId.FOOTBALL:
+      case ScreenId.COLLEGE_FOOTBALL:
+        return "🏈";
+      default:
+        return "❌";
+    }
+  }
 }
 
 class FocusTeam {
@@ -115,12 +134,16 @@ class Screen {
         return FontAwesomeIcons.basketballBall;
       case ScreenId.BASKETBALL:
         return FontAwesomeIcons.basketballBall;
+      case ScreenId.COLLEGE_FOOTBALL:
+        return FontAwesomeIcons.footballBall;
+      case ScreenId.FOOTBALL:
+        return FontAwesomeIcons.footballBall;
       case ScreenId.CLOCK:
         return FontAwesomeIcons.clock;
       case ScreenId.SMART:
         return FontAwesomeIcons.magic;
       default:
-        return FontAwesomeIcons.footballBall;
+        return FontAwesomeIcons.mandalorian;
     }
   }
 }
