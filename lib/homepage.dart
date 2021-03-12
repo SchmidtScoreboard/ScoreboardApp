@@ -551,7 +551,7 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         Padding(
             child: getScreen(smartScreen, context, padding),
-            padding: EdgeInsets.only(top: padding - 10)),
+            padding: EdgeInsets.only(top: min(padding - 10, 30))),
         getGroup(proScreens, "Professional", padding, crossAxisCount),
         getGroup(collegeScreens, "College", padding, crossAxisCount),
         getGroup(otherScreens, "Other", padding, crossAxisCount),
