@@ -261,6 +261,37 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didUpdateWidget(oldWidget);
   }
 
+  Widget getErrorCard(String title, String subtitle, [SetupState targetState]) {
+    return Center(
+        child: SizedBox(
+            width: 600,
+            child: Card(
+                color: Colors.red[300],
+                child: InkWell(
+                  splashColor: Colors.red.withAlpha(30),
+                  child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: ListTile(
+                        title: Text(title),
+                        subtitle: Text(subtitle),
+                      )),
+                  onTap: targetState == null
+                      ? () {}
+                      : () async {
+                          print("Tap");
+                          await AppState.setState(targetState);
+                          setState(() {
+                            //disable the timer
+                            refreshTimer.cancel();
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => buildHome()));
+                          });
+                        },
+                ))));
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<ScoreboardSettings>(
@@ -291,57 +322,16 @@ class _MyHomePageState extends State<MyHomePage> {
             print("Got config error " + snapshot.error.toString());
             name = "Sync Error";
             body = ListView(padding: EdgeInsets.all(10), children: <Widget>[
-              Card(
-                  color: Colors.red[300],
-                  child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: ListTile(
-                        title: Text("Could not connect to your scoreboard"),
-                        subtitle: Text(
-                            "Make sure your scoreboard is plugged in and your device is connected to the same WiFi network"),
-                      ))),
-              Card(
-                color: Colors.red[300],
-                child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: ListTile(
-                      title: Text("If scoreboard is working normally.."),
-                      subtitle: Text(
-                          "Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize"),
-                      onTap: () async {
-                        await AppState.setState(SetupState.SYNC);
-                        setState(() {
-                          //disable the timer
-                          refreshTimer.cancel();
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => buildHome()));
-                        });
-                      },
-                    )),
-              ),
-              Card(
-                color: Colors.red[300],
-                child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: ListTile(
-                      title: Text("If scoreboard is showing an error..."),
-                      subtitle: Text(
-                          "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to redo setup"),
-                      onTap: () async {
-                        await AppState.setState(SetupState.FACTORY);
-                        setState(() {
-                          //disable the timer
-                          refreshTimer.cancel();
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => buildHome()));
-                        });
-                      },
-                    )),
-              )
+              getErrorCard("Could not connect to your scoreboard",
+                  "Make sure your scoreboard is plugged in and your device is connected to the same WiFi network"),
+              getErrorCard(
+                  "If scoreboard is working normally..",
+                  "Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize",
+                  SetupState.SYNC),
+              getErrorCard(
+                  "If scoreboard is showing an error message...",
+                  "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to redo setup",
+                  SetupState.FACTORY),
             ]);
             if (refreshTimer == null || !refreshTimer.isActive) {
               refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
@@ -423,13 +413,14 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  List<Row> getTable(
-      List<Screen> screens, BuildContext context, int crossAxisCount) {
-    List<Widget> items =
-        screens.map((screen) => getScreen(screen, context)).toList();
+  List<Row> getTable(List<Screen> screens, BuildContext context,
+      int crossAxisCount, double iconSize) {
+    List<Widget> items = screens
+        .map((screen) => getScreen(screen, context, iconSize: iconSize))
+        .toList();
     while (items.length % crossAxisCount != 0) {
       items.add(new Visibility(
-          child: getScreen(screens[0], context),
+          child: getScreen(screens[0], context, iconSize: iconSize),
           maintainInteractivity: false,
           visible: false,
           maintainState: true,
@@ -451,7 +442,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return rows;
   }
 
-  Widget getScreen(Screen screen, BuildContext context, [double margin = 5.0]) {
+  Widget getScreen(Screen screen, BuildContext context,
+      {double margin = 5.0, double iconSize = 70.0}) {
     return new Card(
       margin: EdgeInsets.symmetric(horizontal: margin, vertical: 5.0),
       color: screen.id == settings.activeScreen && settings.screenOn
@@ -471,13 +463,16 @@ class _MyHomePageState extends State<MyHomePage> {
             AppState state = await AppState.load();
             String ip = state.scoreboardAddresses[state.activeIndex];
             print("Setting sport for scoreboard at address: $ip");
-            ScoreboardSettings newSettings =
-                await Channel(ipAddress: ip).sportRequest(screen.id);
-            setState(() {
-              print("Done select");
+            try {
+              ScoreboardSettings newSettings =
+                  await Channel(ipAddress: ip).sportRequest(screen.id);
               settings = newSettings;
-              refreshingScreenSelect = false;
-            });
+            } finally {
+              setState(() {
+                print("Done select");
+                refreshingScreenSelect = false;
+              });
+            }
           },
           child: screen.id == ScreenId.SMART
               ? Padding(
@@ -505,8 +500,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: screen.id == settings.activeScreen &&
                           refreshingScreenSelect
                       ? Container(
-                          width: 70,
-                          height: 70,
+                          width: iconSize,
+                          height: iconSize,
                           child: CircularProgressIndicator(
                             valueColor:
                                 new AlwaysStoppedAnimation<Color>(Colors.white),
@@ -514,7 +509,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       : Icon(
                           screen.getIcon(),
                           color: Colors.white,
-                          size: 70,
+                          size: iconSize,
                         ),
                 )),
     );
@@ -526,35 +521,64 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Text(text, style: TextStyle(fontSize: 14)));
   }
 
-  Widget getGroup(
-      List<Screen> screens, String label, double padding, int crossAxisCount) {
+  Widget getGroup(List<Screen> screens, String label, double padding,
+      int crossAxisCount, double iconSize) {
     return Padding(
         padding: EdgeInsets.only(top: 20),
         child: Stack(overflow: Overflow.visible, children: [
           Column(
-            children: [...getTable(screens, context, crossAxisCount)],
+            children: [...getTable(screens, context, crossAxisCount, iconSize)],
           ),
-          Positioned(
-              child: getCategoryText(label, padding), top: -22.0, left: 2.0),
+          Positioned(child: getCategoryText(label, padding), top: -22.0),
         ]));
   }
 
+  double getRowWidth(int screenWidth, int crossAxisCount, double iconWidth,
+      double cardHorizontalPadding, double cardHorizontalMargin) {
+    return crossAxisCount * (iconWidth + cardHorizontalPadding * 2) +
+        (crossAxisCount - 1) * (cardHorizontalMargin * 2);
+  }
+
+  double getInset(int screenWidth, double rowWidth) {
+    return (screenWidth - rowWidth) / 2;
+  }
+
+  int getCrossAxisCount(int screenWidth, double iconWidth,
+      double cardHorizontalPadding, double cardHorizontalMargin) {
+    var crossAxisCount = (screenWidth ~/
+            (iconWidth + cardHorizontalMargin + cardHorizontalPadding)) -
+        1;
+    return min(crossAxisCount, 3);
+  }
+
   Widget _buildHome(BuildContext context) {
-    var width = MediaQuery.of(context).size.width.floor();
-    var crossAxisCount = (width ~/ 110) - 1;
-    crossAxisCount = min(crossAxisCount, 3);
-    var rowWidth = crossAxisCount * 155 + (crossAxisCount - 1) * 5.0;
-    var padding = (width - rowWidth) / 2;
-    // print("Width is $width, $crossAxisCount, rowWidth: $rowWidth, padding: $padding");
+    int width = MediaQuery.of(context).size.width.floor();
+    double iconSize = 100.0;
+    int crossAxisCount = 1;
+    const double cardHorizontalPadding = 40.0;
+    const double cardHorizontalMargin = 5.0;
+    while (crossAxisCount == 1) {
+      crossAxisCount = getCrossAxisCount(
+          width, iconSize, cardHorizontalPadding, cardHorizontalMargin);
+      if (crossAxisCount == 1) {
+        iconSize -= 10;
+      }
+    }
+    var rowWidth = getRowWidth(width, crossAxisCount, iconSize,
+        cardHorizontalPadding, cardHorizontalMargin);
+    var inset = getInset(width, rowWidth);
+    print(
+        "Width is $width, count: $crossAxisCount, rowWidth: $rowWidth, inset: $inset, iconSize: $iconSize");
+
     var smartScreen = Screen(id: ScreenId.SMART, name: "Smart", subtitle: "");
     return ListView(
       children: [
         Padding(
-            child: getScreen(smartScreen, context, padding),
-            padding: EdgeInsets.only(top: min(padding - 10, 30))),
-        getGroup(proScreens, "Professional", padding, crossAxisCount),
-        getGroup(collegeScreens, "College", padding, crossAxisCount),
-        getGroup(otherScreens, "Other", padding, crossAxisCount),
+            child: getScreen(smartScreen, context, margin: inset),
+            padding: EdgeInsets.only(top: min(inset - 10, 30))),
+        getGroup(proScreens, "Professional", inset, crossAxisCount, iconSize),
+        getGroup(collegeScreens, "College", inset, crossAxisCount, iconSize),
+        getGroup(otherScreens, "Other", inset, crossAxisCount, iconSize),
       ],
     );
   }

@@ -192,371 +192,389 @@ class SettingsScreenState extends State<SettingsScreen> {
           appBar: AppBar(
             title: Text("Edit Scoreboard Settings"),
           ),
-          body: (ListView(
-            children: <Widget>[
-              ListTile(
-                leading: Icon(Icons.tv),
-                title: Text("Rename this scoreboard"),
-                subtitle: Text(mutableSettings.name),
-                onTap: () {
-                  String name = mutableSettings.name;
-                  AlertDialog dialog = AlertDialog(
-                    title: Text("Enter a new scoreboard name:"),
-                    content: TextField(
-                      maxLines: 1,
-                      maxLength: 32,
-                      decoration: InputDecoration(labelText: "Scoreboard Name"),
-                      textCapitalization: TextCapitalization.words,
-                      //initialValue: mutableSettings.name,
-
-                      onChanged: (String newName) {
-                        name = newName;
-                      },
-                    ),
-                    actions: <Widget>[
-                      new FlatButton(
-                        child: Text("Cancel"),
-                        onPressed: () {
-                          print("Pressed cancel");
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                      new FlatButton(
-                        child: Text("Confirm"),
-                        onPressed: () {
-                          print("Pressed confirm");
-                          setState(() {
-                            mutableSettings.name = name;
-                          });
-                          Navigator.of(context).pop();
-                        },
-                      )
-                    ],
-                  );
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return dialog;
-                      });
-                },
-              ),
-              ExpansionTile(
-                leading: Icon(Icons.wifi),
-                title: Text("WiFi Settings"),
-                children: <Widget>[
-                  ListTile(
-                      title: Text(
-                          "Updating wifi settings will require your scoreboard to restart")),
-                  Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: Theme(
-                        data: Theme.of(context)
-                            .copyWith(brightness: Brightness.dark),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            icon: Icon(Icons.wifi),
-                            labelText: "Wifi Name",
-                          ),
-                          maxLines: 1,
-                          maxLength: 32,
-                          autocorrect: false,
-                          textInputAction: TextInputAction.next,
-                          focusNode: wifiNode,
-                          onChanged: (String s) {
-                            setState(() {
-                              wifi = s;
-                            });
-                          },
-                          onEditingComplete: () {
-                            FocusScope.of(context).requestFocus(passNode);
-                          },
-                        ),
-                      )),
-                  Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      child: Theme(
-                          data: Theme.of(context)
-                              .copyWith(brightness: Brightness.dark),
-                          child: Stack(children: <Widget>[
-                            TextField(
-                              decoration: InputDecoration(
-                                  icon: Icon(Icons.lock),
-                                  labelText: "Password"),
+          body: Center(
+              child: SizedBox(
+                  width: 600,
+                  child: ListView(
+                    children: <Widget>[
+                      ListTile(
+                        leading: Icon(Icons.tv),
+                        title: Text("Rename this scoreboard"),
+                        subtitle: Text(mutableSettings.name),
+                        onTap: () {
+                          String name = mutableSettings.name;
+                          AlertDialog dialog = AlertDialog(
+                            title: Text("Enter a new scoreboard name:"),
+                            content: TextField(
                               maxLines: 1,
-                              obscureText: !showWifiPassword,
-                              autocorrect: false,
-                              maxLength: 63,
-                              textInputAction: TextInputAction.send,
-                              focusNode: passNode,
-                              onChanged: (String s) {
-                                setState(() {
-                                  password = s;
-                                });
+                              maxLength: 32,
+                              decoration:
+                                  InputDecoration(labelText: "Scoreboard Name"),
+                              textCapitalization: TextCapitalization.words,
+                              //initialValue: mutableSettings.name,
+
+                              onChanged: (String newName) {
+                                name = newName;
                               },
-                              onEditingComplete: () {},
                             ),
-                            Positioned(
-                                bottom: 14,
-                                right: 0,
-                                child: IconButton(
-                                    color: Theme.of(context).accentColor,
-                                    disabledColor:
-                                        Theme.of(context).disabledColor,
-                                    icon: showWifiPassword
-                                        ? Icon(FontAwesomeIcons.eyeSlash)
-                                        : Icon(FontAwesomeIcons.eye),
-                                    iconSize: 16,
-                                    onPressed: passNode.hasFocus
-                                        ? () {
-                                            setState(() {
-                                              showWifiPassword =
-                                                  !showWifiPassword;
-                                            });
-                                          }
-                                        : null)),
-                          ]))),
-                ],
-              ),
-              ListTile(
-                leading: Icon(Icons.timer),
-                title: Text("Rotation time"),
-                trailing: Text("${mutableSettings.rotationTime} seconds"),
-                onTap: () {
-                  Picker picker = new Picker(
-                      adapter: NumberPickerAdapter(data: [
-                        NumberPickerColumn(begin: 5, end: 120, jump: 5)
-                      ]),
-                      hideHeader: true,
-                      title: Text("Select a rotation time in seconds"),
-                      backgroundColor: Colors.transparent,
-                      textStyle: TextStyle(color: Colors.white, fontSize: 18),
-                      onConfirm: (Picker picker, List value) {
-                        mutableSettings.rotationTime =
-                            picker.getSelectedValues()[0];
-                        setState(() {});
-                      });
-                  picker.showDialog(context);
-                },
-              ),
-              ListTile(
-                  leading: Icon(Icons.favorite),
-                  title: Text("Favorite teams:"),
-                  onTap: () {
-                    showAddTeamDialog(teamMaps);
-                  },
-                  trailing: IconButton(
-                      icon: Icon(Icons.add),
-                      onPressed: () {
-                        showAddTeamDialog(teamMaps);
-                      })),
-              Column(
-                  children: mutableSettings.focusTeams
-                      .where((FocusTeam team) =>
-                          teamMaps.containsKey(team.screenId))
-                      .map((FocusTeam team) => Slidable(
-                            key: ValueKey(team.teamId),
-                            child: ListTile(
-                                key: ValueKey(team.teamId),
-                                title: Text("    " +
-                                    teamMaps[team.screenId][team.teamId]
-                                        .toString())),
-                            actionPane: SlidableDrawerActionPane(),
-                            secondaryActions: <Widget>[
-                              IconSlideAction(
-                                icon: Icons.delete,
-                                color: Colors.red,
-                                onTap: () {
-                                  mutableSettings.focusTeams.remove(team);
-                                  setState(() {});
+                            actions: <Widget>[
+                              new FlatButton(
+                                child: Text("Cancel"),
+                                onPressed: () {
+                                  print("Pressed cancel");
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              new FlatButton(
+                                child: Text("Confirm"),
+                                onPressed: () {
+                                  print("Pressed confirm");
+                                  setState(() {
+                                    mutableSettings.name = name;
+                                  });
+                                  Navigator.of(context).pop();
                                 },
                               )
                             ],
-                          ))
-                      .toList()),
-              ListTile(
-                leading: Icon(Icons.access_time),
-                title: Text("Timezone: ${mutableSettings.timezone}"),
-                onTap: () {
-                  Picker picker = new Picker(
-                      adapter: PickerDataAdapter<String>(pickerdata: timezones),
-                      onConfirm: (Picker picker, List value) {
-                        mutableSettings.timezone = timezones[value[0]];
-                        setState(() {});
-                      },
-                      backgroundColor: Colors.transparent,
-                      textStyle: TextStyle(color: Colors.white, fontSize: 18),
-                      title: Text("Change the timezone"),
-                      hideHeader: true,
-                      looping: false);
-                  picker.showDialog(context);
-                },
-              ),
-              if (originalSettings.brightness != null)
-                ExpansionTile(
-                    leading: Icon(Icons.brightness_6),
-                    title: Text("Set Brightness"),
-                    children: <Widget>[
-                      CupertinoSegmentedControl(
-                        children: getBrightnessWidgets(),
-                        padding: EdgeInsets.all(10),
-                        unselectedColor: Theme.of(context).backgroundColor,
-                        selectedColor: Colors.white,
-                        borderColor: Colors.white,
-                        onValueChanged: (int val) {
-                          setState(() {
-                            brightnessSelect = val;
-                            mutableSettings.brightness =
-                                brightnesSelectionToBrightness(
-                                    brightnessSelect);
-                          });
+                          );
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return dialog;
+                              });
                         },
-                        groupValue: brightnessSelect,
-                      )
-                    ]),
-              ExpansionTile(
-                leading: Icon(Icons.info),
-                title: Text("About"),
-                children: <Widget>[
-                  ListTile(
-                      leading: Icon(Icons.tv),
-                      title: FutureBuilder(future: () async {
-                        AppState state = await AppState.load();
-                        String ip =
-                            state.scoreboardAddresses[state.activeIndex];
-                        return Channel(ipAddress: ip).getVersion();
-                      }(), builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          if (snapshot.hasData) {
-                            return Text("Scoreboard Version: ${snapshot.data}");
-                          } else {
-                            return Text("Failed to fetch scoreboard version");
-                          }
-                        } else {
-                          return Text("Fetching scoreboard version...");
-                        }
-                      })),
-                  ListTile(
-                      leading: Icon(Icons.wifi_tethering),
-                      title: Text(
-                          "Scoreboard MAC Address:\n${mutableSettings.macAddress}")),
-                  ListTile(
-                      title: Text("Made for Jamie"),
-                      leading: Icon(Icons.favorite)),
-                  ListTile(
-                    title: Text("Privacy and Usage Policy"),
-                    leading: Icon(FontAwesomeIcons.key),
-                    onTap: () {
-                      AlertDialog policyAlert = AlertDialog(
-                        title: Text("Prviacy and Usage Policy"),
-                        content: Text(AppState.POLICY_TEXT),
-                        actions: <Widget>[
-                          FlatButton(
-                            child: Text("OK"),
-                            onPressed: () {
-                              Navigator.of(context).pop();
+                      ),
+                      ExpansionTile(
+                        leading: Icon(Icons.wifi),
+                        title: Text("WiFi Settings"),
+                        children: <Widget>[
+                          ListTile(
+                              title: Text(
+                                  "Updating wifi settings will require your scoreboard to restart")),
+                          Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              child: Theme(
+                                data: Theme.of(context)
+                                    .copyWith(brightness: Brightness.dark),
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    icon: Icon(Icons.wifi),
+                                    labelText: "Wifi Name",
+                                  ),
+                                  maxLines: 1,
+                                  maxLength: 32,
+                                  autocorrect: false,
+                                  textInputAction: TextInputAction.next,
+                                  focusNode: wifiNode,
+                                  onChanged: (String s) {
+                                    setState(() {
+                                      wifi = s;
+                                    });
+                                  },
+                                  onEditingComplete: () {
+                                    FocusScope.of(context)
+                                        .requestFocus(passNode);
+                                  },
+                                ),
+                              )),
+                          Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              child: Theme(
+                                  data: Theme.of(context)
+                                      .copyWith(brightness: Brightness.dark),
+                                  child: Stack(children: <Widget>[
+                                    TextField(
+                                      decoration: InputDecoration(
+                                          icon: Icon(Icons.lock),
+                                          labelText: "Password"),
+                                      maxLines: 1,
+                                      obscureText: !showWifiPassword,
+                                      autocorrect: false,
+                                      maxLength: 63,
+                                      textInputAction: TextInputAction.send,
+                                      focusNode: passNode,
+                                      onChanged: (String s) {
+                                        setState(() {
+                                          password = s;
+                                        });
+                                      },
+                                      onEditingComplete: () {},
+                                    ),
+                                    Positioned(
+                                        bottom: 14,
+                                        right: 0,
+                                        child: IconButton(
+                                            color:
+                                                Theme.of(context).accentColor,
+                                            disabledColor:
+                                                Theme.of(context).disabledColor,
+                                            icon: showWifiPassword
+                                                ? Icon(
+                                                    FontAwesomeIcons.eyeSlash)
+                                                : Icon(FontAwesomeIcons.eye),
+                                            iconSize: 16,
+                                            onPressed: passNode.hasFocus
+                                                ? () {
+                                                    setState(() {
+                                                      showWifiPassword =
+                                                          !showWifiPassword;
+                                                    });
+                                                  }
+                                                : null)),
+                                  ]))),
+                        ],
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.timer),
+                        title: Text("Rotation time"),
+                        trailing:
+                            Text("${mutableSettings.rotationTime} seconds"),
+                        onTap: () {
+                          Picker picker = new Picker(
+                              adapter: NumberPickerAdapter(data: [
+                                NumberPickerColumn(begin: 5, end: 120, jump: 5)
+                              ]),
+                              hideHeader: true,
+                              title: Text("Select a rotation time in seconds"),
+                              backgroundColor: Colors.transparent,
+                              textStyle:
+                                  TextStyle(color: Colors.white, fontSize: 18),
+                              onConfirm: (Picker picker, List value) {
+                                mutableSettings.rotationTime =
+                                    picker.getSelectedValues()[0];
+                                setState(() {});
+                              });
+                          picker.showDialog(context);
+                        },
+                      ),
+                      ListTile(
+                          leading: Icon(Icons.favorite),
+                          title: Text("Favorite teams:"),
+                          onTap: () {
+                            showAddTeamDialog(teamMaps);
+                          },
+                          trailing: IconButton(
+                              icon: Icon(Icons.add),
+                              onPressed: () {
+                                showAddTeamDialog(teamMaps);
+                              })),
+                      Column(
+                          children: mutableSettings.focusTeams
+                              .where((FocusTeam team) =>
+                                  teamMaps.containsKey(team.screenId))
+                              .map((FocusTeam team) => Slidable(
+                                    key: ValueKey(team.teamId),
+                                    child: ListTile(
+                                        key: ValueKey(team.teamId),
+                                        title: Text("    " +
+                                            teamMaps[team.screenId][team.teamId]
+                                                .toString())),
+                                    actionPane: SlidableDrawerActionPane(),
+                                    secondaryActions: <Widget>[
+                                      IconSlideAction(
+                                        icon: Icons.delete,
+                                        color: Colors.red,
+                                        onTap: () {
+                                          mutableSettings.focusTeams
+                                              .remove(team);
+                                          setState(() {});
+                                        },
+                                      )
+                                    ],
+                                  ))
+                              .toList()),
+                      ListTile(
+                        leading: Icon(Icons.access_time),
+                        title: Text("Timezone: ${mutableSettings.timezone}"),
+                        onTap: () {
+                          Picker picker = new Picker(
+                              adapter: PickerDataAdapter<String>(
+                                  pickerdata: timezones),
+                              onConfirm: (Picker picker, List value) {
+                                mutableSettings.timezone = timezones[value[0]];
+                                setState(() {});
+                              },
+                              backgroundColor: Colors.transparent,
+                              textStyle:
+                                  TextStyle(color: Colors.white, fontSize: 18),
+                              title: Text("Change the timezone"),
+                              hideHeader: true,
+                              looping: false);
+                          picker.showDialog(context);
+                        },
+                      ),
+                      if (originalSettings.brightness != null)
+                        ExpansionTile(
+                            leading: Icon(Icons.brightness_6),
+                            title: Text("Set Brightness"),
+                            children: <Widget>[
+                              CupertinoSegmentedControl(
+                                children: getBrightnessWidgets(),
+                                padding: EdgeInsets.all(10),
+                                unselectedColor:
+                                    Theme.of(context).backgroundColor,
+                                selectedColor: Colors.white,
+                                borderColor: Colors.white,
+                                onValueChanged: (int val) {
+                                  setState(() {
+                                    brightnessSelect = val;
+                                    mutableSettings.brightness =
+                                        brightnesSelectionToBrightness(
+                                            brightnessSelect);
+                                  });
+                                },
+                                groupValue: brightnessSelect,
+                              )
+                            ]),
+                      ExpansionTile(
+                        leading: Icon(Icons.info),
+                        title: Text("About"),
+                        children: <Widget>[
+                          ListTile(
+                              leading: Icon(Icons.tv),
+                              title: FutureBuilder(future: () async {
+                                AppState state = await AppState.load();
+                                String ip = state
+                                    .scoreboardAddresses[state.activeIndex];
+                                return Channel(ipAddress: ip).getVersion();
+                              }(), builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.done) {
+                                  if (snapshot.hasData) {
+                                    return Text(
+                                        "Scoreboard Version: ${snapshot.data}");
+                                  } else {
+                                    return Text(
+                                        "Failed to fetch scoreboard version");
+                                  }
+                                } else {
+                                  return Text("Fetching scoreboard version...");
+                                }
+                              })),
+                          ListTile(
+                              leading: Icon(Icons.wifi_tethering),
+                              title: Text(
+                                  "Scoreboard MAC Address:\n${mutableSettings.macAddress}")),
+                          ListTile(
+                              title: Text("Made for Jamie"),
+                              leading: Icon(Icons.favorite)),
+                          ListTile(
+                            title: Text("Privacy and Usage Policy"),
+                            leading: Icon(FontAwesomeIcons.key),
+                            onTap: () {
+                              AlertDialog policyAlert = AlertDialog(
+                                title: Text("Prviacy and Usage Policy"),
+                                content: Text(AppState.POLICY_TEXT),
+                                actions: <Widget>[
+                                  FlatButton(
+                                    child: Text("OK"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  )
+                                ],
+                              );
+                              showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return policyAlert;
+                                  });
                             },
                           )
                         ],
-                      );
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return policyAlert;
-                          });
-                    },
-                  )
-                ],
-              ),
-              ListTile(
-                leading: scoreboardOutOfDate
-                    ? Badge(
-                        child: Icon(Icons.power_settings_new),
-                        badgeContent:
-                            Text("1", style: TextStyle(color: Colors.white)),
-                      )
-                    : Icon(Icons.power_settings_new),
-                title: Text("Reboot this scoreboard"),
-                subtitle: Text("Scoreboard will check for updates on reboot"),
-                onTap: () {
-                  AlertDialog alert = AlertDialog(
-                      title: Text("Reboot this scoreboard"),
-                      content: Text(
-                          "Rebooting will also update the scoreboard to the latest version.\nThis may take a minute."),
-                      actions: <Widget>[
-                        FlatButton(
-                          child: Text("Cancel"),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                        FlatButton(
-                          child: Text("Update"),
-                          onPressed: () async {
-                            AppState state = await AppState.load();
-                            String ip =
-                                state.scoreboardAddresses[state.activeIndex];
-                            print("Rebooting at ip : $ip");
-                            try {
-                              await Channel(ipAddress: ip).rebootRequest();
-                            } catch (e) {
-                              print(e.toString());
-                            } finally {
-                              Navigator.of(context).pop();
-                            }
-                          },
-                        )
-                      ]);
-                  showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return alert;
-                      });
-                },
-              ),
-              ListTile(
-                  leading: IconTheme(
-                      data: IconThemeData(color: Colors.red),
-                      child: Icon(Icons.delete_forever)),
-                  title: Text("Delete this scoreboard",
-                      style: TextStyle(color: Colors.red)),
-                  onTap: () {
-                    AlertDialog alert = AlertDialog(
-                      title: Text("Are you sure?"),
-                      content: Text(
-                          "This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
-                      actions: <Widget>[
-                        FlatButton(
-                          child: Text("Cancel"),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                        FlatButton(
-                          child: Text(
-                            "Delete",
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          onPressed: () async {
-                            await AppState.removeScoreboard();
-                            Navigator.of(context).pop();
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => buildHome()));
-                          },
-                        )
-                      ],
-                    );
-                    showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return alert;
-                        });
-                  })
-            ],
-          )),
+                      ),
+                      ListTile(
+                        leading: scoreboardOutOfDate
+                            ? Badge(
+                                child: Icon(Icons.power_settings_new),
+                                badgeContent: Text("1",
+                                    style: TextStyle(color: Colors.white)),
+                              )
+                            : Icon(Icons.power_settings_new),
+                        title: Text("Reboot this scoreboard"),
+                        subtitle:
+                            Text("Scoreboard will check for updates on reboot"),
+                        onTap: () {
+                          AlertDialog alert = AlertDialog(
+                              title: Text("Reboot this scoreboard"),
+                              content: Text(
+                                  "Rebooting will also update the scoreboard to the latest version.\nThis may take a minute."),
+                              actions: <Widget>[
+                                FlatButton(
+                                  child: Text("Cancel"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                FlatButton(
+                                  child: Text("Update"),
+                                  onPressed: () async {
+                                    AppState state = await AppState.load();
+                                    String ip = state
+                                        .scoreboardAddresses[state.activeIndex];
+                                    print("Rebooting at ip : $ip");
+                                    try {
+                                      await Channel(ipAddress: ip)
+                                          .rebootRequest();
+                                    } catch (e) {
+                                      print(e.toString());
+                                    } finally {
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                )
+                              ]);
+                          showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return alert;
+                              });
+                        },
+                      ),
+                      ListTile(
+                          leading: IconTheme(
+                              data: IconThemeData(color: Colors.red),
+                              child: Icon(Icons.delete_forever)),
+                          title: Text("Delete this scoreboard",
+                              style: TextStyle(color: Colors.red)),
+                          onTap: () {
+                            AlertDialog alert = AlertDialog(
+                              title: Text("Are you sure?"),
+                              content: Text(
+                                  "This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
+                              actions: <Widget>[
+                                FlatButton(
+                                  child: Text("Cancel"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                FlatButton(
+                                  child: Text(
+                                    "Delete",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                  onPressed: () async {
+                                    await AppState.removeScoreboard();
+                                    Navigator.of(context).pop();
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => buildHome()));
+                                  },
+                                )
+                              ],
+                            );
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return alert;
+                                });
+                          })
+                    ],
+                  ))),
           floatingActionButton: Visibility(
               visible: hasEditedSettings(),
               maintainInteractivity: false,

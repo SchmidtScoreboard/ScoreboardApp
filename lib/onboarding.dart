@@ -58,7 +58,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         key: scaffoldKey,
         body: Builder(builder: (BuildContext context) {
@@ -68,7 +67,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
         backgroundColor: Theme.of(context).primaryColorDark,
         drawer: ScoreboardDrawer());
   }
-
 
   Widget getOnboardWidget(BuildContext context);
 
@@ -135,7 +133,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       ));
     }
     Widget alignedFooter = SafeArea(
-        minimum: const EdgeInsets.only(bottom: 20, right: 20),
+        minimum: const EdgeInsets.only(bottom: 10, right: 10),
         child: Align(alignment: FractionalOffset.bottomRight, child: footer));
     return Stack(children: [
       SingleChildScrollView(
@@ -143,7 +141,10 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
               minimum: const EdgeInsets.only(top: 70),
               child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Center(child: Container(width: 500, child: Column(children: paddedWidgets)))))),
+                  child: Center(
+                      child: Container(
+                          width: 500,
+                          child: Column(children: paddedWidgets)))))),
       SafeArea(
         child: IconButton(
           icon: Icon(Icons.menu),
@@ -221,22 +222,19 @@ class SplashScreenState extends OnboardingScreenState {
           getOnboardButton(
               context, "Get Started", ConnectToHotspotScreen(), callback),
         ],
-        Padding(
-            padding: EdgeInsets.all(20),
-            child: RaisedButton(
-              shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.all(Radius.circular(borderRadius))),
-              color: Theme.of(context).accentColor,
-              padding: EdgeInsets.all(5),
-              child: Text("Skip to Sync",
-                  style: TextStyle(color: Colors.white, fontSize: 12)),
-              onPressed: () {
-                AppState.setState(SetupState.SYNC);
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => SyncScreen()));
-              },
-            )));
+        RaisedButton(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(borderRadius))),
+          color: Theme.of(context).accentColor,
+          padding: EdgeInsets.all(5),
+          child: Text("Skip to Sync",
+              style: TextStyle(color: Colors.white, fontSize: 12)),
+          onPressed: () {
+            AppState.setState(SetupState.SYNC);
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => SyncScreen()));
+          },
+        ));
   }
 }
 
@@ -274,7 +272,6 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
 
   @override
   Widget getOnboardWidget(BuildContext context) {
-    bool floatingInCenter = MediaQuery.of(context).size.height > MediaQuery.of(context).size.width;
     return layoutWidgets(
         <Widget>[
           getOnboardTitle("Connect to your Scoreboard"),
@@ -296,33 +293,31 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
               return Column(children: [
                 getOnboardInstruction(
                     "In your device's Settings app, connect to the wifi network as shown on your scoreboard"),
-                  SizedBox(height: 20),
+                SizedBox(height: 20),
                 Text("Waiting on connection...",
                     style: TextStyle(color: Colors.grey[400])),
               ]);
             },
           ),
         ],
-        Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(mainAxisAlignment: floatingInCenter ? MainAxisAlignment.center : MainAxisAlignment.end, children: [
-              RaisedButton(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(borderRadius),
-                        topLeft: Radius.circular(borderRadius))),
-                color: Theme.of(context).accentColor,
-                padding: EdgeInsets.all(5),
-                child: Text("Skip to Sync",
-                    style: TextStyle(color: Colors.white, fontSize: 12)),
-                onPressed: () {
-                  AppState.setState(SetupState.SYNC);
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (context) => SyncScreen()));
-                },
-              ),
-              getResetButton(true)
-            ])));
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          RaisedButton(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(borderRadius),
+                    topLeft: Radius.circular(borderRadius))),
+            color: Theme.of(context).accentColor,
+            padding: EdgeInsets.all(5),
+            child: Text("Skip to Sync",
+                style: TextStyle(color: Colors.white, fontSize: 12)),
+            onPressed: () {
+              AppState.setState(SetupState.SYNC);
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => SyncScreen()));
+            },
+          ),
+          getResetButton(true)
+        ]));
   }
 }
 
@@ -530,11 +525,11 @@ class SyncScreenState extends OnboardingScreenState {
   @override
   Widget getOnboardWidget(BuildContext context) {
     print("Building sync screen");
-    bool floatingInCenter = MediaQuery.of(context).size.height > (MediaQuery.of(context).size.width * 1.5);
     return layoutWidgets(
         [
           getOnboardTitle("Sync with Scoreboard"),
-          getOnboardInstruction("Your scoreboard is connecting to wifi!\n\nIt may take a few minutes to connect.\n\nOnce connected, enter the code that appears on the Scoreboard to sync."),
+          getOnboardInstruction(
+              "Your scoreboard is connecting to wifi! It may take a few minutes to connect.\n\nOnce connected, enter the code that appears on the Scoreboard to sync."),
           Theme(
               data: Theme.of(context),
               child: TextField(
@@ -553,28 +548,26 @@ class SyncScreenState extends OnboardingScreenState {
           getOnboardButton(context, "Confirm", MyHomePage(), callback,
               enabled: isValid, errorCallback: errorCallback)
         ],
-        Padding(
-            padding: EdgeInsets.all(20),
-            child: Row(mainAxisAlignment: floatingInCenter ? MainAxisAlignment.center : MainAxisAlignment.end, children: [
-              RaisedButton(
-                color: Theme.of(context).accentColor,
-                padding: EdgeInsets.all(5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(borderRadius),
-                        bottomLeft: Radius.circular(borderRadius))),
-                child: Text("Retry Wifi",
-                    style: TextStyle(color: Colors.white, fontSize: 12)),
-                onPressed: () {
-                  AppState.setState(SetupState.WIFI_CONNECT);
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => WifiCredentialsScreen()));
-                },
-              ),
-              getResetButton(true)
-            ])));
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          RaisedButton(
+            color: Theme.of(context).accentColor,
+            padding: EdgeInsets.all(5),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(borderRadius),
+                    bottomLeft: Radius.circular(borderRadius))),
+            child: Text("Retry Wifi",
+                style: TextStyle(color: Colors.white, fontSize: 12)),
+            onPressed: () {
+              AppState.setState(SetupState.WIFI_CONNECT);
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => WifiCredentialsScreen()));
+            },
+          ),
+          getResetButton(true)
+        ]));
   }
 
   void errorCallback(BuildContext context) {
