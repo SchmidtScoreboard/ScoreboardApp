@@ -9,7 +9,9 @@
     <uses-permission android:name="android.permission.INTERNET" /> 
     <application
         android:label="Scoreboard"
+        android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher">
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

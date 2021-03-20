@@ -84,6 +84,24 @@ class Channel {
     }
   }
 
+  Future<ScoreboardSettings> autoPowerRequest(bool autoPower) async {
+    var url = ipAddress + "autoPower";
+
+    Map data = {'auto_power': autoPower};
+    //encode Map to JSON
+    var body = json.encode(data);
+
+    var response = await http
+        .post(url, headers: {"Content-Type": "application/json"}, body: body)
+        .timeout(Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      return ScoreboardSettings.fromJson(json.decode(response.body));
+    } else {
+      throw Exception("Failed to send auto power request");
+    }
+  }
+
   Future<ScoreboardSettings> wifiRequest(String ssid, String password) async {
     String url = ipAddress + "wifi";
     Map data = {'ssid': ssid, 'psk': password};

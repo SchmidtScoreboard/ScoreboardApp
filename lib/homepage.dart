@@ -1,5 +1,6 @@
 import 'package:Scoreboard/teams.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:async';
 import 'models.dart';
 import 'settings.dart';
@@ -201,6 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Channel channel;
   bool refreshingScreenSelect = false;
   bool refreshingPower = false;
+  bool refreshingAutoPower = false;
   bool shouldRefreshConfig = true;
   bool scoreboardUpdateAvailable = false;
 
@@ -323,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
             name = settings.name;
             body = _buildHome(context);
             actions = _buildActions();
-            fab = _buildFab();
+            fab = _buildFab(context);
             drawer = ScoreboardDrawer();
             shouldRefreshConfig = false;
           } else if (snapshot.hasError) {
@@ -391,34 +393,100 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
   }
 
-  Widget _buildFab() {
-    return FloatingActionButton(
-      onPressed: () async {
-        setState(() {
-          refreshingPower = true;
-        });
-        AppState state = await AppState.load();
-        String ip = state.scoreboardAddresses[state.activeIndex];
-        print("Setting power for scoreboard at address: $ip");
-        ScoreboardSettings newSettings =
-            await Channel(ipAddress: ip).powerRequest(!settings.screenOn);
-        setState(() {
-          settings = newSettings;
-          refreshingPower = false;
-        });
-      },
-      child: refreshingPower
-          ? CircularProgressIndicator(
-              valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
-            )
-          : Icon(
-              Icons.power_settings_new,
-              color: Colors.white,
-            ),
-      backgroundColor:
-          settings.screenOn ? Theme.of(context).accentColor : Colors.grey,
-      foregroundColor: Colors.white,
-    );
+  Widget _buildFab(BuildContext context) {
+    double height = 75;
+    double width = 150;
+    return Container(
+        height: height,
+        width: width,
+        child: new Material(
+            shape: new RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(height / 2))),
+            elevation: 10.0,
+            clipBehavior: Clip.antiAlias,
+            child: Stack(children: [
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Container(
+                    color: settings.screenOn
+                        ? Theme.of(context).accentColor
+                        : Colors.grey,
+                    width: width / 2,
+                    height: height,
+                    child: InkWell(
+                      onTap: () async {
+                        setState(() {
+                          settings.screenOn = !settings.screenOn;
+                          refreshingPower = true;
+                        });
+                        AppState state = await AppState.load();
+                        String ip =
+                            state.scoreboardAddresses[state.activeIndex];
+                        print("Setting power for scoreboard at address: $ip");
+                        ScoreboardSettings newSettings =
+                            await Channel(ipAddress: ip)
+                                .powerRequest(settings.screenOn);
+                        setState(() {
+                          settings = newSettings;
+                          refreshingPower = false;
+                        });
+                      },
+                      child: refreshingPower
+                          ? Padding(
+                              padding: EdgeInsets.all(height / 4),
+                              child: CircularProgressIndicator(
+                                valueColor: new AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
+                              ))
+                          : Icon(
+                              Icons.power_settings_new,
+                              color: Colors.white,
+                              size: height / 2,
+                            ),
+                    )),
+                InkWell(
+                    onTap: () async {
+                      setState(() {
+                        settings.autoPowerOn = !settings.autoPowerOn;
+                        refreshingAutoPower = true;
+                      });
+                      AppState state = await AppState.load();
+                      String ip = state.scoreboardAddresses[state.activeIndex];
+                      print(
+                          "Setting auto power for scoreboard at address: $ip");
+                      ScoreboardSettings newSettings =
+                          await Channel(ipAddress: ip)
+                              .autoPowerRequest(settings.autoPowerOn);
+                      setState(() {
+                        settings = newSettings;
+                        refreshingAutoPower = false;
+                      });
+                    },
+                    child: Container(
+                        color:
+                            settings.autoPowerOn ? Colors.green : Colors.grey,
+                        width: width / 2,
+                        height: height,
+                        child: refreshingAutoPower
+                            ? Padding(
+                                padding: EdgeInsets.all(height / 4),
+                                child: CircularProgressIndicator(
+                                  valueColor: new AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ))
+                            : Icon(
+                                Icons.auto_awesome,
+                                color: Colors.white,
+                                size: height / 2,
+                              ))),
+              ]),
+              Center(
+                  child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 0),
+                      child: VerticalDivider(
+                        thickness: 2,
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      ))),
+            ])));
   }
 
   List<Row> getTable(List<Screen> screens, BuildContext context,
@@ -482,44 +550,60 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             }
           },
-          child: screen.id == ScreenId.SMART
-              ? Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        screen.id == settings.activeScreen &&
-                                refreshingScreenSelect
-                            ? Container(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  valueColor: new AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ))
-                            : Icon(screen.getIcon(), color: Colors.white),
-                        Text(
-                          "  Automatic",
-                          style: TextStyle(fontSize: 24),
-                        )
-                      ]))
-              : Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                  child: screen.id == settings.activeScreen &&
-                          refreshingScreenSelect
-                      ? Container(
-                          width: iconSize,
-                          height: iconSize,
-                          child: CircularProgressIndicator(
-                            valueColor:
-                                new AlwaysStoppedAnimation<Color>(Colors.white),
-                          ))
-                      : Icon(
-                          screen.getIcon(),
-                          color: Colors.white,
-                          size: iconSize,
-                        ),
-                )),
+          child: Stack(children: [
+            screen.id == ScreenId.SMART
+                ? Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          screen.id == settings.activeScreen &&
+                                  refreshingScreenSelect
+                              ? Container(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    valueColor:
+                                        new AlwaysStoppedAnimation<Color>(
+                                            Colors.white),
+                                  ))
+                              : Icon(screen.getIcon(), color: Colors.white),
+                          Text(
+                            "  Automatic",
+                            style: TextStyle(fontSize: 24),
+                          )
+                        ]))
+                : Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                    child: screen.id == settings.activeScreen &&
+                            refreshingScreenSelect
+                        ? Container(
+                            width: iconSize,
+                            height: iconSize,
+                            child: CircularProgressIndicator(
+                              valueColor: new AlwaysStoppedAnimation<Color>(
+                                  Colors.white),
+                            ))
+                        : Icon(
+                            screen.getIcon(),
+                            color: Colors.white,
+                            size: iconSize,
+                          ),
+                  ),
+            if (settings.autoPowerOn &&
+                settings.activeScreen == screen.id &&
+                !settings.screenOn)
+              Positioned(
+                  right: 4.0,
+                  top: 4.0,
+                  child: Container(
+                      width: 15,
+                      height: 15,
+                      decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          boxShadow: [BoxShadow(offset: Offset(0, 1))])))
+          ])),
     );
   }
 

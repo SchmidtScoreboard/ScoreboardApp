@@ -149,10 +149,11 @@ class Screen {
 }
 
 class ScoreboardSettings {
-  static final int clientVersion = 3;
+  static final int clientVersion = 4;
 
   int activeScreen;
   bool screenOn;
+  bool autoPowerOn;
   List<Screen> screens;
   int setupState;
   String name;
@@ -167,6 +168,7 @@ class ScoreboardSettings {
   ScoreboardSettings(
       {this.activeScreen,
       this.screenOn,
+      this.autoPowerOn,
       this.name,
       this.screens,
       this.setupState,
@@ -192,6 +194,7 @@ class ScoreboardSettings {
     return ScoreboardSettings(
         activeScreen: json["active_screen"],
         screenOn: json["screen_on"],
+        autoPowerOn: json["auto_power"] ?? false,
         name: json["name"] ?? "My New Scoreboard",
         screens: screens,
         setupState: json["setup_state"],
@@ -215,6 +218,7 @@ class ScoreboardSettings {
     return new ScoreboardSettings(
         activeScreen: activeScreen,
         screenOn: screenOn,
+        autoPowerOn: autoPowerOn,
         name: name,
         version: version,
         screens: new List<Screen>.from(screensCopy),
@@ -237,6 +241,7 @@ class ScoreboardSettings {
   bool operator ==(other) {
     return this.activeScreen == other.activeScreen &&
         this.screenOn == other.screenOn &&
+        this.autoPowerOn == other.autoPowerOn &&
         this.name == other.name &&
         this.timezone == other.timezone &&
         this.macAddress == other.macAddress &&
@@ -249,6 +254,7 @@ class ScoreboardSettings {
   Map<String, dynamic> toJson() {
     Map<String, dynamic> ret = {};
     ret["active_screen"] = activeScreen;
+    ret["auto_power"] = autoPowerOn;
     ret["screen_on"] = screenOn;
     ret["screens"] = [];
     ret["setup_state"] = setupState;

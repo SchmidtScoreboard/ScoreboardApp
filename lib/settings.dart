@@ -367,9 +367,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                               .where((FocusTeam team) =>
                                   teamMaps.containsKey(team.screenId))
                               .map((FocusTeam team) => Slidable(
-                                    key: ValueKey(team.teamId),
+                                    // key: ValueKey(team.teamId),
                                     child: ListTile(
-                                        key: ValueKey(team.teamId),
+                                        // key: ValueKey(team.teamId),
                                         title: Text("  " +
                                             ScreenId.getEmoji(team.screenId) +
                                             "  " +
