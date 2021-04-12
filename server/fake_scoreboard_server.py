@@ -6,7 +6,6 @@ import time
 app = Flask(__name__)
 
 def get_response():
-    time.sleep(5) 
     with open("scoreboard_settings.json") as f:
         settings = json.load(f)
         return jsonify(settings)

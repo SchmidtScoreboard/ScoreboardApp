@@ -222,7 +222,11 @@ class _MyHomePageState extends State<MyHomePage> {
     Screen(
         id: ScreenId.FOOTBALL,
         name: "Football",
-        subtitle: "Show scores from professional basketball"),
+        subtitle: "Show scores from professional football"),
+    Screen(
+        id: ScreenId.GOLF,
+        name: "Golf",
+        subtitle: "Show scores from professional golf"),
   ];
 
   List<Screen> collegeScreens = [
@@ -239,6 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Screen> otherScreens = [
     Screen(
         id: ScreenId.CLOCK, name: "Clock", subtitle: "Show the current time"),
+    Screen(id: ScreenId.FLAPPY, name: "Game", subtitle: "Let's play a game"),
   ];
   @override
   void initState() {
@@ -535,19 +540,30 @@ class _MyHomePageState extends State<MyHomePage> {
                 settings.screenOn = true;
                 refreshingScreenSelect = true;
               });
-            }
-            AppState state = await AppState.load();
-            String ip = state.scoreboardAddresses[state.activeIndex];
-            print("Setting sport for scoreboard at address: $ip");
-            try {
-              ScoreboardSettings newSettings =
-                  await Channel(ipAddress: ip).sportRequest(screen.id);
-              settings = newSettings;
-            } finally {
-              setState(() {
-                print("Done select");
-                refreshingScreenSelect = false;
-              });
+
+              AppState state = await AppState.load();
+              String ip = state.scoreboardAddresses[state.activeIndex];
+              print("Setting sport for scoreboard at address: $ip");
+              try {
+                ScoreboardSettings newSettings =
+                    await Channel(ipAddress: ip).sportRequest(screen.id);
+                settings = newSettings;
+              } finally {
+                setState(() {
+                  print("Done select");
+                  refreshingScreenSelect = false;
+                });
+              }
+            } else if (screen.id == settings.activeScreen && screen.id == ScreenId.FLAPPY) {
+              AppState state = await AppState.load();
+              String ip = state.scoreboardAddresses[state.activeIndex];
+              try {
+                ScoreboardSettings newSettings =
+                    await Channel(ipAddress: ip).gameAction();
+                settings = newSettings;
+              } finally {
+                print("Done send game action");
+              }
             }
           },
           child: Stack(children: [
@@ -678,6 +694,7 @@ class _MyHomePageState extends State<MyHomePage> {
         getGroup(proScreens, "Professional", inset, crossAxisCount, iconSize),
         getGroup(collegeScreens, "College", inset, crossAxisCount, iconSize),
         getGroup(otherScreens, "Other", inset, crossAxisCount, iconSize),
+        Padding(padding: EdgeInsets.only(top: 80), child: SafeArea(child: Center(child: Text("Made for Jamie"))))
       ],
     );
   }

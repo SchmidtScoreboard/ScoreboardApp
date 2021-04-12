@@ -16,10 +16,12 @@ class ScreenId {
   static const BASKETBALL = 3;
   static const FOOTBALL = 4;
   static const COLLEGE_FOOTBALL = 5;
+  static const GOLF = 6;
   static const CLOCK = 50;
   static const REFRESH = 100;
   static const HOTSPOT = 101;
   static const WIFIDETAILS = 102;
+  static const FLAPPY = 420;
   static const SYNC = 103;
   static const SMART = 10000;
 
@@ -35,6 +37,8 @@ class ScreenId {
       case ScreenId.FOOTBALL:
       case ScreenId.COLLEGE_FOOTBALL:
         return "🏈";
+      case ScreenId.GOLF:
+        return "⛳️";
       default:
         return "❌";
     }
@@ -138,8 +142,12 @@ class Screen {
         return FontAwesomeIcons.footballBall;
       case ScreenId.FOOTBALL:
         return FontAwesomeIcons.footballBall;
+      case ScreenId.GOLF:
+        return FontAwesomeIcons.golfBall;
       case ScreenId.CLOCK:
         return FontAwesomeIcons.clock;
+      case ScreenId.FLAPPY:
+        return Icons.play_arrow;
       case ScreenId.SMART:
         return FontAwesomeIcons.magic;
       default:
@@ -149,7 +157,7 @@ class Screen {
 }
 
 class ScoreboardSettings {
-  static final int clientVersion = 4;
+  static final int clientVersion = 5;
 
   int activeScreen;
   bool screenOn;

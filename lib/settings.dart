@@ -370,7 +370,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                     // key: ValueKey(team.teamId),
                                     child: ListTile(
                                         // key: ValueKey(team.teamId),
-                                        title: Text("  " +
+                                        title: Text("        " +
                                             ScreenId.getEmoji(team.screenId) +
                                             "  " +
                                             teamMaps[team.screenId][team.teamId]
@@ -388,7 +388,25 @@ class SettingsScreenState extends State<SettingsScreen> {
                                       )
                                     ],
                                   ))
-                              .toList()),
+                              .toList()), 
+                      Builder(builder: (context) {
+                        FocusTeam golfKey =
+                            FocusTeam(screenId: ScreenId.GOLF, teamId: 0);
+                        return CheckboxListTile(
+                            value: mutableSettings.focusTeams.contains(golfKey),
+                            onChanged: (bool newValue) {
+                              if (newValue) {
+                                mutableSettings.focusTeams.add(golfKey);
+                              } else {
+                                mutableSettings.focusTeams.remove(golfKey);
+                              }
+                              setState(() {});
+                            },
+                            activeColor: Theme.of(context).accentColor,
+                            secondary: Icon(Icons.sports_golf),
+                            title: Text("Prioritize Golf"),
+                            subtitle: Text("Focus on Golf events when active"));
+                      }),
                       ListTile(
                         leading: Icon(Icons.access_time),
                         title: Text("Timezone: ${mutableSettings.timezone}"),

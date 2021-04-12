@@ -50,6 +50,22 @@ class Channel {
     }
   }
 
+  Future<ScoreboardSettings> gameAction() async {
+    var url = ipAddress + "gameAction";
+
+    Map data = {};
+    //encode Map to JSON
+    var body = json.encode(data);
+
+    var response = await http.post(url,
+        headers: {"Content-Type": "application/json"}, body: body);
+    if (response.statusCode == 200) {
+      return ScoreboardSettings.fromJson(json.decode(response.body));
+    } else {
+      throw Exception("Failed to send sport request");
+    }
+  }
+
   Future<ScoreboardSettings> configureSettings(
       ScoreboardSettings newSettings) async {
     var url = ipAddress + "configure";

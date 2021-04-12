@@ -1,8 +1,8 @@
 {
-  "name": "Mark's Scoreboard",
+  "name": "My Scoreboard",
   "timezone": "US/Central",
   "setup_state": 10,
-  "active_screen": 0,
+  "active_screen": 10000,
   "mac_address": "b8:27:eb:6b:64:25",
   "screens": [
     {
@@ -31,7 +31,8 @@
     }
   ],
   "screen_on": true,
-  "version": 3,
+  "auto_power": true,
+  "version": 4,
   "focus_team": [],
   "rotation_time": 10
 }
