@@ -388,7 +388,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                       )
                                     ],
                                   ))
-                              .toList()), 
+                              .toList()),
                       Builder(builder: (context) {
                         FocusTeam golfKey =
                             FocusTeam(screenId: ScreenId.GOLF, teamId: 0);
@@ -407,6 +407,19 @@ class SettingsScreenState extends State<SettingsScreen> {
                             title: Text("Prioritize Golf"),
                             subtitle: Text("Focus on Golf events when active"));
                       }),
+                      CheckboxListTile(
+                          value: mutableSettings.clock_off_auto_power,
+                          onChanged: (bool newValue) {
+                            mutableSettings.clock_off_auto_power = newValue;
+                            setState(() {
+                              
+                            });
+                          },
+                            activeColor: Theme.of(context).accentColor,
+                            secondary: Icon(FontAwesomeIcons.clock),
+                            title: Text("Automatic Clock"),
+                            subtitle: Text("Show clock when there are no sports and magic power is enabled")
+                          ),
                       ListTile(
                         leading: Icon(Icons.access_time),
                         title: Text("Timezone: ${mutableSettings.timezone}"),

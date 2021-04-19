@@ -8,6 +8,7 @@ import 'channel.dart';
 import 'onboarding.dart';
 import 'dart:math';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:badges/badges.dart';
 
 class ScoreboardDrawer extends StatefulWidget {
@@ -276,39 +277,168 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didUpdateWidget(oldWidget);
   }
 
-  Widget getErrorCard(String title, String subtitle, [SetupState targetState]) {
-    return Center(
-        child: SizedBox(
-            width: 600,
-            child: Card(
-                color: Colors.red[300],
-                child: InkWell(
-                  splashColor: Colors.red.withAlpha(30),
+  Widget getErrorTile(String title, String subtitle, IconData icon) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+    );
+  }
+
+  Widget getErrorButton(String text, Function() callback) {
+    return Padding(child:ElevatedButton(
+        child: Text(text),
+        style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(18.0))),
+            primary: Theme.of(context).accentColor),
+        onPressed: callback),
+        padding: EdgeInsets.only(bottom: 10.0));
+  }
+
+  Widget getLoadingPage(BuildContext context, bool loading) {
+    var buttonStyle = (bool left) {
+      const borderRadius = Radius.circular(18.0);
+      const zero = Radius.circular(0);
+      return ElevatedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.horizontal(
+                  left: left ? borderRadius : zero,
+                  right: left ? zero : borderRadius)),
+          primary: Theme.of(context).accentColor);
+    };
+
+    var getBottomText = (String text) {
+      return Padding(padding: EdgeInsets.only(bottom: 10.0), child: Text(text));
+    };
+    return Stack(children: [
+      Center(
+          child: loading
+              ? CircularProgressIndicator()
+              : Icon(
+                  Icons.error,
+                  color: Colors.yellow[300],
+                  size: 150,
+                )),
+      SafeArea(
+          child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                  width: 500,
                   child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: ListTile(
-                        title: Text(title),
-                        subtitle: Text(subtitle),
-                      )),
-                  onTap: targetState == null
-                      ? () {}
-                      : () async {
-                          print("Tap");
-                          await AppState.setState(targetState);
-                          setState(() {
-                            //disable the timer
-                            refreshTimer.cancel();
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => buildHome()));
-                          });
-                        },
-                ))));
+                      padding: EdgeInsets.symmetric(horizontal: 30),
+                      child: Column(
+                        children: [
+                          getBottomText(loading
+                              ? "Make sure your device is connected to the same WiFi network as your Scoreboard\n\nScoreboard takes approximately 2 minutes to reboot"
+                              : "Failed to connect to scoreboard!\n\nMake sure your device is connected to the same WiFi network as your Scoreboard"),
+                          Container(
+                            height: 20,
+                          ),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton(
+                                    child: Text("Refresh"),
+                                    style: buttonStyle(true),
+                                    onPressed: () {
+                                      setState(() {});
+                                    }),
+                                ElevatedButton(
+                                    child: Text("Troubleshooting"),
+                                    style: buttonStyle(false),
+                                    onPressed: () {
+                                      showMaterialModalBottomSheet(
+                                        context: context,
+                                        builder: (context) =>
+                                            SingleChildScrollView(
+                                          controller:
+                                              ModalScrollController.of(context),
+                                          child: SafeArea(
+                                              child: Column(
+                                                children: [
+                                                  Stack(children: [
+                                                    Center(
+                                                        child: Padding(
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                    20),
+                                                            child: Text(
+                                                                "Troubleshooting",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        24)))),
+                                                    Padding(
+                                                        padding:
+                                                            EdgeInsets.all(10),
+                                                        child: IconButton(
+                                                            icon: Icon(
+                                                                Icons.cancel),
+                                                            onPressed: () {
+                                                              Navigator.pop(
+                                                                  context);
+                                                            })),
+                                                  ]),
+                                                  getErrorTile(
+                                                      "Power",
+                                                      "If your scoreboard is showing no content, it may not have power. Ensure it is fully plugged in--there should be a red light from the left side of the Scoreboard. Then, tap refresh and wait for your Scoreboard to power on.",
+                                                      FontAwesomeIcons.plug),
+                                                  getErrorButton("Refresh", () {
+                                                    setState(() {});
+                                                    Navigator.pop(context);
+                                                  }),
+                                                  getErrorTile(
+                                                      "Sync",
+                                                      "If your scoreboard is showing content and appears connected, you are likely not connected to the correct WiFi network. Go to your device's Settings to ensure it is connected to the same WiFi network you used to set up this Scoreboard. Then, tap Refresh above.\n\n"
+                                                      "If that is unsuccessful, you need to resync the app. Quickly double press the Scoreboard's side button--you should see a sync code appear. Then, tap the Sync button below to re-syncronize.",
+                                                      FontAwesomeIcons.sync),
+                                                  getErrorButton("Sync",
+                                                      () async {
+                                                    Navigator.pop(context);
+                                                    await AppState.setState(
+                                                        SetupState.SYNC);
+                                                    setState(() {
+                                                      //disable the timer
+                                                      Navigator.pushReplacement(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  buildHome()));
+                                                    });
+                                                  }),
+                                                  getErrorTile(
+                                                      "Reset",
+                                                      "If your Scoreboard is displaying an error, it may be experiencing an issue that requires a simple reboot. Unplug your Scoreboard and plug it back in, then wait 2 minutes for it to start back up.\n\nIf the error persists after a reboot, hold down the side button on the Scoreboard for 10 seconds, then release. It should display a \"Resetting\" message. Then, tap Reset below to restart the Scoreboard setup process.",
+                                                      FontAwesomeIcons.sync),
+                                                  getErrorButton("Reset",
+                                                      () async {
+                                                    Navigator.pop(context);
+                                                    await AppState.setState(
+                                                        SetupState.FACTORY);
+                                                    setState(() {
+                                                      //disable the timer
+                                                      Navigator.pushReplacement(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  buildHome()));
+                                                    });
+                                                  }),
+                                                ],
+                                              )),
+                                        ),
+                                      );
+                                    })
+                              ])
+                        ],
+                        mainAxisAlignment: MainAxisAlignment.end,
+                      )))))
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
+    print("Calling build at root");
     return FutureBuilder<ScoreboardSettings>(
         future: getConfig(),
         builder: (context, snapshot) {
@@ -335,32 +465,16 @@ class _MyHomePageState extends State<MyHomePage> {
             shouldRefreshConfig = false;
           } else if (snapshot.hasError) {
             print("Got config error " + snapshot.error.toString());
-            name = "Sync Error";
-            body = ListView(padding: EdgeInsets.all(10), children: <Widget>[
-              getErrorCard("Could not connect to your scoreboard",
-                  "Make sure your scoreboard is plugged in and your device is connected to the same WiFi network"),
-              getErrorCard(
-                  "If scoreboard is working normally..",
-                  "Double click the side button on the scoreboard to enter sync mode, then tap here to synchronize",
-                  SetupState.SYNC),
-              getErrorCard(
-                  "If scoreboard is showing an error message...",
-                  "Hold down the side button on the scoreboard for ten seconds to fully reset. Then, tap here to redo setup",
-                  SetupState.FACTORY),
-            ]);
-            if (refreshTimer == null || !refreshTimer.isActive) {
-              refreshTimer = Timer.periodic(Duration(seconds: 10), (Timer t) {
-                setState(() {
-                  shouldRefreshConfig = true;
-                });
-              });
-            }
+            name = "Connection Error";
+            body = getLoadingPage(context, false);
+
             drawer = ScoreboardDrawer();
             shouldRefreshConfig = false;
           } else {
-            name = "Loading";
-            body = Center(child: CircularProgressIndicator());
+            name = "Loading...";
+            body = getLoadingPage(context, true);
             drawer = ScoreboardDrawer();
+            shouldRefreshConfig = false;
           }
           return Scaffold(
             appBar: AppBar(
@@ -554,7 +668,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   refreshingScreenSelect = false;
                 });
               }
-            } else if (screen.id == settings.activeScreen && screen.id == ScreenId.FLAPPY) {
+            } else if (screen.id == settings.activeScreen &&
+                screen.id == ScreenId.FLAPPY) {
               AppState state = await AppState.load();
               String ip = state.scoreboardAddresses[state.activeIndex];
               try {
@@ -694,7 +809,9 @@ class _MyHomePageState extends State<MyHomePage> {
         getGroup(proScreens, "Professional", inset, crossAxisCount, iconSize),
         getGroup(collegeScreens, "College", inset, crossAxisCount, iconSize),
         getGroup(otherScreens, "Other", inset, crossAxisCount, iconSize),
-        Padding(padding: EdgeInsets.only(top: 80), child: SafeArea(child: Center(child: Text("Made for Jamie"))))
+        Padding(
+            padding: EdgeInsets.only(top: 80),
+            child: SafeArea(child: Center(child: Text("Made for Jamie"))))
       ],
     );
   }

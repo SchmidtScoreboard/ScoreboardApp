@@ -172,6 +172,7 @@ class ScoreboardSettings {
   int rotationTime;
   List<FocusTeam> focusTeams;
   int brightness;
+  bool clock_off_auto_power;
 
   ScoreboardSettings(
       {this.activeScreen,
@@ -185,7 +186,8 @@ class ScoreboardSettings {
       this.macAddress,
       this.rotationTime,
       this.focusTeams,
-      this.brightness});
+      this.brightness,
+      this.clock_off_auto_power});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -211,7 +213,8 @@ class ScoreboardSettings {
         macAddress: json["mac_address"] ?? "00:00:00:00:00:00",
         rotationTime: json['rotation_time'] ?? 10,
         focusTeams: focusTeams,
-        brightness: json['brightness'] ?? null);
+        brightness: json['brightness'] ?? null,
+        clock_off_auto_power: json['clock_off_auto_power'] ?? false);
   }
 
   ScoreboardSettings clone() {
@@ -235,7 +238,8 @@ class ScoreboardSettings {
         macAddress: macAddress,
         rotationTime: rotationTime,
         focusTeams: focus,
-        brightness: brightness);
+        brightness: brightness,
+        clock_off_auto_power: clock_off_auto_power);
   }
 
   bool clientNeedsUpdate() {
@@ -256,7 +260,8 @@ class ScoreboardSettings {
         listEquals(this.screens, other.screens) &&
         this.rotationTime == other.rotationTime &&
         listEquals(this.focusTeams, other.focusTeams) &&
-        this.brightness == other.brightness;
+        this.brightness == other.brightness &&
+        this.clock_off_auto_power == other.clock_off_auto_power;
   }
 
   Map<String, dynamic> toJson() {
@@ -276,6 +281,7 @@ class ScoreboardSettings {
     ret["rotation_time"] = rotationTime;
     ret["favorite_teams"] = focusTeams;
     ret["brightness"] = brightness;
+    ret["clock_off_auto_power"] = clock_off_auto_power;
     return ret;
   }
 }

@@ -22,7 +22,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   OnboardingStatus status = OnboardingStatus.ready;
   bool keyboardShowing = false;
   var scaffoldKey = GlobalKey<ScaffoldState>();
-
+  String ipAddress = "";
   Widget getResetButton(bool isDoubleButton) {
     return RaisedButton(
       color: Theme.of(context).accentColor,
@@ -56,16 +56,35 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  Future<String> getIp() async {
+    AppState state = await AppState.load();
+    String ip;
+    try {
+      ip = state.scoreboardAddresses[state.activeIndex];
+    } catch (e) {
+      ip = "";
+    }
+    return ip;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        key: scaffoldKey,
-        body: Builder(builder: (BuildContext context) {
-          return getOnboardWidget(context);
-        }),
-        // backgroundColor: ,
-        backgroundColor: Theme.of(context).primaryColorDark,
-        drawer: ScoreboardDrawer());
+    return FutureBuilder(
+        future: getIp(),
+        builder: (BuildContext context, snapshot) {
+          if (snapshot.hasData) {
+            ipAddress = snapshot.data;
+            return Scaffold(
+                key: scaffoldKey,
+                body: Builder(builder: (BuildContext context) {
+                  return getOnboardWidget(context);
+                }),
+                backgroundColor: Theme.of(context).primaryColorDark,
+                drawer: ScoreboardDrawer());
+          } else {
+            return Container(color: Theme.of(context).primaryColorDark);
+          }
+        });
   }
 
   Widget getOnboardWidget(BuildContext context);
@@ -147,9 +166,18 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
                           child: Column(children: paddedWidgets)))))),
       SafeArea(
         child: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () => scaffoldKey.currentState.openDrawer(),
-        ),
+            icon: ipAddress == "" ? Icon(Icons.menu) : Icon(Icons.arrow_back),
+            onPressed: () async {
+              if (ipAddress == "") {
+                scaffoldKey.currentState.openDrawer();
+              } else {
+                await AppState.setState(SetupState.READY);
+                setState(() {
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (context) => buildHome()));
+                });
+              }
+            }),
       ),
       if (footer != null && !keyboardShowing) alignedFooter
     ]);
