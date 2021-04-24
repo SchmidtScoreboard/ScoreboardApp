@@ -365,7 +365,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       Column(
                           children: mutableSettings.focusTeams
                               .where((FocusTeam team) =>
-                                  teamMaps.containsKey(team.screenId))
+                                  teamMaps.containsKey(team.screenId) && teamMaps[team.screenId].containsKey(team.teamId)) 
                               .map((FocusTeam team) => Slidable(
                                     // key: ValueKey(team.teamId),
                                     child: ListTile(

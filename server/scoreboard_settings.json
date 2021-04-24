@@ -33,6 +33,11 @@
   "screen_on": true,
   "auto_power": true,
   "version": 4,
-  "focus_team": [],
+  "focus_teams": [
+    {
+      "screen_id": 1,
+      "team_id": 160
+    }
+  ],
   "rotation_time": 10
 }

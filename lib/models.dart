@@ -157,7 +157,7 @@ class Screen {
 }
 
 class ScoreboardSettings {
-  static final int clientVersion = 5;
+  static final int clientVersion = 6;
 
   int activeScreen;
   bool screenOn;
