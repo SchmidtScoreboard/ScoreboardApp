@@ -32,7 +32,7 @@
   ],
   "screen_on": true,
   "auto_power": true,
-  "version": 4,
+  "version": 6,
   "focus_teams": [
     {
       "screen_id": 1,
