@@ -284,11 +284,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget getErrorTile(String title, String subtitle, IconData icon) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(subtitle),
-    );
+    return Container(
+        width: 500,
+        child: ListTile(
+          leading: Icon(icon),
+          title: Text(title),
+          subtitle: Text(subtitle),
+        ));
   }
 
   Widget getErrorButton(String text, Function() callback) {
@@ -311,20 +313,31 @@ class _MyHomePageState extends State<MyHomePage> {
         child: SafeArea(
             child: Column(
           children: [
-            Stack(children: [
-              Center(
-                  child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text("Troubleshooting",
-                          style: TextStyle(fontSize: 24)))),
-              Padding(
-                  padding: EdgeInsets.all(10),
-                  child: IconButton(
-                      icon: Icon(Icons.cancel),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      })),
-            ]),
+            Container(
+                width: 500,
+                child: ListTile(
+                    leading: Icon(Icons.cancel),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    title: Text("Troubleshooting",
+                        style: TextStyle(
+                            fontSize: 30, fontWeight: FontWeight.bold)))),
+            Container(height: 30),
+            // Stack(children: [
+            //   Center(
+            //       child: Padding(
+            //           padding: EdgeInsets.all(20),
+            //           child: Text("Troubleshooting",
+            //               style: TextStyle(fontSize: 24)))),
+            //   Padding(
+            //       padding: EdgeInsets.all(10),
+            //       child: IconButton(
+            //           icon: Icon(Icons.cancel),
+            //           onPressed: () {
+            //             Navigator.pop(context);
+            //           })),
+            // ])),
             getErrorTile(
                 "Power",
                 "If your scoreboard is showing no content, it may not have power. Ensure it is fully plugged in--there should be a red light from the left side of the Scoreboard. Then, tap refresh and wait for your Scoreboard to power on.",
