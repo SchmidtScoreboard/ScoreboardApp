@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,6 +23,7 @@ class ScreenId {
   static const HOTSPOT = 101;
   static const WIFIDETAILS = 102;
   static const FLAPPY = 420;
+  static const CUSTOM_MESSAGE = 421;
   static const SYNC = 103;
   static const SMART = 10000;
 
@@ -150,11 +152,15 @@ class Screen {
         return Icons.play_arrow;
       case ScreenId.SMART:
         return FontAwesomeIcons.magic;
+      case ScreenId.CUSTOM_MESSAGE:
+        return Icons.chat_bubble;
       default:
         return FontAwesomeIcons.mandalorian;
     }
   }
 }
+
+enum AutoPowerMode { Off, Clock, CustomMessage }
 
 class ScoreboardSettings {
   static final int clientVersion = 6;
@@ -172,7 +178,7 @@ class ScoreboardSettings {
   int rotationTime;
   List<FocusTeam> focusTeams;
   int brightness;
-  bool clock_off_auto_power;
+  AutoPowerMode autoPowerMode;
 
   ScoreboardSettings(
       {this.activeScreen,
@@ -187,7 +193,7 @@ class ScoreboardSettings {
       this.rotationTime,
       this.focusTeams,
       this.brightness,
-      this.clock_off_auto_power});
+      this.autoPowerMode});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -201,6 +207,15 @@ class ScoreboardSettings {
         focusTeams.add(FocusTeam.fromJson(team));
       }
     }
+
+    String autoPowerModeStr = json['auto_power_mode'] ?? null;
+    AutoPowerMode mode = AutoPowerMode.Off;
+    if (autoPowerModeStr == "Clock") {
+      mode = AutoPowerMode.Clock;
+    } else if (autoPowerModeStr == "CustomMessage") {
+      mode = AutoPowerMode.CustomMessage;
+    }
+
     return ScoreboardSettings(
         activeScreen: json["active_screen"],
         screenOn: json["screen_on"],
@@ -214,7 +229,7 @@ class ScoreboardSettings {
         rotationTime: json['rotation_time'] ?? 10,
         focusTeams: focusTeams,
         brightness: json['brightness'] ?? null,
-        clock_off_auto_power: json['clock_off_auto_power'] ?? false);
+        autoPowerMode: mode);
   }
 
   ScoreboardSettings clone() {
@@ -239,7 +254,7 @@ class ScoreboardSettings {
         rotationTime: rotationTime,
         focusTeams: focus,
         brightness: brightness,
-        clock_off_auto_power: clock_off_auto_power);
+        autoPowerMode: autoPowerMode);
   }
 
   bool clientNeedsUpdate() {
@@ -261,7 +276,7 @@ class ScoreboardSettings {
         this.rotationTime == other.rotationTime &&
         listEquals(this.focusTeams, other.focusTeams) &&
         this.brightness == other.brightness &&
-        this.clock_off_auto_power == other.clock_off_auto_power;
+        this.autoPowerMode == other.autoPowerMode;
   }
 
   Map<String, dynamic> toJson() {
@@ -281,7 +296,7 @@ class ScoreboardSettings {
     ret["rotation_time"] = rotationTime;
     ret["favorite_teams"] = focusTeams;
     ret["brightness"] = brightness;
-    ret["clock_off_auto_power"] = clock_off_auto_power;
+    ret["autoPowerMode"] = autoPowerMode;
     return ret;
   }
 }
@@ -549,4 +564,171 @@ String ipFromCode(String code) {
 bool isValidIpCode(String candidate) {
   RegExp regex = RegExp("[A-Z][A-Z][A-Z][A-Z][A-Z][A-Z][A-Z][A-Z]");
   return regex.hasMatch(candidate);
+}
+
+enum FontSize { Small, Medium, Large }
+
+class CustomMessageLine {
+  String text;
+  FontSize size;
+  Color color;
+
+  CustomMessageLine({this.text, this.size, this.color});
+  bool operator ==(other) {
+    return text == other.text && size == other.size && color == other.color;
+  }
+
+  Map<String, dynamic> toJson() {
+    String colorStr = "";
+    colorStr += color.red.toRadixString(16).padLeft(2, '0');
+    colorStr += color.green.toRadixString(16).padLeft(2, '0');
+    colorStr += color.blue.toRadixString(16).padLeft(2, '0');
+
+    Map<String, dynamic> ret = {};
+    ret["text"] = text;
+    ret["size"] = size == FontSize.Large
+        ? "Large"
+        : size == FontSize.Medium
+            ? "Medium"
+            : "Small";
+    ret["color"] = color.value.toRadixString(16);
+    return ret;
+  }
+
+  factory CustomMessageLine.fromJson(Map<String, dynamic> json) {
+    String colorStr = "FF" + json["color"];
+    int hex = int.parse(colorStr, radix: 16);
+
+    FontSize size = FontSize.Small;
+    String fontStr = json["size"];
+    if (fontStr == "Medium") {
+      size = FontSize.Medium;
+    } else if (fontStr == "Large") {
+      size = FontSize.Large;
+    }
+
+    return CustomMessageLine(color: Color(hex), size: size, text: json["text"]);
+  }
+
+  CustomMessageLine clone() {
+    return CustomMessageLine(
+        color: this.color, size: this.size, text: this.text);
+  }
+}
+
+class Pixels {
+  List<List<Color>> data;
+
+  Pixels({this.data});
+  bool operator ==(other) {
+    // return listEquals(this.data, other.data);
+    for (int x = 0; x < 64; x++) {
+      for (int y = 0; y < 32; y++) {
+        if (other.data[y][x] != data[y][x]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  List<List<Uint8List>> toJson() {
+    List<List<Uint8List>> out = [];
+    for (List<Color> row in data) {
+      List<Uint8List> outRow = [];
+      for (Color pixel in row) {
+        var pixelOut = new Uint8List(3);
+        pixelOut[0] = pixel.red;
+        pixelOut[1] = pixel.green;
+        pixelOut[2] = pixel.blue;
+        outRow.add(pixelOut);
+      }
+      out.add(outRow);
+    }
+    return out;
+  }
+
+  Pixels clone() {
+    List<List<Color>> dataCopy = [];
+    for (var row in this.data) {
+      List<Color> outRow = [];
+      for (var pixel in row) {
+        outRow.add(pixel);
+      }
+      dataCopy.add(outRow);
+    }
+    return Pixels(data: dataCopy);
+  }
+
+  Uint8List getImageBytes() {
+    StringBuffer bytes = StringBuffer();
+    bytes.writeln("P3");
+    bytes.writeln("64 32");
+    bytes.writeln("255");
+    var numPixels = 0;
+    for (var row in this.data) {
+      for (var pixel in row) {
+        bytes.writeln("${pixel.red} ${pixel.green} ${pixel.blue}");
+        numPixels++;
+      }
+    }
+    while (numPixels < (64 * 32)) {
+      bytes.writeln("0 0 0");
+      numPixels++;
+    }
+    String out = bytes.toString();
+    return Uint8List.fromList(out.codeUnits);
+  }
+}
+
+class CustomMessage {
+  List<CustomMessageLine> lines;
+  Pixels background;
+
+  CustomMessage({this.lines, this.background});
+
+  bool operator ==(other) {
+    print("Lines equal ${listEquals(this.lines, other.lines)}");
+    print("backgroun equal ${background == other.background}");
+    return listEquals(this.lines, other.lines) &&
+        background == other.background;
+  }
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> ret = {};
+    ret["background"] = background.toJson();
+
+    ret["texts"] = [];
+    for (CustomMessageLine line in lines) {
+      ret["texts"].add(line.toJson());
+    }
+    return ret;
+  }
+
+  factory CustomMessage.fromJson(Map<String, dynamic> json) {
+    List<CustomMessageLine> lines = [];
+    for (var line in json["texts"]) {
+      lines.add(CustomMessageLine.fromJson(line));
+    }
+
+    List<List<Color>> data = [];
+    for (var row in json["background"]) {
+      List<Color> outRow = [];
+      for (var pixel in row) {
+        Color pix = new Color.fromARGB(255, pixel[0], pixel[1], pixel[2]);
+        outRow.add(pix);
+      }
+      data.add(outRow);
+    }
+
+    return CustomMessage(background: Pixels(data: data), lines: lines);
+  }
+
+  CustomMessage clone() {
+    List<CustomMessageLine> linesCopy = [];
+    for (var line in lines) {
+      linesCopy.add(line.clone());
+    }
+    return CustomMessage(background: background.clone(), lines: linesCopy);
+  }
 }

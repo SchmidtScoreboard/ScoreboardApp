@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'models.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -22,7 +23,8 @@ class Channel {
   // String root = "http://127.0.0.1:5005/";
 
   Future<ScoreboardSettings> configRequest() async {
-    final response = await http.get(ipAddress).timeout(Duration(seconds: 10));
+    Uri url = Uri.parse(ipAddress);
+    final response = await http.get(url).timeout(Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       ScoreboardSettings newScoreboard =
@@ -35,7 +37,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> sportRequest(int id) async {
-    var url = ipAddress + "setSport";
+    Uri url = Uri.parse(ipAddress + "setSport");
 
     Map data = {'sport': id};
     //encode Map to JSON
@@ -51,7 +53,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> gameAction() async {
-    var url = ipAddress + "gameAction";
+    Uri url = Uri.parse(ipAddress + "gameAction");
 
     Map data = {};
     //encode Map to JSON
@@ -68,7 +70,7 @@ class Channel {
 
   Future<ScoreboardSettings> configureSettings(
       ScoreboardSettings newSettings) async {
-    var url = ipAddress + "configure";
+    Uri url = Uri.parse(ipAddress + "configure");
     print("Sending scoreboard: $newSettings");
     var body = json.encode(newSettings.toJson());
 
@@ -83,7 +85,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> powerRequest(bool power) async {
-    var url = ipAddress + "setPower";
+    Uri url = Uri.parse(ipAddress + "setPower");
 
     Map data = {'screen_on': power};
     //encode Map to JSON
@@ -101,7 +103,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> autoPowerRequest(bool autoPower) async {
-    var url = ipAddress + "autoPower";
+    Uri url = Uri.parse(ipAddress + "autoPower");
 
     Map data = {'auto_power': autoPower};
     //encode Map to JSON
@@ -119,7 +121,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> wifiRequest(String ssid, String password) async {
-    String url = ipAddress + "wifi";
+    Uri url = Uri.parse(ipAddress + "wifi");
     Map data = {'ssid': ssid, 'psk': password};
     //encode Map to JSON
     var body = json.encode(data);
@@ -138,7 +140,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> syncRequest() async {
-    var url = ipAddress + "sync";
+    Uri url = Uri.parse(ipAddress + "sync");
 
     print("Attempting to sync at $url");
 
@@ -152,7 +154,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> connectRequest() async {
-    String url = ipAddress + "connect";
+    Uri url = Uri.parse(ipAddress + "connect");
     print("Attempting to connect at $url");
     final response = await http.post(url).timeout(Duration(seconds: 10));
     if (response.statusCode == 200) {
@@ -164,7 +166,7 @@ class Channel {
   }
 
   Future<ScoreboardSettings> rebootRequest() async {
-    String url = ipAddress + "reboot";
+    Uri url = Uri.parse(ipAddress + "reboot");
     final response = await http.post(url).timeout(Duration(seconds: 10));
     if (response.statusCode == 200) {
       print(response.body);
@@ -175,13 +177,40 @@ class Channel {
   }
 
   Future<String> getVersion() async {
-    String url = ipAddress + "version";
+    Uri url = Uri.parse(ipAddress + "version");
     final response = await http.get(url).timeout(Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       return response.body;
     } else {
       throw Exception("Failed to load version");
+    }
+  }
+
+  Future<CustomMessage> getCustomMessage() async {
+    Uri url = Uri.parse(ipAddress + "getCustomMessage");
+    final response = await http.get(url).timeout(Duration(seconds: 10));
+    print("Got custom message response ${json.decode(response.body)}");
+
+    if (response.statusCode == 200) {
+      var message = CustomMessage.fromJson(json.decode(response.body));
+      return message;
+    } else {
+      print("Failed to parse");
+      throw Exception("Failed to get custom message");
+    }
+  }
+
+  Future<void> setCustomMessage(CustomMessage message) async {
+    Uri url = Uri.parse(ipAddress + "setCustomMessage");
+    var body = json.encode(message.toJson());
+
+    var response = await http.post(url,
+        headers: {"Content-Type": "application/json"}, body: body);
+
+    if (response.statusCode != 202) {
+      print(response.statusCode);
+      throw Exception("Failed to set custom message");
     }
   }
 }

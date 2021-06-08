@@ -174,6 +174,18 @@ class SettingsScreenState extends State<SettingsScreen> {
     return map;
   }
 
+  Widget getAutoPowerSelector(String title, AutoPowerMode mode, Icon icon) {
+    return CheckboxListTile(
+        value: mutableSettings.autoPowerMode == mode,
+        onChanged: (bool newValue) {
+          mutableSettings.autoPowerMode = mode;
+          setState(() {});
+        },
+        activeColor: Theme.of(context).accentColor,
+        secondary: icon,
+        title: Text(title));
+  }
+
   @override
   Widget build(BuildContext context) {
     var teamMaps = {
@@ -365,7 +377,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                       Column(
                           children: mutableSettings.focusTeams
                               .where((FocusTeam team) =>
-                                  teamMaps.containsKey(team.screenId) && teamMaps[team.screenId].containsKey(team.teamId)) 
+                                  teamMaps.containsKey(team.screenId) &&
+                                  teamMaps[team.screenId]
+                                      .containsKey(team.teamId))
                               .map((FocusTeam team) => Slidable(
                                     // key: ValueKey(team.teamId),
                                     child: ListTile(
@@ -407,19 +421,20 @@ class SettingsScreenState extends State<SettingsScreen> {
                             title: Text("Prioritize Golf"),
                             subtitle: Text("Focus on Golf events when active"));
                       }),
-                      CheckboxListTile(
-                          value: mutableSettings.clock_off_auto_power,
-                          onChanged: (bool newValue) {
-                            mutableSettings.clock_off_auto_power = newValue;
-                            setState(() {
-                              
-                            });
-                          },
-                            activeColor: Theme.of(context).accentColor,
-                            secondary: Icon(FontAwesomeIcons.clock),
-                            title: Text("Automatic Clock"),
-                            subtitle: Text("Show clock when there are no sports and magic power is enabled")
-                          ),
+                      ExpansionTile(
+                        leading: Icon(Icons.power),
+                        title: Text("Magic Power Mode"),
+                        subtitle: Text(
+                            "Show a clock or custom message when no favorite teams are playing and magic power is active"),
+                        children: [
+                          getAutoPowerSelector("Screen Off", AutoPowerMode.Off,
+                              Icon(Icons.tv_off)),
+                          getAutoPowerSelector("Clock", AutoPowerMode.Clock,
+                              Icon(FontAwesomeIcons.clock)),
+                          getAutoPowerSelector("Custom Message",
+                              AutoPowerMode.CustomMessage, Icon(Icons.chat))
+                        ],
+                      ),
                       ListTile(
                         leading: Icon(Icons.access_time),
                         title: Text("Timezone: ${mutableSettings.timezone}"),

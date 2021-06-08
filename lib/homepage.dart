@@ -1,4 +1,3 @@
-import 'package:Scoreboard/teams.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:async';
@@ -10,6 +9,9 @@ import 'dart:math';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:badges/badges.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as ImageManipulation;
 
 const REFRESH_FAILURES_BEFORE_SHOW_ERROR = 24;
 
@@ -249,6 +251,10 @@ class _MyHomePageState extends State<MyHomePage> {
     Screen(
         id: ScreenId.CLOCK, name: "Clock", subtitle: "Show the current time"),
     Screen(id: ScreenId.FLAPPY, name: "Game", subtitle: "Let's play a game"),
+    Screen(
+        id: ScreenId.CUSTOM_MESSAGE,
+        name: "Custom Message",
+        subtitle: "Display a custom message"),
   ];
   @override
   void initState() {
@@ -324,20 +330,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         style: TextStyle(
                             fontSize: 30, fontWeight: FontWeight.bold)))),
             Container(height: 30),
-            // Stack(children: [
-            //   Center(
-            //       child: Padding(
-            //           padding: EdgeInsets.all(20),
-            //           child: Text("Troubleshooting",
-            //               style: TextStyle(fontSize: 24)))),
-            //   Padding(
-            //       padding: EdgeInsets.all(10),
-            //       child: IconButton(
-            //           icon: Icon(Icons.cancel),
-            //           onPressed: () {
-            //             Navigator.pop(context);
-            //           })),
-            // ])),
             getErrorTile(
                 "Power",
                 "If your scoreboard is showing no content, it may not have power. Ensure it is fully plugged in--there should be a red light from the left side of the Scoreboard. Then, tap refresh and wait for your Scoreboard to power on.",
@@ -657,6 +649,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return rows;
   }
 
+  Future<CustomMessage> getCustomMessage() async {
+    AppState state = await AppState.load();
+    String ip = state.scoreboardAddresses[state.activeIndex];
+    return Channel(ipAddress: ip).getCustomMessage();
+  }
+
   Widget getScreen(Screen screen, BuildContext context,
       {double margin = 5.0, double iconSize = 70.0}) {
     return new Card(
@@ -666,6 +664,29 @@ class _MyHomePageState extends State<MyHomePage> {
           : Colors.grey,
       child: InkWell(
           splashColor: Colors.blue.withAlpha(30),
+          onLongPress: () {
+            if (screen.id == ScreenId.CUSTOM_MESSAGE) {
+              showMaterialModalBottomSheet(
+                context: context,
+                builder: (BuildContext context) {
+                  return FutureBuilder(
+                    future: getCustomMessage(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        print("Has error ${snapshot.error}");
+                      }
+                      if (snapshot.hasData) {
+                        return CustomMessageEditor(
+                            initialMessage: snapshot.data);
+                      } else {
+                        return Container(height: 0.0);
+                      }
+                    },
+                  );
+                },
+              );
+            }
+          },
           onTap: () async {
             if (screen.id != settings.activeScreen) {
               setState(() {
@@ -892,5 +913,290 @@ class _MyHomePageState extends State<MyHomePage> {
             return alert;
           });
     }
+  }
+}
+
+class CustomMessageEditor extends StatefulWidget {
+  final CustomMessage initialMessage;
+
+  CustomMessageEditor({
+    Key key,
+    this.initialMessage,
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() =>
+      CustomMessageEditorState(customMessage: initialMessage.clone());
+}
+
+class CustomMessageEditorState extends State<CustomMessageEditor> {
+  CustomMessage customMessage;
+  final picker = ImagePicker();
+
+  CustomMessageEditorState({this.customMessage});
+
+  Widget getDeleteAction(CustomMessageLine line) {
+    return IconSlideAction(
+        icon: Icons.delete,
+        color: Colors.red,
+        onTap: () {
+          customMessage.lines.remove(line);
+          setState(() {});
+        });
+  }
+
+  Widget getLineText(CustomMessageLine line) {
+    return Slidable(
+      child: Row(children: [
+        Expanded(
+            child: InkWell(
+                onTap: () {
+                  String text = line.text;
+                  showDialog(
+                    builder: (context) => AlertDialog(
+                      title: const Text('Update text'),
+                      content: TextFormField(
+                        initialValue: text,
+                        onChanged: (newText) => {text = newText},
+                      ),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: const Text('Confirm'),
+                          onPressed: () {
+                            setState(() => line.text = text);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        FlatButton(
+                          child: const Text('Cancel'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                    context: context,
+                  );
+                },
+                child: Text(line.text, style: TextStyle(fontSize: 18)))),
+        InkWell(
+          child: Padding(
+              child: Text(line.size.toString().split(".").last,
+                  style: TextStyle(fontSize: 18)),
+              padding: EdgeInsets.symmetric(horizontal: 10.0)),
+          onTap: () => {
+            showDialog(
+              builder: (context) => AlertDialog(
+                title: const Text('Select font size!'),
+                actions: <Widget>[
+                  FlatButton(
+                    child: const Text('Small'),
+                    onPressed: () {
+                      setState(() => line.size = FontSize.Small);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text('Medium'),
+                    onPressed: () {
+                      setState(() => line.size = FontSize.Medium);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text('Large'),
+                    onPressed: () {
+                      setState(() => line.size = FontSize.Large);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: const Text('Cancel'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              context: context,
+            )
+          },
+        ),
+        Padding(
+            child: InkWell(
+                onTap: () {
+                  // Show color picker
+                  Color pickerColor = line.color;
+                  showDialog(
+                    builder: (context) => AlertDialog(
+                      title: const Text('Pick a color!'),
+                      content: SingleChildScrollView(
+                        child: ColorPicker(
+                          pickerColor: pickerColor,
+                          onColorChanged: (Color color) {
+                            setState(() => pickerColor = color);
+                          },
+                          showLabel: true,
+                          pickerAreaHeightPercent: 0.8,
+                        ),
+                      ),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: const Text('Cancel'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        FlatButton(
+                          child: const Text('Confirm'),
+                          onPressed: () {
+                            setState(() => line.color = pickerColor);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                    context: context,
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: line.color,
+                      border: Border.all(color: Colors.black),
+                      shape: BoxShape.circle),
+                  width: 40,
+                  height: 40,
+                )),
+            padding: EdgeInsets.only(right: 10.0, top: 5.0, bottom: 5.0)),
+      ]),
+      actionPane: SlidableDrawerActionPane(),
+      secondaryActions: [getDeleteAction(line)],
+    );
+  }
+
+  Widget getLineTextEditor(List<CustomMessageLine> lines) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text("Lines Editor", style: TextStyle(fontSize: 24)),
+            if (lines.length < 5)
+              IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () {
+                    customMessage.lines.add(CustomMessageLine(
+                        color: Colors.white,
+                        size: FontSize.Medium,
+                        text: "New text"));
+                    setState(() {});
+                  }),
+          ],
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        ),
+        for (var line in lines) getLineText(line)
+      ],
+    );
+  }
+
+  Widget wrapModalWidget(Widget widget) {
+    return Padding(
+        child: Container(width: 500, child: widget),
+        padding: EdgeInsets.all(10));
+  }
+
+  bool isSaveActive() {
+    bool result = widget.initialMessage != this.customMessage;
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+        child: SingleChildScrollView(
+      controller: ModalScrollController.of(context),
+      child: Column(
+        children: [
+          wrapModalWidget(Center(
+              child: Text("Custom Message",
+                  style:
+                      TextStyle(fontSize: 30, fontWeight: FontWeight.bold)))),
+          Divider(
+            height: 20.0,
+            thickness: 0.0,
+            color: Colors.transparent,
+          ),
+          Text("Set background image", style: TextStyle(fontSize: 20)),
+          wrapModalWidget(Text(
+              "The image should be 64x32 pixels. You can use any pixel-art creation app to create your background image",
+              style: TextStyle(fontSize: 12))),
+          InkWell(
+              child: Container(
+                  decoration: BoxDecoration(
+                      border: Border.all(width: 3.0, color: Colors.blue)),
+                  child: Image.memory(customMessage.background.getImageBytes(),
+                      scale: 0.25)),
+              onTap: () async {
+                print("Selecting image");
+                try {
+                  final pickedImage =
+                      await picker.getImage(source: ImageSource.gallery);
+                  print("Image selected");
+                  var bytes = await pickedImage.readAsBytes();
+                  print("Got bytes");
+                  var decodedImage = ImageManipulation.decodeImage(bytes);
+                  print("Image decoded");
+                  if (decodedImage.width != 64 || decodedImage.height != 32) {
+                    decodedImage = ImageManipulation.copyResize(decodedImage,
+                        width: 64, height: 32);
+                  }
+                  print("Image shrunk");
+
+                  // set background, set state
+                  for (var x = 0; x < 64; x++) {
+                    for (var y = 0; y < 32; y++) {
+                      int stupidFuckingColor = decodedImage.getPixel(x, y);
+                      int blue = (stupidFuckingColor >> 16) & 0xff;
+                      int green = (stupidFuckingColor >> 8) & 0xff;
+                      int red = stupidFuckingColor & 0xff;
+                      Color theActualFuckingColor =
+                          Color((0xff << 24) | (red << 16) | (green << 8) | blue);
+                      customMessage.background.data[y][x] =
+                          theActualFuckingColor;
+                    }
+                  }
+
+                  print("Set new background");
+                  print(customMessage.background);
+
+                  setState(() {});
+                } catch (e) {
+                  print("Failed to do image shit");
+                  print(e);
+                }
+              }),
+          Divider(
+            height: 20.0,
+            thickness: 0.0,
+            color: Colors.transparent,
+          ),
+          Text("Set text", style: TextStyle(fontSize: 20)),
+          wrapModalWidget(Text(
+              "Optionally, specify additional text to display on top of your background image.",
+              style: TextStyle(fontSize: 12))),
+          wrapModalWidget(getLineTextEditor(customMessage.lines)),
+          ElevatedButton(
+              onPressed: isSaveActive()
+                  ? () async {
+                      AppState state = await AppState.load();
+                      String ip = state.scoreboardAddresses[state.activeIndex];
+                      await Channel(ipAddress: ip)
+                          .setCustomMessage(customMessage);
+                      Navigator.of(context).pop();
+                    }
+                  : null,
+              child: Text("Save Custom Message")),
+        ],
+      ),
+    ));
   }
 }
