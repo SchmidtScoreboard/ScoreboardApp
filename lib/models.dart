@@ -162,8 +162,30 @@ class Screen {
 
 enum AutoPowerMode { Off, Clock, CustomMessage }
 
+String autoPowerModeToString(AutoPowerMode mode) {
+  switch (mode) {
+    case AutoPowerMode.Off:
+      return "Off";
+    case AutoPowerMode.Clock:
+      return "Clock";
+    case AutoPowerMode.CustomMessage:
+      return "CustomMessage";
+  }
+}
+
+AutoPowerMode autoPowerModeFromString(String str) {
+  switch (str) {
+    case "Off":
+      return AutoPowerMode.Off;
+    case "Clock":
+      return AutoPowerMode.Clock;
+    case "CustomMessage":
+      return AutoPowerMode.CustomMessage;
+  }
+}
+
 class ScoreboardSettings {
-  static final int clientVersion = 6;
+  static final int clientVersion = 7;
 
   int activeScreen;
   bool screenOn;
@@ -208,14 +230,6 @@ class ScoreboardSettings {
       }
     }
 
-    String autoPowerModeStr = json['auto_power_mode'] ?? null;
-    AutoPowerMode mode = AutoPowerMode.Off;
-    if (autoPowerModeStr == "Clock") {
-      mode = AutoPowerMode.Clock;
-    } else if (autoPowerModeStr == "CustomMessage") {
-      mode = AutoPowerMode.CustomMessage;
-    }
-
     return ScoreboardSettings(
         activeScreen: json["active_screen"],
         screenOn: json["screen_on"],
@@ -229,7 +243,7 @@ class ScoreboardSettings {
         rotationTime: json['rotation_time'] ?? 10,
         focusTeams: focusTeams,
         brightness: json['brightness'] ?? null,
-        autoPowerMode: mode);
+        autoPowerMode: autoPowerModeFromString(json['auto_power_mode'] ?? "Off"));
   }
 
   ScoreboardSettings clone() {
@@ -296,7 +310,7 @@ class ScoreboardSettings {
     ret["rotation_time"] = rotationTime;
     ret["favorite_teams"] = focusTeams;
     ret["brightness"] = brightness;
-    ret["autoPowerMode"] = autoPowerMode;
+    ret["auto_power_mode"] = autoPowerModeToString(autoPowerMode);
     return ret;
   }
 }

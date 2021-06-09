@@ -71,7 +71,7 @@ class Channel {
   Future<ScoreboardSettings> configureSettings(
       ScoreboardSettings newSettings) async {
     Uri url = Uri.parse(ipAddress + "configure");
-    print("Sending scoreboard: $newSettings");
+    print("Sending scoreboard: ${newSettings.toJson()}");
     var body = json.encode(newSettings.toJson());
 
     var response = await http

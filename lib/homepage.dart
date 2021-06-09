@@ -213,49 +213,57 @@ class _MyHomePageState extends State<MyHomePage> {
   int refreshFailures = 0;
   Future doneSetup;
 
-  List<Screen> proScreens = [
-    Screen(
-        id: ScreenId.NHL,
-        name: "Hockey",
-        subtitle: "Show scores from professional hockey"),
-    Screen(
-        id: ScreenId.MLB,
-        name: "Baseball",
-        subtitle: "Show scores from professional baseball"),
-    Screen(
-        id: ScreenId.BASKETBALL,
-        name: "Basketball",
-        subtitle: "Show scores from professional basketball"),
-    Screen(
-        id: ScreenId.FOOTBALL,
-        name: "Football",
-        subtitle: "Show scores from professional football"),
-    Screen(
-        id: ScreenId.GOLF,
-        name: "Golf",
-        subtitle: "Show scores from professional golf"),
-  ];
+  List<Screen> getProScreens(int version) {
+    return [
+      Screen(
+          id: ScreenId.NHL,
+          name: "Hockey",
+          subtitle: "Show scores from professional hockey"),
+      Screen(
+          id: ScreenId.MLB,
+          name: "Baseball",
+          subtitle: "Show scores from professional baseball"),
+      Screen(
+          id: ScreenId.BASKETBALL,
+          name: "Basketball",
+          subtitle: "Show scores from professional basketball"),
+      Screen(
+          id: ScreenId.FOOTBALL,
+          name: "Football",
+          subtitle: "Show scores from professional football"),
+      Screen(
+          id: ScreenId.GOLF,
+          name: "Golf",
+          subtitle: "Show scores from professional golf"),
+    ];
+  }
 
-  List<Screen> collegeScreens = [
-    Screen(
-        id: ScreenId.COLLEGE_BASKETBALL,
-        name: "College Basketball",
-        subtitle: "Show scores from college basketball"),
-    Screen(
-        id: ScreenId.COLLEGE_FOOTBALL,
-        name: "College Football",
-        subtitle: "Show scores from college football"),
-  ];
+  List<Screen> getCollegeScreens(int version) {
+    return [
+      Screen(
+          id: ScreenId.COLLEGE_BASKETBALL,
+          name: "College Basketball",
+          subtitle: "Show scores from college basketball"),
+      Screen(
+          id: ScreenId.COLLEGE_FOOTBALL,
+          name: "College Football",
+          subtitle: "Show scores from college football"),
+    ];
+  }
 
-  List<Screen> otherScreens = [
-    Screen(
-        id: ScreenId.CLOCK, name: "Clock", subtitle: "Show the current time"),
-    Screen(id: ScreenId.FLAPPY, name: "Game", subtitle: "Let's play a game"),
-    Screen(
-        id: ScreenId.CUSTOM_MESSAGE,
-        name: "Custom Message",
-        subtitle: "Display a custom message"),
-  ];
+  List<Screen> getOtherScreens(int version) {
+    return [
+      Screen(
+          id: ScreenId.CLOCK, name: "Clock", subtitle: "Show the current time"),
+      Screen(id: ScreenId.FLAPPY, name: "Game", subtitle: "Let's play a game"),
+      if (version >= 7)
+        Screen(
+            id: ScreenId.CUSTOM_MESSAGE,
+            name: "Custom Message",
+            subtitle: "Display a custom message"),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -847,9 +855,12 @@ class _MyHomePageState extends State<MyHomePage> {
         Padding(
             child: getScreen(smartScreen, context, margin: inset),
             padding: EdgeInsets.only(top: min(inset - 10, 30))),
-        getGroup(proScreens, "Professional", inset, crossAxisCount, iconSize),
-        getGroup(collegeScreens, "College", inset, crossAxisCount, iconSize),
-        getGroup(otherScreens, "Other", inset, crossAxisCount, iconSize),
+        getGroup(getProScreens(settings.version), "Professional", inset,
+            crossAxisCount, iconSize),
+        getGroup(getCollegeScreens(settings.version), "College", inset,
+            crossAxisCount, iconSize),
+        getGroup(getOtherScreens(settings.version), "Other", inset,
+            crossAxisCount, iconSize),
         Padding(
             padding: EdgeInsets.only(top: 80),
             child: SafeArea(child: Center(child: Text("Made for Jamie"))))
@@ -1136,20 +1147,15 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                   child: Image.memory(customMessage.background.getImageBytes(),
                       scale: 0.25)),
               onTap: () async {
-                print("Selecting image");
                 try {
                   final pickedImage =
                       await picker.getImage(source: ImageSource.gallery);
-                  print("Image selected");
                   var bytes = await pickedImage.readAsBytes();
-                  print("Got bytes");
                   var decodedImage = ImageManipulation.decodeImage(bytes);
-                  print("Image decoded");
                   if (decodedImage.width != 64 || decodedImage.height != 32) {
                     decodedImage = ImageManipulation.copyResize(decodedImage,
                         width: 64, height: 32);
                   }
-                  print("Image shrunk");
 
                   // set background, set state
                   for (var x = 0; x < 64; x++) {
@@ -1158,15 +1164,12 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                       int blue = (stupidFuckingColor >> 16) & 0xff;
                       int green = (stupidFuckingColor >> 8) & 0xff;
                       int red = stupidFuckingColor & 0xff;
-                      Color theActualFuckingColor =
-                          Color((0xff << 24) | (red << 16) | (green << 8) | blue);
+                      Color theActualFuckingColor = Color(
+                          (0xff << 24) | (red << 16) | (green << 8) | blue);
                       customMessage.background.data[y][x] =
                           theActualFuckingColor;
                     }
                   }
-
-                  print("Set new background");
-                  print(customMessage.background);
 
                   setState(() {});
                 } catch (e) {
@@ -1174,6 +1177,16 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                   print(e);
                 }
               }),
+          TextButton(
+              onPressed: () {
+                for (var x = 0; x < 64; x++) {
+                  for (var y = 0; y < 32; y++) {
+                    customMessage.background.data[y][x] = Colors.black;
+                  }
+                }
+                setState(() {});
+              },
+              child: Text("Clear Background")),
           Divider(
             height: 20.0,
             thickness: 0.0,
@@ -1195,6 +1208,11 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                     }
                   : null,
               child: Text("Save Custom Message")),
+          TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"))
         ],
       ),
     ));
