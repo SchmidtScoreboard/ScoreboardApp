@@ -425,7 +425,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                         leading: Icon(Icons.power),
                         title: Text("Magic Power Mode"),
                         subtitle: Text(
-                            "Show a clock or custom message when no favorite teams are playing and magic power is active"),
+                            "Select behavior when there are no favorite teams playing and magic power is active"),
                         children: [
                           getAutoPowerSelector("Screen Off", AutoPowerMode.Off,
                               Icon(Icons.tv_off)),

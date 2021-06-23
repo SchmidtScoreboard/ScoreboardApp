@@ -12,6 +12,7 @@ import 'package:badges/badges.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as ImageManipulation;
+import 'dart:io' show Platform;
 
 const REFRESH_FAILURES_BEFORE_SHOW_ERROR = 24;
 
@@ -1045,6 +1046,7 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                         child: ColorPicker(
                           pickerColor: pickerColor,
                           onColorChanged: (Color color) {
+                            print("setting picker color to: 0x${color.value.toRadixString(16)}");
                             setState(() => pickerColor = color);
                           },
                           showLabel: true,
@@ -1120,6 +1122,48 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
     return result;
   }
 
+  Widget getImageSelectButton() {
+    var callback = () async {
+      try {
+        final pickedImage = await picker.getImage(source: ImageSource.gallery);
+        var bytes = await pickedImage.readAsBytes();
+        var decodedImage = ImageManipulation.decodeImage(bytes);
+        if (decodedImage.width != 64 || decodedImage.height != 32) {
+          decodedImage =
+              ImageManipulation.copyResize(decodedImage, width: 64, height: 32);
+        }
+
+        // set background, set state
+        for (var x = 0; x < 64; x++) {
+          for (var y = 0; y < 32; y++) {
+            int stupidFuckingColor = decodedImage.getPixel(x, y);
+            int blue = (stupidFuckingColor >> 16) & 0xff;
+            int green = (stupidFuckingColor >> 8) & 0xff;
+            int red = stupidFuckingColor & 0xff;
+            Color theActualFuckingColor =
+                Color((0xff << 24) | (red << 16) | (green << 8) | blue);
+            customMessage.background.data[y][x] = theActualFuckingColor;
+          }
+        }
+
+        setState(() {});
+      } catch (e) {
+        print("Failed to do image shit");
+        print(e);
+      }
+    };
+
+    return Platform.isIOS
+        ? InkWell(
+            child: Container(
+                decoration: BoxDecoration(
+                    border: Border.all(width: 3.0, color: Colors.blue)),
+                child: Image.memory(customMessage.background.getImageBytes(),
+                    scale: 0.25)),
+            onTap: callback)
+        : ElevatedButton(onPressed: callback, child: Text("Select Image"));
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -1138,45 +1182,9 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
           ),
           Text("Set background image", style: TextStyle(fontSize: 20)),
           wrapModalWidget(Text(
-              "The image should be 64x32 pixels. You can use any pixel-art creation app to create your background image",
+              "The image should have a 2 : 1 aspect ratio. The image picker may add noise to extremely low-resolution images--try to use an image at least 576 x 288. You can use any pixel-art creation app to create your background image",
               style: TextStyle(fontSize: 12))),
-          InkWell(
-              child: Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(width: 3.0, color: Colors.blue)),
-                  child: Image.memory(customMessage.background.getImageBytes(),
-                      scale: 0.25)),
-              onTap: () async {
-                try {
-                  final pickedImage =
-                      await picker.getImage(source: ImageSource.gallery);
-                  var bytes = await pickedImage.readAsBytes();
-                  var decodedImage = ImageManipulation.decodeImage(bytes);
-                  if (decodedImage.width != 64 || decodedImage.height != 32) {
-                    decodedImage = ImageManipulation.copyResize(decodedImage,
-                        width: 64, height: 32);
-                  }
-
-                  // set background, set state
-                  for (var x = 0; x < 64; x++) {
-                    for (var y = 0; y < 32; y++) {
-                      int stupidFuckingColor = decodedImage.getPixel(x, y);
-                      int blue = (stupidFuckingColor >> 16) & 0xff;
-                      int green = (stupidFuckingColor >> 8) & 0xff;
-                      int red = stupidFuckingColor & 0xff;
-                      Color theActualFuckingColor = Color(
-                          (0xff << 24) | (red << 16) | (green << 8) | blue);
-                      customMessage.background.data[y][x] =
-                          theActualFuckingColor;
-                    }
-                  }
-
-                  setState(() {});
-                } catch (e) {
-                  print("Failed to do image shit");
-                  print(e);
-                }
-              }),
+          getImageSelectButton(),
           TextButton(
               onPressed: () {
                 for (var x = 0; x < 64; x++) {

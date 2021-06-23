@@ -190,7 +190,6 @@ class Channel {
   Future<CustomMessage> getCustomMessage() async {
     Uri url = Uri.parse(ipAddress + "getCustomMessage");
     final response = await http.get(url).timeout(Duration(seconds: 10));
-    print("Got custom message response ${json.decode(response.body)}");
 
     if (response.statusCode == 200) {
       var message = CustomMessage.fromJson(json.decode(response.body));

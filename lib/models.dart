@@ -605,7 +605,7 @@ class CustomMessageLine {
         : size == FontSize.Medium
             ? "Medium"
             : "Small";
-    ret["color"] = color.value.toRadixString(16);
+    ret["color"] = colorStr;
     return ret;
   }
 
@@ -702,8 +702,6 @@ class CustomMessage {
   CustomMessage({this.lines, this.background});
 
   bool operator ==(other) {
-    print("Lines equal ${listEquals(this.lines, other.lines)}");
-    print("backgroun equal ${background == other.background}");
     return listEquals(this.lines, other.lines) &&
         background == other.background;
   }
