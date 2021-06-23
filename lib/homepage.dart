@@ -1046,8 +1046,7 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                         child: ColorPicker(
                           pickerColor: pickerColor,
                           onColorChanged: (Color color) {
-                            print("setting picker color to: 0x${color.value.toRadixString(16)}");
-                            setState(() => pickerColor = color);
+                            pickerColor = color;
                           },
                           showLabel: true,
                           pickerAreaHeightPercent: 0.8,
