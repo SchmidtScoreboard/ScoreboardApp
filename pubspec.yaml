@@ -23,13 +23,12 @@ dependencies:
   shared_preferences: "^0.5.2"
   reorderables: ^0.2.12
   flutter_slidable: "^0.5.7"
-  flutter_picker:
-    git: git://github.com/yangyxd/flutter_picker.git
+  flutter_picker: ^2.0.1
   font_awesome_flutter: 8.5.0
   badges: ^1.1.0
   toast: ^0.1.5
   url_launcher: ^6.0.2
-  keyboard_visibility: ^0.5.2
+  flutter_keyboard_visibility: ^5.0.2
   modal_bottom_sheet: ^2.0.0
   image_picker: ^0.8.0+1
   flutter_colorpicker: ^0.4.0

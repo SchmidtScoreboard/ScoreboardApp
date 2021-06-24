@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:keyboard_visibility/keyboard_visibility.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
 import 'homepage.dart';
 import 'channel.dart';
@@ -23,6 +23,8 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   bool keyboardShowing = false;
   var scaffoldKey = GlobalKey<ScaffoldState>();
   String ipAddress = "";
+  KeyboardVisibilityController keyboardVisibilityController = KeyboardVisibilityController();
+  StreamSubscription<bool> keyboardEvents;
   Widget getResetButton(bool isDoubleButton) {
     return RaisedButton(
       color: Theme.of(context).accentColor,
@@ -46,15 +48,21 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-
-    KeyboardVisibilityNotification().addNewListener(
-      onChange: (bool visible) {
+     keyboardEvents = keyboardVisibilityController.onChange.listen((bool visible) {
         setState(() {
           keyboardShowing = visible;
         });
       },
     );
   }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    await keyboardEvents.cancel();
+  }
+
+
 
   Future<String> getIp() async {
     AppState state = await AppState.load();
@@ -371,11 +379,6 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
     passNode.addListener(() {
       setState(() {});
     });
-    KeyboardVisibilityNotification().addNewListener(
-      onChange: (bool visible) {
-        print(visible);
-      },
-    );
   }
 
   void errorCallback(BuildContext context) {
