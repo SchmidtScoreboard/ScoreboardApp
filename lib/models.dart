@@ -243,7 +243,8 @@ class ScoreboardSettings {
         rotationTime: json['rotation_time'] ?? 10,
         focusTeams: focusTeams,
         brightness: json['brightness'] ?? null,
-        autoPowerMode: autoPowerModeFromString(json['auto_power_mode'] ?? "Off"));
+        autoPowerMode:
+            autoPowerModeFromString(json['auto_power_mode'] ?? "Off"));
   }
 
   ScoreboardSettings clone() {
@@ -677,16 +678,21 @@ class Pixels {
   Uint8List getImageBytes() {
     StringBuffer bytes = StringBuffer();
     bytes.writeln("P3");
-    bytes.writeln("64 32");
+    bytes.writeln("256 128");
     bytes.writeln("255");
     var numPixels = 0;
     for (var row in this.data) {
-      for (var pixel in row) {
-        bytes.writeln("${pixel.red} ${pixel.green} ${pixel.blue}");
-        numPixels++;
+      for (int j = 0; j < 4; j++) {
+        for (var pixel in row) {
+          bytes.writeln("${pixel.red} ${pixel.green} ${pixel.blue}");
+          bytes.writeln("${pixel.red} ${pixel.green} ${pixel.blue}");
+          bytes.writeln("${pixel.red} ${pixel.green} ${pixel.blue}");
+          bytes.writeln("${pixel.red} ${pixel.green} ${pixel.blue}");
+          numPixels += 4;
+        }
       }
     }
-    while (numPixels < (64 * 32)) {
+    while (numPixels < (64 * 4 * 32 * 4)) {
       bytes.writeln("0 0 0");
       numPixels++;
     }

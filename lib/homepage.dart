@@ -1158,7 +1158,7 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                 decoration: BoxDecoration(
                     border: Border.all(width: 3.0, color: Colors.blue)),
                 child: Image.memory(customMessage.background.getImageBytes(),
-                    scale: 0.25)),
+                    scale: 1.0, width: 64.0 * 4, height: 32.0 * 4, isAntiAlias: true,)),
             onTap: callback)
         : ElevatedButton(onPressed: callback, child: Text("Select Image"));
   }
@@ -1201,7 +1201,7 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
           ),
           Text("Set text", style: TextStyle(fontSize: 20)),
           wrapModalWidget(Text(
-              "Optionally, specify additional text to display on top of your background image.",
+              "Optionally, specify additional text to display on top of your background image.\nSwipe left on a line to delete it",
               style: TextStyle(fontSize: 12))),
           wrapModalWidget(getLineTextEditor(customMessage.lines)),
           ElevatedButton(
