@@ -798,7 +798,7 @@ class _MyHomePageState extends State<MyHomePage> {
       int crossAxisCount, double iconSize) {
     return Padding(
         padding: EdgeInsets.only(top: 20),
-        child: Stack(overflow: Overflow.visible, children: [
+        child: Stack(clipBehavior: Clip.none, children: [
           Column(
             children: [...getTable(screens, context, crossAxisCount, iconSize)],
           ),
@@ -1157,8 +1157,13 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
             child: Container(
                 decoration: BoxDecoration(
                     border: Border.all(width: 3.0, color: Colors.blue)),
-                child: Image.memory(customMessage.background.getImageBytes(),
-                    scale: 1.0, width: 64.0 * 4, height: 32.0 * 4, isAntiAlias: true,)),
+                child: Image.memory(
+                  customMessage.background.getImageBytes(),
+                  scale: 1.0,
+                  width: 64.0 * 4,
+                  height: 32.0 * 4,
+                  isAntiAlias: true,
+                )),
             onTap: callback)
         : ElevatedButton(onPressed: callback, child: Text("Select Image"));
   }

@@ -20,18 +20,18 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.0
-  shared_preferences: "^0.5.2"
+  shared_preferences: ^2.0.15
   reorderables: ^0.2.12
   flutter_slidable: "^0.5.7"
   flutter_picker: ^2.0.1
   font_awesome_flutter: 8.5.0
-  badges: ^1.1.0
+  badges: ^2.0.2
   toast: ^0.1.5
-  url_launcher: ^6.0.2
+  url_launcher: ^6.1.2
   flutter_keyboard_visibility: ^5.0.2
-  modal_bottom_sheet: ^2.0.0
+  modal_bottom_sheet: ^2.0.1
   image_picker: ^0.8.0+1
-  flutter_colorpicker: ^0.4.0
+  flutter_colorpicker: ^1.0.3
   image: ^3.0.2
   convert:
 
