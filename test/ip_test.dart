@@ -1,4 +1,4 @@
-import 'package:scoreboard/models.dart';
+import 'package:Scoreboard/models.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'models.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -8,11 +7,10 @@ import 'teams.dart';
 import 'channel.dart';
 import 'homepage.dart';
 import 'package:flutter_picker/flutter_picker.dart';
-import 'package:badges/badges.dart';
 
 class SettingsScreen extends StatefulWidget {
   final ScoreboardSettings settings;
-  SettingsScreen({this.settings});
+  SettingsScreen({required this.settings});
 
   @override
   State<StatefulWidget> createState() {
@@ -21,8 +19,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class SettingsScreenState extends State<SettingsScreen> {
-  ScoreboardSettings mutableSettings;
-  ScoreboardSettings originalSettings;
+  late ScoreboardSettings mutableSettings;
+  late ScoreboardSettings originalSettings;
   FocusNode wifiNode = FocusNode();
   FocusNode passNode = FocusNode();
   String wifi = "";
@@ -75,13 +73,13 @@ class SettingsScreenState extends State<SettingsScreen> {
           content: Text(
               "Changing brightness requires a restart of your scoreboard. Continue?"),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
-            FlatButton(
+            TextButton(
               child: Text("OK"),
               onPressed: () async {
                 Navigator.of(context).pop();
@@ -177,7 +175,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   Widget getAutoPowerSelector(String title, AutoPowerMode mode, Icon icon) {
     return CheckboxListTile(
         value: mutableSettings.autoPowerMode == mode,
-        onChanged: (bool newValue) {
+        onChanged: (bool? newValue) {
           mutableSettings.autoPowerMode = mode;
           setState(() {});
         },
@@ -232,14 +230,14 @@ class SettingsScreenState extends State<SettingsScreen> {
                               },
                             ),
                             actions: <Widget>[
-                              new FlatButton(
+                              new TextButton(
                                 child: Text("Cancel"),
                                 onPressed: () {
                                   print("Pressed cancel");
                                   Navigator.of(context).pop();
                                 },
                               ),
-                              new FlatButton(
+                              new TextButton(
                                 child: Text("Confirm"),
                                 onPressed: () {
                                   print("Pressed confirm");
@@ -379,7 +377,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           children: mutableSettings.focusTeams
                               .where((FocusTeam team) =>
                                   teamMaps.containsKey(team.screenId) &&
-                                  teamMaps[team.screenId]
+                                  teamMaps[team.screenId]!
                                       .containsKey(team.teamId))
                               .map((FocusTeam team) => Slidable(
                                     // key: ValueKey(team.teamId),
@@ -388,20 +386,22 @@ class SettingsScreenState extends State<SettingsScreen> {
                                         title: Text("        " +
                                             ScreenId.getEmoji(team.screenId) +
                                             "  " +
-                                            teamMaps[team.screenId][team.teamId]
+                                            teamMaps[team.screenId]![
+                                                    team.teamId]
                                                 .toString())),
-                                    actionPane: SlidableDrawerActionPane(),
-                                    secondaryActions: <Widget>[
-                                      IconSlideAction(
-                                        icon: Icons.delete,
-                                        color: Colors.red,
-                                        onTap: () {
-                                          mutableSettings.focusTeams
-                                              .remove(team);
-                                          setState(() {});
-                                        },
-                                      )
-                                    ],
+                                    endActionPane: ActionPane(
+                                        motion: ScrollMotion(),
+                                        children: <Widget>[
+                                          SlidableAction(
+                                            icon: Icons.delete,
+                                            backgroundColor: Colors.red,
+                                            onPressed: (BuildContext context) {
+                                              mutableSettings.focusTeams
+                                                  .remove(team);
+                                              setState(() {});
+                                            },
+                                          )
+                                        ]),
                                   ))
                               .toList()),
                       Builder(builder: (context) {
@@ -409,8 +409,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                             FocusTeam(screenId: ScreenId.GOLF, teamId: 0);
                         return CheckboxListTile(
                             value: mutableSettings.focusTeams.contains(golfKey),
-                            onChanged: (bool newValue) {
-                              if (newValue) {
+                            onChanged: (bool? newValue) {
+                              if (newValue != null && newValue!) {
                                 mutableSettings.focusTeams.add(golfKey);
                               } else {
                                 mutableSettings.focusTeams.remove(golfKey);
@@ -443,7 +443,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                         onTap: () {
                           Picker picker = new Picker(
                               adapter: PickerDataAdapter<String>(
-                                  pickerdata: timezones),
+                                  pickerData: timezones),
                               onConfirm: (Picker picker, List value) {
                                 mutableSettings.timezone = timezones[value[0]];
                                 setState(() {});
@@ -466,7 +466,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                 children: getBrightnessWidgets(),
                                 padding: EdgeInsets.all(10),
                                 unselectedColor:
-                                    Theme.of(context).backgroundColor,
+                                    Theme.of(context).colorScheme.background,
                                 selectedColor: Colors.white,
                                 borderColor: Colors.white,
                                 onValueChanged: (int val) {
@@ -520,7 +520,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                                 title: Text("Prviacy and Usage Policy"),
                                 content: Text(AppState.POLICY_TEXT),
                                 actions: <Widget>[
-                                  FlatButton(
+                                  TextButton(
                                     child: Text("OK"),
                                     onPressed: () {
                                       Navigator.of(context).pop();
@@ -539,10 +539,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                       ),
                       ListTile(
                         leading: scoreboardOutOfDate
-                            ? Badge(
+                            ? Badge.count(
+                                count: 1,
                                 child: Icon(Icons.power_settings_new),
-                                badgeContent: Text("1",
-                                    style: TextStyle(color: Colors.white)),
                               )
                             : Icon(Icons.power_settings_new),
                         title: Text("Reboot this scoreboard"),
@@ -554,13 +553,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                               content: Text(
                                   "Rebooting will also update the scoreboard to the latest version.\nThis may take a minute."),
                               actions: <Widget>[
-                                FlatButton(
+                                TextButton(
                                   child: Text("Cancel"),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
                                 ),
-                                FlatButton(
+                                TextButton(
                                   child: Text("Update"),
                                   onPressed: () async {
                                     AppState state = await AppState.load();
@@ -597,13 +596,13 @@ class SettingsScreenState extends State<SettingsScreen> {
                               content: Text(
                                   "This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
                               actions: <Widget>[
-                                FlatButton(
+                                TextButton(
                                   child: Text("Cancel"),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
                                 ),
-                                FlatButton(
+                                TextButton(
                                   child: Text(
                                     "Delete",
                                     style: TextStyle(color: Colors.red),
@@ -659,14 +658,14 @@ class SettingsScreenState extends State<SettingsScreen> {
           AlertDialog dialog = new AlertDialog(
             title: Text("Exit settings without saving changes?"),
             actions: <Widget>[
-              new FlatButton(
+              new TextButton(
                 child: Text("Cancel"),
                 onPressed: () {
                   print("Pressed cancel");
                   Navigator.of(context).pop(false);
                 },
               ),
-              new FlatButton(
+              new TextButton(
                 child: Text("Confirm"),
                 onPressed: () {
                   print("Pressed confirm");
@@ -675,11 +674,12 @@ class SettingsScreenState extends State<SettingsScreen> {
               )
             ],
           );
-          return showDialog(
+          showDialog(
               context: context,
               builder: (BuildContext context) {
                 return dialog;
               });
+          return Future.value(true);
         } else {
           return Future.value(true);
         }
@@ -697,19 +697,19 @@ class SettingsScreenState extends State<SettingsScreen> {
       "College Football"
     ];
     Picker picker = new Picker(
-        adapter: PickerDataAdapter<String>(pickerdata: leagues),
+        adapter: PickerDataAdapter<String>(pickerData: leagues),
         onConfirm: (Picker picker, List value) {
           int screenId = value[0];
           List<Team> displayData = [];
-          for (int teamId in teamMaps[screenId].keys) {
+          for (int teamId in teamMaps[screenId]!.keys) {
             if (!mutableSettings.focusTeams
                 .contains(FocusTeam(screenId: screenId, teamId: teamId))) {
-              displayData.add(teamMaps[screenId][teamId]);
+              displayData.add(teamMaps[screenId]![teamId]!);
             }
           }
           displayData.sort();
           Picker picker = new Picker(
-              adapter: PickerDataAdapter<Team>(pickerdata: displayData),
+              adapter: PickerDataAdapter<Team>(pickerData: displayData),
               onConfirm: (Picker picker, List value) {
                 mutableSettings.focusTeams.add(FocusTeam(
                     screenId: screenId, teamId: displayData[value[0]].id));

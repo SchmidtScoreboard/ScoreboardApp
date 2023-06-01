@@ -214,7 +214,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool shouldRefreshConfig = true;
   bool scoreboardUpdateAvailable = false;
   int refreshFailures = 0;
-  Future doneSetup;
+  late Future doneSetup;
 
   List<Screen> getProScreens(int version) {
     return [
@@ -288,7 +288,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    if (refreshTimer != null && refreshTimer.isActive) {
+    if (refreshTimer.isActive) {
       refreshTimer.cancel();
     }
     super.dispose();
@@ -317,7 +317,7 @@ class _MyHomePageState extends State<MyHomePage> {
             style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(18.0))),
-                primary: Theme.of(context).colorScheme.secondary),
+                backgroundColor: Theme.of(context).colorScheme.secondary),
             onPressed: callback),
         padding: EdgeInsets.only(bottom: 10.0));
   }
@@ -391,7 +391,7 @@ class _MyHomePageState extends State<MyHomePage> {
             borderRadius: BorderRadius.horizontal(
                 left: left ? borderRadius : zero,
                 right: left ? zero : borderRadius)),
-        primary: Theme.of(context).colorScheme.secondary);
+        backgroundColor: Theme.of(context).colorScheme.secondary);
   }
 
   Widget getLoadingPage(BuildContext context, bool loading) {
@@ -870,7 +870,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _checkVersion() async {
-    AlertDialog alert;
+    AlertDialog? alert;
     try {
       settings = await getConfig();
     } catch (e) {
@@ -883,7 +883,7 @@ class _MyHomePageState extends State<MyHomePage> {
           content: Text(
               "You are using an outdated version of the Scoreboard app.\nPlease update it in the App Store to get the latest features and bug fixes"),
           actions: [
-            FlatButton(
+            TextButton(
               child: Text("OK"),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -895,13 +895,13 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text("Update your scoreboard!"),
           content: Text("There is an update available for your scoreboard."),
           actions: [
-            FlatButton(
+            TextButton(
               child: Text("Later"),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
-            FlatButton(
+            TextButton(
               child: Text("Reboot"),
               onPressed: () async {
                 AppState state = await AppState.load();
@@ -922,7 +922,7 @@ class _MyHomePageState extends State<MyHomePage> {
       showDialog(
           context: context,
           builder: (BuildContext context) {
-            return alert;
+            return alert!;
           });
     }
   }
@@ -948,10 +948,10 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
   CustomMessageEditorState({required this.customMessage});
 
   Widget getDeleteAction(CustomMessageLine line) {
-    return IconSlideAction(
+    return SlidableAction(
         icon: Icons.delete,
-        color: Colors.red,
-        onTap: () {
+        backgroundColor: Colors.red,
+        onPressed: (BuildContext context) {
           customMessage.lines.remove(line);
           setState(() {});
         });
@@ -972,14 +972,14 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                         onChanged: (newText) => {text = newText},
                       ),
                       actions: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('Confirm'),
                           onPressed: () {
                             setState(() => line.text = text);
                             Navigator.of(context).pop();
                           },
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('Cancel'),
                           onPressed: () {
                             Navigator.of(context).pop();
@@ -1001,28 +1001,28 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
               builder: (context) => AlertDialog(
                 title: const Text('Select font size!'),
                 actions: <Widget>[
-                  FlatButton(
+                  TextButton(
                     child: const Text('Small'),
                     onPressed: () {
                       setState(() => line.size = FontSize.Small);
                       Navigator.of(context).pop();
                     },
                   ),
-                  FlatButton(
+                  TextButton(
                     child: const Text('Medium'),
                     onPressed: () {
                       setState(() => line.size = FontSize.Medium);
                       Navigator.of(context).pop();
                     },
                   ),
-                  FlatButton(
+                  TextButton(
                     child: const Text('Large'),
                     onPressed: () {
                       setState(() => line.size = FontSize.Large);
                       Navigator.of(context).pop();
                     },
                   ),
-                  FlatButton(
+                  TextButton(
                     child: const Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop();
@@ -1053,13 +1053,13 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                         ),
                       ),
                       actions: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('Cancel'),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('Confirm'),
                           onPressed: () {
                             setState(() => line.color = pickerColor);
@@ -1081,8 +1081,10 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
                 )),
             padding: EdgeInsets.only(right: 10.0, top: 5.0, bottom: 5.0)),
       ]),
-      actionPane: SlidableDrawerActionPane(),
-      secondaryActions: [getDeleteAction(line)],
+      endActionPane: ActionPane(
+        motion: ScrollMotion(),
+        children: [getDeleteAction(line)],
+      ),
     );
   }
 
@@ -1125,8 +1127,8 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
     var callback = () async {
       try {
         final pickedImage = await picker.getImage(source: ImageSource.gallery);
-        var bytes = await pickedImage.readAsBytes();
-        var decodedImage = ImageManipulation.decodeImage(bytes);
+        var bytes = await pickedImage!.readAsBytes();
+        var decodedImage = ImageManipulation.decodeImage(bytes)!;
         if (decodedImage.width != 64 || decodedImage.height != 32) {
           decodedImage =
               ImageManipulation.copyResize(decodedImage, width: 64, height: 32);

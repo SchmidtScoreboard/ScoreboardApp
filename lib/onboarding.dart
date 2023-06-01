@@ -3,7 +3,6 @@ import 'dart:async';
 import 'models.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 
@@ -25,17 +24,19 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   String ipAddress = "";
   KeyboardVisibilityController keyboardVisibilityController =
       KeyboardVisibilityController();
-  StreamSubscription<bool> keyboardEvents;
+  late StreamSubscription<bool> keyboardEvents;
   Widget getResetButton(bool isDoubleButton) {
-    return RaisedButton(
-      color: Theme.of(context).colorScheme.secondary,
-      padding: EdgeInsets.all(5),
-      shape: RoundedRectangleBorder(
-          borderRadius: isDoubleButton
-              ? BorderRadius.only(
-                  bottomRight: Radius.circular(borderRadius),
-                  topRight: Radius.circular(borderRadius))
-              : BorderRadius.all(Radius.circular(borderRadius))),
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        padding: EdgeInsets.all(5),
+        shape: RoundedRectangleBorder(
+            borderRadius: isDoubleButton
+                ? BorderRadius.only(
+                    bottomRight: Radius.circular(borderRadius),
+                    topRight: Radius.circular(borderRadius))
+                : BorderRadius.all(Radius.circular(borderRadius))),
+      ),
       child: Text("Restart Setup",
           style: TextStyle(color: Colors.white, fontSize: 12)),
       onPressed: () {
@@ -79,9 +80,9 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: getIp(),
-        builder: (BuildContext context, snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
           if (snapshot.hasData) {
-            ipAddress = snapshot.data;
+            ipAddress = snapshot.data!;
             return Scaffold(
                 key: scaffoldKey,
                 body: Builder(builder: (BuildContext context) {
@@ -114,21 +115,21 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget getOnboardButton(BuildContext context, String text, Widget target,
       Future<bool> Function(BuildContext) callback,
-      {bool enabled = true, Function(BuildContext) errorCallback}) {
-    return RaisedButton(
+      {bool enabled = true, Function(BuildContext)? errorCallback}) {
+    return ElevatedButton(
       child: status == OnboardingStatus.ready
-          ? Text(
-              text,
-            )
+          ? Text(text, style: TextStyle(color: Colors.white, fontSize: 12))
           : Padding(
               padding: EdgeInsets.all(10),
               child: CircularProgressIndicator(
                 valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
               )),
-      color: Theme.of(context).colorScheme.secondary,
-      elevation: 4,
-      highlightElevation: 8,
-      shape: StadiumBorder(),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).colorScheme.secondary,
+        elevation: 4,
+        // highlightElevation: 8,
+        shape: StadiumBorder(),
+      ),
       onPressed: enabled
           ? () async {
               setState(() {
@@ -151,7 +152,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget layoutWidgets(Iterable widgets, [Widget footer]) {
+  Widget layoutWidgets(Iterable widgets, Widget? footer) {
     List<Widget> paddedWidgets = [];
     for (var widget in widgets) {
       paddedWidgets.add(widget);
@@ -177,7 +178,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
             icon: ipAddress == "" ? Icon(Icons.menu) : Icon(Icons.arrow_back),
             onPressed: () async {
               if (ipAddress == "") {
-                scaffoldKey.currentState.openDrawer();
+                scaffoldKey.currentState!.openDrawer();
               } else {
                 await AppState.setState(SetupState.READY);
                 setState(() {
@@ -187,7 +188,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
               }
             }),
       ),
-      if (footer != null && !keyboardShowing) alignedFooter
+      if (!keyboardShowing) alignedFooter
     ]);
   }
 }
@@ -212,7 +213,7 @@ class SplashScreenState extends OnboardingScreenState {
           title: Text("Usage and Privacy Policy"),
           content: SingleChildScrollView(child: Text(AppState.POLICY_TEXT)),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("Accept"),
               onPressed: () async {
                 await AppState.setPolicyVersion(
@@ -258,11 +259,13 @@ class SplashScreenState extends OnboardingScreenState {
           getOnboardButton(
               context, "Get Started", ConnectToHotspotScreen(), callback),
         ],
-        RaisedButton(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(borderRadius))),
-          color: Theme.of(context).colorScheme.secondary,
-          padding: EdgeInsets.all(5),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(borderRadius))),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            padding: EdgeInsets.all(5),
+          ),
           child: Text("Skip to Sync",
               style: TextStyle(color: Colors.white, fontSize: 12)),
           onPressed: () {
@@ -282,7 +285,7 @@ class ConnectToHotspotScreen extends OnboardingScreen {
 }
 
 class ConnectToHotspotScreenState extends OnboardingScreenState {
-  Timer refreshTimer;
+  late Timer refreshTimer;
   bool connected = false;
 
   Future<bool> callback(BuildContext context) async {
@@ -337,13 +340,15 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
           ),
         ],
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          RaisedButton(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(borderRadius),
-                    topLeft: Radius.circular(borderRadius))),
-            color: Theme.of(context).colorScheme.secondary,
-            padding: EdgeInsets.all(5),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(borderRadius),
+                      topLeft: Radius.circular(borderRadius))),
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              padding: EdgeInsets.all(5),
+            ),
             child: Text("Skip to Sync",
                 style: TextStyle(color: Colors.white, fontSize: 12)),
             onPressed: () {
@@ -367,11 +372,11 @@ class WifiCredentialsScreen extends OnboardingScreen {
 class WifiCredentialsScreenState extends OnboardingScreenState {
   FocusNode wifiNode = FocusNode();
   FocusNode passNode = FocusNode();
-  String wifi;
-  String password;
+  late String wifi;
+  late String password;
   bool showWifiPassword = false;
   bool sentCredentials = false;
-  String errorString = null;
+  String errorString = "";
 
   @override
   void initState() {
@@ -384,11 +389,11 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   void errorCallback(BuildContext context) {
     if (sentCredentials) {
       print("Got error callback wifi setup");
-      if (errorString == null) {
+      if (errorString == "") {
         errorString =
             "Failed to send Wifi Configuration, is your scoreboard turned on? Are you connected to wifi network Scoreboard42?";
       }
-      Scaffold.of(context).showSnackBar(new SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
         content: Text(
           errorString,
           style: TextStyle(color: Colors.white),
@@ -406,7 +411,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
   }
 
   Future<bool> callback(BuildContext context) async {
-    Scaffold.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     sentCredentials = false;
 
     AlertDialog wifiConfirm = AlertDialog(
@@ -432,13 +437,13 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
         ],
       )),
       actions: <Widget>[
-        FlatButton(
+        TextButton(
           child: Text("Cancel"),
           onPressed: () async {
             Navigator.of(context).pop(false);
           },
         ),
-        FlatButton(
+        TextButton(
           child: Text("Confirm"),
           onPressed: () async {
             Navigator.of(context).pop(true);
@@ -465,7 +470,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
           await AppState.setState(SetupState.SYNC);
         }
       } catch (e) {
-        errorString = null;
+        errorString = "";
         print(e.toString());
         return false;
       }
@@ -580,13 +585,15 @@ class SyncScreenState extends OnboardingScreenState {
               enabled: isValid, errorCallback: errorCallback)
         ],
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-          RaisedButton(
-            color: Theme.of(context).colorScheme.secondary,
-            padding: EdgeInsets.all(5),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(borderRadius),
-                    bottomLeft: Radius.circular(borderRadius))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              padding: EdgeInsets.all(5),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(borderRadius),
+                      bottomLeft: Radius.circular(borderRadius))),
+            ),
             child: Text("Retry Wifi",
                 style: TextStyle(color: Colors.white, fontSize: 12)),
             onPressed: () {
@@ -602,7 +609,7 @@ class SyncScreenState extends OnboardingScreenState {
   }
 
   void errorCallback(BuildContext context) {
-    Scaffold.of(context).showSnackBar(new SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(new SnackBar(
       content: Text(
         "Sync failed. Is your phone connected to the same WiFi network as the Scoreboard?",
         style: TextStyle(color: Colors.white),
@@ -619,7 +626,7 @@ class SyncScreenState extends OnboardingScreenState {
   }
 
   Future<bool> callback(BuildContext context) async {
-    Scaffold.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     String ip = ipFromCode(code);
     String address = "http://$ip:5005/";
     print("Found address: $address");

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,12 +49,20 @@ class ScreenId {
 class FocusTeam {
   int screenId;
   int teamId;
-  FocusTeam({this.screenId, this.teamId});
+  FocusTeam({required this.screenId, required this.teamId});
   factory FocusTeam.fromJson(Map<String, dynamic> json) {
     return FocusTeam(screenId: json["screen_id"], teamId: json['team_id']);
   }
   bool operator ==(other) {
-    return this.screenId == other.screenId && this.teamId == other.teamId;
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    return other is FocusTeam &&
+        this.screenId == other.screenId &&
+        this.teamId == other.teamId;
   }
 
   FocusTeam clone() {
@@ -72,12 +79,12 @@ class FocusTeam {
 
 class Screen {
   Screen(
-      {this.id,
-      this.name,
-      this.subtitle,
-      this.alwaysRotate,
-      this.rotationTime,
-      this.focusTeams});
+      {required this.id,
+      required this.name,
+      required this.subtitle,
+      this.alwaysRotate = false,
+      this.rotationTime = 0,
+      this.focusTeams = const []});
   int id;
   String name;
   String subtitle;
@@ -97,7 +104,14 @@ class Screen {
   }
 
   bool operator ==(other) {
-    return this.id == other.id &&
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    return other is Screen &&
+        this.id == other.id &&
         this.name == other.name &&
         this.subtitle == other.subtitle &&
         this.alwaysRotate == other.alwaysRotate &&
@@ -181,6 +195,8 @@ AutoPowerMode autoPowerModeFromString(String str) {
       return AutoPowerMode.Clock;
     case "CustomMessage":
       return AutoPowerMode.CustomMessage;
+    default:
+      return AutoPowerMode.Off;
   }
 }
 
@@ -196,26 +212,26 @@ class ScoreboardSettings {
   int version;
   String timezone;
   String macAddress;
-  bool alwaysRotate;
+  bool alwaysRotate = false;
   int rotationTime;
   List<FocusTeam> focusTeams;
   int brightness;
   AutoPowerMode autoPowerMode;
 
   ScoreboardSettings(
-      {this.activeScreen,
-      this.screenOn,
-      this.autoPowerOn,
-      this.name,
-      this.screens,
-      this.setupState,
-      this.version,
-      this.timezone,
-      this.macAddress,
-      this.rotationTime,
-      this.focusTeams,
-      this.brightness,
-      this.autoPowerMode});
+      {required this.activeScreen,
+      required this.screenOn,
+      required this.autoPowerOn,
+      required this.name,
+      required this.screens,
+      required this.setupState,
+      required this.version,
+      required this.timezone,
+      required this.macAddress,
+      required this.rotationTime,
+      required this.focusTeams,
+      required this.brightness,
+      required this.autoPowerMode});
 
   factory ScoreboardSettings.fromJson(Map<String, dynamic> json) {
     List<Screen> screens = [];
@@ -281,7 +297,14 @@ class ScoreboardSettings {
   }
 
   bool operator ==(other) {
-    return this.activeScreen == other.activeScreen &&
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    return other is ScoreboardSettings &&
+        this.activeScreen == other.activeScreen &&
         this.screenOn == other.screenOn &&
         this.autoPowerOn == other.autoPowerOn &&
         this.name == other.name &&
@@ -323,7 +346,7 @@ const MAX_BRIGHTNESS = 100;
 
 // Scoreboard uses Diffie-Hellman Key Exchange of ~500 digit keys
 class VerificationKey {
-  BigInt secret;
+  late BigInt secret;
 
   static BigInt p = BigInt.parse("23");
   static BigInt g = BigInt.parse("5"); // Primitive root modulo of p
@@ -384,11 +407,11 @@ enum SetupState {
 }
 
 class AppState {
-  List<String> scoreboardAddresses;
-  List<SetupState> scoreboardSetupStates;
-  List<String> scoreboardNames;
-  int activeIndex;
-  int policyVersion;
+  late List<String> scoreboardAddresses;
+  late List<SetupState> scoreboardSetupStates;
+  late List<String> scoreboardNames;
+  late int activeIndex;
+  late int policyVersion;
 
   static const String ADDRESS_KEY = "addresses";
   static const String SETUP_STATE_KEY = "setup_states";
@@ -400,7 +423,7 @@ class AppState {
   static const String POLICY_TEXT =
       "Schmidt Scoreboard does not collect or sell personal information of any kind.\n\nIt may collect Scoreboard usage information purely for internal use and feature selection, but it will never collect your wifi information or any other private information.\n\nScoreboard offers several modes to display scores from various leagues. Any of these modes may be removed at any time.";
 
-  static AppState _singleton;
+  static AppState? _singleton;
 
   AppState._internal();
   AppState._default() {
@@ -421,36 +444,36 @@ class AppState {
 
   static Future<AppState> load() async {
     if (_singleton != null) {
-      return _singleton;
+      return _singleton!;
     } else {
       _singleton = AppState._internal();
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       try {
-        _singleton.scoreboardAddresses = prefs.getStringList(ADDRESS_KEY);
-        _singleton.scoreboardSetupStates = prefs
-            .getStringList(SETUP_STATE_KEY)
+        _singleton!.scoreboardAddresses = prefs.getStringList(ADDRESS_KEY)!;
+        _singleton!.scoreboardSetupStates = prefs
+            .getStringList(SETUP_STATE_KEY)!
             .map((s) => SetupState.values[int.parse(s)])
             .toList();
-        _singleton.scoreboardNames = prefs.getStringList(NAMES_KEY);
-        _singleton.activeIndex = prefs.getInt(LAST_INDEX_KEY);
-        _singleton.policyVersion = prefs.getInt(POLICY_VERSION) ?? 0;
-        if (_singleton.scoreboardAddresses.length !=
-                _singleton.scoreboardSetupStates.length ||
-            _singleton.scoreboardNames.length !=
-                _singleton.scoreboardAddresses.length) {
+        _singleton!.scoreboardNames = prefs.getStringList(NAMES_KEY)!;
+        _singleton!.activeIndex = prefs.getInt(LAST_INDEX_KEY)!;
+        _singleton!.policyVersion = prefs.getInt(POLICY_VERSION) ?? 0;
+        if (_singleton!.scoreboardAddresses.length !=
+                _singleton!.scoreboardSetupStates.length ||
+            _singleton!.scoreboardNames.length !=
+                _singleton!.scoreboardAddresses.length) {
           throw Exception("Invalid addresses, setup states, or names");
-        } else if (_singleton.activeIndex >=
-                _singleton.scoreboardAddresses.length ||
-            _singleton.activeIndex < 0) {
+        } else if (_singleton!.activeIndex >=
+                _singleton!.scoreboardAddresses.length ||
+            _singleton!.activeIndex < 0) {
           throw Exception("Invalid last index");
         }
-        return _singleton;
+        return _singleton!;
       } catch (e) {
         //invalid string lists, set everything to basic values and return. This is an OK state if nothing has been done
         _singleton = AppState._internal();
-        resetState(_singleton);
+        resetState(_singleton!);
 
-        return _singleton;
+        return _singleton!;
       }
     }
   }
@@ -460,15 +483,15 @@ class AppState {
       throw Exception("Cannot store null AppState");
     } else {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setStringList(ADDRESS_KEY, _singleton.scoreboardAddresses);
+      prefs.setStringList(ADDRESS_KEY, _singleton!.scoreboardAddresses);
       prefs.setStringList(
           SETUP_STATE_KEY,
-          _singleton.scoreboardSetupStates
+          _singleton!.scoreboardSetupStates
               .map((state) => state.index.toString())
               .toList());
-      prefs.setStringList(NAMES_KEY, _singleton.scoreboardNames);
-      prefs.setInt(LAST_INDEX_KEY, _singleton.activeIndex);
-      prefs.setInt(POLICY_VERSION, _singleton.policyVersion);
+      prefs.setStringList(NAMES_KEY, _singleton!.scoreboardNames);
+      prefs.setInt(LAST_INDEX_KEY, _singleton!.activeIndex);
+      prefs.setInt(POLICY_VERSION, _singleton!.policyVersion);
     }
   }
 
@@ -521,8 +544,8 @@ class AppState {
         if (matches.length > 0) {
           Match m = matches[0];
           if (m.groupCount == 1 && m.group(1) != null) {
-            int candidate = int.tryParse(m.group(1));
-            if (candidate != null && candidate > number) {
+            int candidate = int.tryParse(m.group(1)!) ?? 0;
+            if (candidate > number) {
               number = candidate;
             }
           }
@@ -538,7 +561,7 @@ class AppState {
     await AppState.store();
   }
 
-  static Future removeScoreboard({int index}) async {
+  static Future removeScoreboard({int? index}) async {
     AppState app = await AppState.load();
     if (index == null) {
       index = app.activeIndex;
@@ -567,7 +590,7 @@ String ipFromCode(String code) {
   String out = "";
   RegExp regex = RegExp("..");
   for (RegExpMatch match in regex.allMatches(code)) {
-    String matched = match.group(0);
+    String matched = match.group(0)!;
     int mod = alphabet.indexOf(matched[0]);
     int rem = alphabet.indexOf(matched[1]);
     int octet = alphabet.length * mod + rem;
@@ -588,9 +611,19 @@ class CustomMessageLine {
   FontSize size;
   Color color;
 
-  CustomMessageLine({this.text, this.size, this.color});
+  CustomMessageLine(
+      {required this.text, required this.size, required this.color});
   bool operator ==(other) {
-    return text == other.text && size == other.size && color == other.color;
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    return other is CustomMessageLine &&
+        text == other.text &&
+        size == other.size &&
+        color == other.color;
   }
 
   Map<String, dynamic> toJson() {
@@ -634,17 +667,27 @@ class CustomMessageLine {
 class Pixels {
   List<List<Color>> data;
 
-  Pixels({this.data});
+  Pixels({required this.data});
   bool operator ==(other) {
     // return listEquals(this.data, other.data);
-    for (int x = 0; x < 64; x++) {
-      for (int y = 0; y < 32; y++) {
-        if (other.data[y][x] != data[y][x]) {
-          return false;
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (other is Pixels) {
+      for (int x = 0; x < 64; x++) {
+        for (int y = 0; y < 32; y++) {
+          if (other.data[y][x] != data[y][x]) {
+            return false;
+          }
         }
       }
+      return true;
+    } else {
+      return false;
     }
-    return true;
   }
 
   List<List<Uint8List>> toJson() {
@@ -705,11 +748,21 @@ class CustomMessage {
   List<CustomMessageLine> lines;
   Pixels background;
 
-  CustomMessage({this.lines, this.background});
+  CustomMessage({required this.lines, required this.background});
 
   bool operator ==(other) {
-    return listEquals(this.lines, other.lines) &&
-        background == other.background;
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (other is CustomMessage) {
+      return listEquals(this.lines, other.lines) &&
+          background == other.background;
+    } else {
+      return false;
+    }
   }
 
   Map<String, dynamic> toJson() {
