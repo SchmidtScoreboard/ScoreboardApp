@@ -14,31 +14,27 @@ description: Setup, manage, and control the Schmidt Scoreboard from your iOS or 
 version: 2.3.0+13
 
 environment:
-  sdk: ">=2.2.2 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.0
   shared_preferences: ^2.0.15
-  reorderables: ^0.2.12
-  flutter_slidable: "^0.5.7"
+  reorderables: ^0.6.0
+  flutter_slidable: ^3.0.0
   flutter_picker: ^2.0.1
-  font_awesome_flutter: 8.5.0
+  font_awesome_flutter: ^10.4.0
   badges: ^2.0.2
-  toast: ^0.1.5
+  toast: ^0.2.9
   url_launcher: ^6.1.2
   flutter_keyboard_visibility: ^5.0.2
-  modal_bottom_sheet: ^2.0.1
+  modal_bottom_sheet: ^3.0.0-pre
   image_picker: ^0.8.0+1
   flutter_colorpicker: ^1.0.3
   image: ^3.0.2
   convert:
-
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.2
+  cupertino_icons: ^1.0.5
 
 dev_dependencies:
   test:

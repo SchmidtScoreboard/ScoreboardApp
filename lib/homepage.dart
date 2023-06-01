@@ -8,7 +8,6 @@ import 'onboarding.dart';
 import 'dart:math';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:badges/badges.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as ImageManipulation;
@@ -17,7 +16,7 @@ import 'dart:io' show Platform;
 const REFRESH_FAILURES_BEFORE_SHOW_ERROR = 24;
 
 class ScoreboardDrawer extends StatefulWidget {
-  ScoreboardDrawer({Key key}) : super(key: key);
+  ScoreboardDrawer({required Key key}) : super(key: key);
 
   @override
   _ScoreboardDrawerState createState() => _ScoreboardDrawerState();

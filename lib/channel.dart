@@ -6,7 +6,7 @@ import 'dart:convert';
 
 class Channel {
   String ipAddress;
-  Channel({this.ipAddress});
+  Channel({required this.ipAddress});
 
   static final Channel localChannel =
       Channel(ipAddress: "http://127.0.0.1:5005/");
