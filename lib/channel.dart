@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 import 'models.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -132,11 +131,7 @@ class Channel {
       print(response.body);
       return ScoreboardSettings.fromJson(json.decode(response.body));
     }
-    if (response.statusCode == 404) {
-      return null;
-    } else {
-      throw Exception("Failed to connect to scoreboard");
-    }
+    throw Exception("Failed to connect to scoreboard");
   }
 
   Future<ScoreboardSettings> syncRequest() async {

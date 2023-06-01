@@ -23,11 +23,12 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   bool keyboardShowing = false;
   var scaffoldKey = GlobalKey<ScaffoldState>();
   String ipAddress = "";
-  KeyboardVisibilityController keyboardVisibilityController = KeyboardVisibilityController();
+  KeyboardVisibilityController keyboardVisibilityController =
+      KeyboardVisibilityController();
   StreamSubscription<bool> keyboardEvents;
   Widget getResetButton(bool isDoubleButton) {
     return RaisedButton(
-      color: Theme.of(context).accentColor,
+      color: Theme.of(context).colorScheme.secondary,
       padding: EdgeInsets.all(5),
       shape: RoundedRectangleBorder(
           borderRadius: isDoubleButton
@@ -48,7 +49,8 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-     keyboardEvents = keyboardVisibilityController.onChange.listen((bool visible) {
+    keyboardEvents = keyboardVisibilityController.onChange.listen(
+      (bool visible) {
         setState(() {
           keyboardShowing = visible;
         });
@@ -61,8 +63,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
     await keyboardEvents.cancel();
   }
-
-
 
   Future<String> getIp() async {
     AppState state = await AppState.load();
@@ -102,7 +102,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       text,
       style: TextStyle(
           fontSize: 36,
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           fontWeight: FontWeight.bold),
       textAlign: TextAlign.center,
     );
@@ -125,7 +125,7 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
               child: CircularProgressIndicator(
                 valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
               )),
-      color: Theme.of(context).accentColor,
+      color: Theme.of(context).colorScheme.secondary,
       elevation: 4,
       highlightElevation: 8,
       shape: StadiumBorder(),
@@ -245,7 +245,7 @@ class SplashScreenState extends OnboardingScreenState {
                   text: "schmidtscoreboard.com",
                   style: TextStyle(
                       fontSize: 18,
-                      color: Theme.of(context).accentColor,
+                      color: Theme.of(context).colorScheme.secondary,
                       fontWeight: FontWeight.bold),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {
@@ -261,7 +261,7 @@ class SplashScreenState extends OnboardingScreenState {
         RaisedButton(
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(borderRadius))),
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           padding: EdgeInsets.all(5),
           child: Text("Skip to Sync",
               style: TextStyle(color: Colors.white, fontSize: 12)),
@@ -342,7 +342,7 @@ class ConnectToHotspotScreenState extends OnboardingScreenState {
                 borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(borderRadius),
                     topLeft: Radius.circular(borderRadius))),
-            color: Theme.of(context).accentColor,
+            color: Theme.of(context).colorScheme.secondary,
             padding: EdgeInsets.all(5),
             child: Text("Skip to Sync",
                 style: TextStyle(color: Colors.white, fontSize: 12)),
@@ -520,7 +520,7 @@ class WifiCredentialsScreenState extends OnboardingScreenState {
                 bottom: 14,
                 right: 0,
                 child: IconButton(
-                    color: Theme.of(context).accentColor,
+                    color: Theme.of(context).colorScheme.secondary,
                     disabledColor: Theme.of(context).disabledColor,
                     icon: showWifiPassword
                         ? Icon(FontAwesomeIcons.eyeSlash)
@@ -581,7 +581,7 @@ class SyncScreenState extends OnboardingScreenState {
         ],
         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
           RaisedButton(
-            color: Theme.of(context).accentColor,
+            color: Theme.of(context).colorScheme.secondary,
             padding: EdgeInsets.all(5),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(

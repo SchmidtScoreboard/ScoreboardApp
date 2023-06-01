@@ -181,7 +181,7 @@ class SettingsScreenState extends State<SettingsScreen> {
           mutableSettings.autoPowerMode = mode;
           setState(() {});
         },
-        activeColor: Theme.of(context).accentColor,
+        activeColor: Theme.of(context).colorScheme.secondary,
         secondary: icon,
         title: Text(title));
   }
@@ -320,8 +320,9 @@ class SettingsScreenState extends State<SettingsScreen> {
                                         bottom: 14,
                                         right: 0,
                                         child: IconButton(
-                                            color:
-                                                Theme.of(context).accentColor,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .secondary,
                                             disabledColor:
                                                 Theme.of(context).disabledColor,
                                             icon: showWifiPassword
@@ -416,7 +417,8 @@ class SettingsScreenState extends State<SettingsScreen> {
                               }
                               setState(() {});
                             },
-                            activeColor: Theme.of(context).accentColor,
+                            activeColor:
+                                Theme.of(context).colorScheme.secondary,
                             secondary: Icon(Icons.sports_golf),
                             title: Text("Prioritize Golf"),
                             subtitle: Text("Focus on Golf events when active"));
@@ -645,7 +647,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                       : Icon(Icons.save),
                   label:
                       requesting ? Text("Loading...") : Text("Save Settings"),
-                  backgroundColor: Theme.of(context).accentColor,
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
                   foregroundColor: Colors.white,
                 ),
               )),

@@ -16,7 +16,7 @@ import 'dart:io' show Platform;
 const REFRESH_FAILURES_BEFORE_SHOW_ERROR = 24;
 
 class ScoreboardDrawer extends StatefulWidget {
-  ScoreboardDrawer({required Key key}) : super(key: key);
+  ScoreboardDrawer({Key? key}) : super(key: key);
 
   @override
   _ScoreboardDrawerState createState() => _ScoreboardDrawerState();
@@ -27,9 +27,9 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
   Widget build(BuildContext context) {
     return FutureBuilder(
         future: AppState.load(),
-        builder: (context, snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<AppState> snapshot) {
           if (snapshot.hasData) {
-            AppState state = snapshot.data;
+            AppState? state = snapshot.data;
             return Drawer(
                 child: Column(
               children: <Widget>[
@@ -51,7 +51,7 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
                 Expanded(
                     child: ListView(
                         shrinkWrap: true,
-                        children: _buildDrawerList(state, context))),
+                        children: _buildDrawerList(state!, context))),
                 Align(
                   alignment: FractionalOffset.bottomCenter,
                   child: SafeArea(
@@ -80,62 +80,65 @@ class _ScoreboardDrawerState extends State<ScoreboardDrawer> {
     for (int i = 0; i < state.scoreboardAddresses.length; i++) {
       widgets.add(ClipRect(
           child: Slidable(
-        key: ValueKey(i),
-        child: ListTile(
-            title: Text(
-              state.scoreboardNames[i],
-              style: i == state.activeIndex
-                  ? TextStyle(fontWeight: FontWeight.bold)
-                  : null,
-            ),
-            onTap: () async {
-              await AppState.setActive(i);
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => buildHome()));
-            }),
-        actionPane: SlidableDrawerActionPane(),
-        secondaryActions: <Widget>[
-          IconSlideAction(
-            icon: Icons.delete,
-            color: Colors.red,
-            onTap: () async {
-              //show alert dialog
-
-              AlertDialog alert = AlertDialog(
-                title: Text("Are you sure?"),
-                content: Text(
-                    "This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
-                actions: <Widget>[
-                  FlatButton(
-                    child: Text("Cancel"),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+              key: ValueKey(i),
+              child: ListTile(
+                  title: Text(
+                    state.scoreboardNames[i],
+                    style: i == state.activeIndex
+                        ? TextStyle(fontWeight: FontWeight.bold)
+                        : null,
                   ),
-                  FlatButton(
-                    child: Text(
-                      "Delete",
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    onPressed: () async {
-                      await AppState.removeScoreboard(index: i);
-                      Navigator.of(context).pop();
-                      setState(() {});
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => buildHome()));
+                  onTap: () async {
+                    await AppState.setActive(i);
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (context) => buildHome()));
+                  }),
+              endActionPane: ActionPane(
+                motion: ScrollMotion(),
+                dismissible: DismissiblePane(onDismissed: () {}),
+                children: [
+                  SlidableAction(
+                    icon: Icons.delete,
+                    backgroundColor: Colors.red,
+                    onPressed: (BuildContext context) async {
+                      //show alert dialog
+                      AlertDialog alert = AlertDialog(
+                        title: Text("Are you sure?"),
+                        content: Text(
+                            "This action will only delete the saved settings from the app. To fully reset it, hold the side button on the scoreboard for ten seconds."),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text("Cancel"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                            child: Text(
+                              "Delete",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            onPressed: () async {
+                              await AppState.removeScoreboard(index: i);
+                              Navigator.of(context).pop();
+                              setState(() {});
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => buildHome()));
+                            },
+                          )
+                        ],
+                      );
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return alert;
+                          });
                     },
                   )
                 ],
-              );
-              showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return alert;
-                  });
-            },
-          )
-        ],
-      )));
+              ))));
     }
     return widgets;
   }
@@ -194,7 +197,7 @@ Widget buildHome() {
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -202,9 +205,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  ScoreboardSettings settings;
-  Timer refreshTimer;
-  Channel channel;
+  late ScoreboardSettings settings;
+  late Timer refreshTimer;
+  late Channel channel;
   bool refreshingScreenSelect = false;
   bool refreshingPower = false;
   bool refreshingAutoPower = false;
@@ -314,7 +317,7 @@ class _MyHomePageState extends State<MyHomePage> {
             style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(18.0))),
-                primary: Theme.of(context).accentColor),
+                primary: Theme.of(context).colorScheme.secondary),
             onPressed: callback),
         padding: EdgeInsets.only(bottom: 10.0));
   }
@@ -388,7 +391,7 @@ class _MyHomePageState extends State<MyHomePage> {
             borderRadius: BorderRadius.horizontal(
                 left: left ? borderRadius : zero,
                 right: left ? zero : borderRadius)),
-        primary: Theme.of(context).accentColor);
+        primary: Theme.of(context).colorScheme.secondary);
   }
 
   Widget getLoadingPage(BuildContext context, bool loading) {
@@ -455,15 +458,15 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     return FutureBuilder<ScoreboardSettings>(
         future: getConfig(),
-        builder: (context, snapshot) {
+        builder:
+            (BuildContext context, AsyncSnapshot<ScoreboardSettings> snapshot) {
           Widget body;
-
-          List<Widget> actions;
-          Widget fab;
+          List<Widget>? actions;
+          Widget? fab;
           Widget drawer;
           String name;
           if (snapshot.hasData) {
-            settings = snapshot.data;
+            settings = snapshot.data!;
             name = settings.name;
             body = _buildHome(context);
             actions = _buildActions();
@@ -481,9 +484,7 @@ class _MyHomePageState extends State<MyHomePage> {
               if (refreshFailures < REFRESH_FAILURES_BEFORE_SHOW_ERROR) {
                 name = "Loading";
               } else {
-                if (refreshTimer != null) {
-                  refreshTimer.cancel();
-                }
+                refreshTimer.cancel();
                 name = "Connection Error";
               }
             } else {
@@ -512,10 +513,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return <Widget>[
       IconButton(
           icon: settings.scoreboardNeedsUpdate()
-              ? Badge(
+              ? Badge.count(
+                  count: 1,
                   child: Icon(Icons.settings),
-                  badgeContent:
-                      Text("1", style: TextStyle(color: Colors.white)),
                 )
               : Icon(Icons.settings),
           tooltip: 'Settings',
@@ -547,7 +547,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Container(
                     color: settings.screenOn
-                        ? Theme.of(context).accentColor
+                        ? Theme.of(context).colorScheme.secondary
                         : Colors.grey,
                     width: width / 2,
                     height: height,
@@ -668,7 +668,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return new Card(
       margin: EdgeInsets.symmetric(horizontal: margin, vertical: 5.0),
       color: screen.id == settings.activeScreen && settings.screenOn
-          ? Theme.of(context).accentColor
+          ? Theme.of(context).colorScheme.secondary
           : Colors.grey,
       child: InkWell(
           splashColor: Colors.blue.withAlpha(30),
@@ -679,13 +679,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 builder: (BuildContext context) {
                   return FutureBuilder(
                     future: getCustomMessage(),
-                    builder: (context, snapshot) {
+                    builder: (BuildContext context,
+                        AsyncSnapshot<CustomMessage> snapshot) {
                       if (snapshot.hasError) {
                         print("Has error ${snapshot.error}");
                       }
                       if (snapshot.hasData) {
                         return CustomMessageEditor(
-                            initialMessage: snapshot.data);
+                            initialMessage: snapshot.data!);
                       } else {
                         return Container(height: 0.0);
                       }
@@ -931,8 +932,8 @@ class CustomMessageEditor extends StatefulWidget {
   final CustomMessage initialMessage;
 
   CustomMessageEditor({
-    Key key,
-    this.initialMessage,
+    Key? key,
+    required this.initialMessage,
   }) : super(key: key);
 
   @override
@@ -944,7 +945,7 @@ class CustomMessageEditorState extends State<CustomMessageEditor> {
   CustomMessage customMessage;
   final picker = ImagePicker();
 
-  CustomMessageEditorState({this.customMessage});
+  CustomMessageEditorState({required this.customMessage});
 
   Widget getDeleteAction(CustomMessageLine line) {
     return IconSlideAction(
