@@ -127,7 +127,6 @@ abstract class OnboardingScreenState extends State<OnboardingScreen> {
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         elevation: 4,
-        // highlightElevation: 8,
         shape: StadiumBorder(),
       ),
       onPressed: enabled

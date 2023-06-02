@@ -496,7 +496,7 @@ class _MyHomePageState extends State<MyHomePage> {
             drawer = ScoreboardDrawer();
             shouldRefreshConfig = false;
           }
-
+          print("Rendering scaffold with name " + name);
           return Scaffold(
             appBar: AppBar(
               title: Text(name),

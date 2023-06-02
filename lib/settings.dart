@@ -457,29 +457,27 @@ class SettingsScreenState extends State<SettingsScreen> {
                           picker.showDialog(context);
                         },
                       ),
-                      if (originalSettings.brightness != null)
-                        ExpansionTile(
-                            leading: Icon(Icons.brightness_6),
-                            title: Text("Set Brightness"),
-                            children: <Widget>[
-                              CupertinoSegmentedControl(
-                                children: getBrightnessWidgets(),
-                                padding: EdgeInsets.all(10),
-                                unselectedColor:
-                                    Theme.of(context).colorScheme.background,
-                                selectedColor: Colors.white,
-                                borderColor: Colors.white,
-                                onValueChanged: (int val) {
-                                  setState(() {
-                                    brightnessSelect = val;
-                                    mutableSettings.brightness =
-                                        brightnesSelectionToBrightness(
-                                            brightnessSelect);
-                                  });
-                                },
-                                groupValue: brightnessSelect,
-                              )
-                            ]),
+                      ExpansionTile(
+                          leading: Icon(Icons.brightness_6),
+                          title: Text("Set Brightness"),
+                          children: <Widget>[
+                            CupertinoSegmentedControl(
+                              children: getBrightnessWidgets(),
+                              padding: EdgeInsets.all(10),
+                              unselectedColor: Colors.grey[700],
+                              selectedColor: Colors.white,
+                              borderColor: Colors.white,
+                              onValueChanged: (int val) {
+                                setState(() {
+                                  brightnessSelect = val;
+                                  mutableSettings.brightness =
+                                      brightnesSelectionToBrightness(
+                                          brightnessSelect);
+                                });
+                              },
+                              groupValue: brightnessSelect,
+                            )
+                          ]),
                       ExpansionTile(
                         leading: Icon(Icons.info),
                         title: Text("About"),
@@ -517,7 +515,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                             leading: Icon(FontAwesomeIcons.key),
                             onTap: () {
                               AlertDialog policyAlert = AlertDialog(
-                                title: Text("Prviacy and Usage Policy"),
+                                title: Text("Privacy and Usage Policy"),
                                 content: Text(AppState.POLICY_TEXT),
                                 actions: <Widget>[
                                   TextButton(

@@ -258,7 +258,7 @@ class ScoreboardSettings {
         macAddress: json["mac_address"] ?? "00:00:00:00:00:00",
         rotationTime: json['rotation_time'] ?? 10,
         focusTeams: focusTeams,
-        brightness: json['brightness'] ?? null,
+        brightness: json['brightness'] ?? HIGH_BRIGHTNESS,
         autoPowerMode:
             autoPowerModeFromString(json['auto_power_mode'] ?? "Off"));
   }
